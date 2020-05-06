@@ -1,13 +1,19 @@
 package ru.maratislamov.script.statements;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.values.Value;
 
 /**
  * A "print" statement evaluates an expression, converts the result to a
  * string, and displays it to the user.
  */
 public class PrintStatement implements Statement {
+
+    public static String TYPE_TEXT = "text";
+    public static String TYPE_INLINE = "inline";
+    public static String TYPE_BUTTON = "button";
 
     private final Expression expression;
 
@@ -19,8 +25,10 @@ public class PrintStatement implements Statement {
         this.expression = expression;
     }
 
-    public void execute(ScriptSession session) {
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
         //todo: use type: text, inline, button
-        System.out.println(type + ": " + expression.evaluate(session).toString());
+        Value value = expression.evaluate(session, executionContext);
+        System.out.println(type + ": " + value.toString());
+        return value;
     }
 }

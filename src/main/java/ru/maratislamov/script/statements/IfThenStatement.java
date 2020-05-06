@@ -1,8 +1,13 @@
 package ru.maratislamov.script.statements;
 
 import ru.maratislamov.script.BotScript;
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.values.Value;
+
+import java.math.BigDecimal;
+import java.util.Objects;
 
 /**
  * An if then statement jumps execution to another place in the program, but
@@ -20,13 +25,14 @@ public class IfThenStatement implements Statement {
         this.label = label;
     }
 
-    public void execute(ScriptSession session) {
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
         if (botScript.labels.containsKey(label)) {
-            double value = condition.evaluate(session).toNumber();
-            if (value != 0) {
+            BigDecimal value = condition.evaluate(session, executionContext).toNumber();
+            if (!Objects.equals(value, BigDecimal.ZERO)) {
                 session.setCurrentStatement(botScript.labels.get(label).intValue());
             }
         } else throw new RuntimeException("Unexpected label: '" + label + "'");
+        return null;
     }
 
     @Override

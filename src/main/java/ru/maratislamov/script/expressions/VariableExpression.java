@@ -1,5 +1,6 @@
 package ru.maratislamov.script.expressions;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.NULLValue;
 import ru.maratislamov.script.values.MapValueInterface;
@@ -17,18 +18,18 @@ public class VariableExpression implements Expression {
         this.name = name;
     }
 
-    public Value evaluate(ScriptSession session) {
+    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator context) {
         MapValueInterface variables = session.getVariables();
 
         if (variables.containsKey(name)) {
-            return variables.get(name, session);
+            return variables.get(name, session, context);
         }
 
         if (name.contains(".")) {
             String[] path = name.split("\\.");
             Value value = null;
             for (String vr : path) {
-                value = variables.get(vr, session);
+                value = variables.get(vr, session, context);
 
                 if (value == null) return new NULLValue();
 

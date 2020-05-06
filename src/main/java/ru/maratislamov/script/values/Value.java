@@ -1,6 +1,10 @@
 package ru.maratislamov.script.values;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
+import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+
+import java.math.BigDecimal;
 
 /**
  * This is the base interface for a value. Values are the data that the
@@ -18,6 +22,7 @@ import ru.maratislamov.script.expressions.Expression;
  * literals in code.
  */
 public interface Value extends Expression {
+
     /**
      * Value types override this to convert themselves to a string
      * representation.
@@ -28,5 +33,25 @@ public interface Value extends Expression {
      * Value types override this to convert themselves to a numeric
      * representation.
      */
-    double toNumber();
+    BigDecimal toNumber();
+
+    /**
+     * service internal message value for suspend when acynch call
+     */
+    public static final Value SUSPEND = new Value() {
+        @Override
+        public BigDecimal toNumber() {
+            return null;
+        }
+
+        @Override
+        public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return "$SUSPEND";
+        }
+    };
 }

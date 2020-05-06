@@ -1,17 +1,15 @@
 package ru.maratislamov.script;
 
-import ru.maratislamov.script.parser.Parser;
-import ru.maratislamov.script.parser.Token;
-import ru.maratislamov.script.parser.TokenType;
-import ru.maratislamov.script.parser.TokenizeState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.maratislamov.script.parser.*;
 import ru.maratislamov.script.statements.Statement;
+import ru.maratislamov.script.values.Value;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static ru.maratislamov.script.values.Value.SUSPEND;
 
 /**
  * This defines a single class that contains an entire interpreter for a
@@ -98,137 +96,17 @@ import java.util.*;
  * possible, I'll leave a "HACK" note there explaining what and why. If you
  * make your own interpreter, you'll want to address those.
  *
- * @author Bob Nystrom
+ * @author Marat Islamov, Bob Nystrom
  */
 public class BotScript {
+    private static final Logger logger = LoggerFactory.getLogger(BotScript.class);
 
     // Loaded program as tokens
     List<Statement> statements;
 
+    ScriptFunctionsImplemntator functionsImplemntator;
+
     public final Map<String, Integer> labels;
-
-    // Tokenizing (lexing) -----------------------------------------------------
-
-    /**
-     * This function takes a script as a string of characters and chunks it into
-     * a sequence of tokens. Each token is a meaningful unit of program, like a
-     * variable name, a number, a string, or an operator.
-     */
-    private List<Token> tokenize(InputStream inputStream) {
-        List<Token> tokens = new ArrayList<Token>();
-
-        String token = "";
-        TokenizeState state = TokenizeState.DEFAULT;
-
-        // Many tokens are a single character, like operators and ().
-        String charTokens = "\n=!+-*/<>()";
-        TokenType[] tokenTypes = {TokenType.LINE, TokenType.EQUALS, TokenType.NOT,
-                TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
-                TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
-                TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN
-        };
-
-        // Scan through the code one character at a time, building up the list
-        // of tokens.
-
-
-
-        try (InputStreamReader source = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
-            
-            int iC = source.read();
-
-            while (iC != -1) {
-                char c = (char) iC;
-
-                switch (state) {
-                    case DEFAULT:
-                        if (charTokens.indexOf(c) != -1) {
-                            tokens.add(new Token(Character.toString(c),
-                                    tokenTypes[charTokens.indexOf(c)]));
-                        } else if (Character.isLetter(c)) {
-                            token += c;
-                            state = TokenizeState.WORD;
-                        } else if (Character.isDigit(c)) {
-                            token += c;
-                            state = TokenizeState.NUMBER;
-                        } else if (c == '"') {
-                            state = TokenizeState.STRING;
-                        } else if (c == '\'') {
-                            state = TokenizeState.COMMENT;
-                        }
-                        break;
-
-                    case WORD:
-                        if (Character.isLetterOrDigit(c) || c == '.') {
-                            token += c;
-                        } else if (c == ':') {
-                            tokens.add(new Token(token, TokenType.LABEL));
-                            token = "";
-                            state = TokenizeState.DEFAULT;
-                        } else {
-                            tokens.add(new Token(token, TokenType.WORD));
-                            token = "";
-                            state = TokenizeState.DEFAULT;
-                            ////i--; // Reprocess this character in the default state.
-                            continue;
-                        }
-                        break;
-
-                    case NUMBER:
-                        // HACK: Negative numbers and floating points aren't supported.
-                        // To get a negative number, just do 0 - <your number>.
-                        // To get a floating point, divide.
-                        if (Character.isDigit(c)) {
-                            token += c;
-                        } else {
-                            tokens.add(new Token(token, TokenType.NUMBER));
-                            token = "";
-                            state = TokenizeState.DEFAULT;
-                            ////i--; // Reprocess this character in the default state.
-                            continue;
-                        }
-                        break;
-
-                    case STRING:
-                        if (c == '"') {
-                            tokens.add(new Token(token, TokenType.STRING));
-                            token = "";
-                            state = TokenizeState.DEFAULT;
-                        } else {
-                            token += c;
-                        }
-                        break;
-
-                    case COMMENT:
-                        if (c == '\n') {
-                            state = TokenizeState.DEFAULT;
-                            ////i--;
-                            continue;
-                        }
-                        break;
-
-                    default:
-                        String substring = "" + c;
-                        while (c != -1) {
-                            if (c == '\n') break;
-                            substring += c;
-                            c = (char) source.read();
-                        }
-                        throw new Error("Unexpected token here: " + substring);
-                }
-
-                iC = source.read();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // HACK: Silently ignore any in-progress token when we run out of
-        // characters. This means that, for example, if a script has a string
-        // that's missing the closing ", it will just ditch it.
-        return tokens;
-    }
 
     // Token data --------------------------------------------------------------
 
@@ -253,8 +131,9 @@ public class BotScript {
      * the interpreter such as the values of all of the variables and the
      * current statement.
      */
-    public BotScript() {
-        labels = new HashMap<String, Integer>();
+    public BotScript(ScriptFunctionsImplemntator context) {
+        this.labels = new HashMap<>();
+        this.functionsImplemntator = context;
     }
 
     /**
@@ -263,7 +142,7 @@ public class BotScript {
     public void load(InputStream source) {
 
         // Tokenize.
-        List<Token> tokens = tokenize(source);
+        List<Token> tokens = Tokenizer.tokenize(source);
 
         // Parse.
         Parser parser = new Parser(this, tokens);
@@ -282,7 +161,7 @@ public class BotScript {
      * In an interpreter that didn't mix the interpretation logic in with the
      * AST node classes, this would be doing a lot more work.
      */
-    public void interpret(ScriptSession session) {
+    public <TSession extends ScriptSession> void interpret(TSession session) {
         if (statements == null) throw new RuntimeException("script is not loaded");
 
         // Interpret until we're done.
@@ -290,7 +169,14 @@ public class BotScript {
             int thisStatement = session.getCurrentStatement();
             Statement statementEntity = statements.get(thisStatement);
             session.incCurrentStatement();
-            statementEntity.execute(session);
+            Value value = statementEntity.execute(session, functionsImplemntator);
+
+            if (value == SUSPEND) {
+                session.decCurrentStatement();
+                return;
+            }
+
+
         }
 
     }

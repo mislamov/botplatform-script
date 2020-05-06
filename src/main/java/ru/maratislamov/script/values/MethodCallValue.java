@@ -1,16 +1,22 @@
 package ru.maratislamov.script.values;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.statements.Statement;
 
-import java.util.LinkedHashMap;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * A string value.
  */
-public class MethodCallValue implements Value {
+public class MethodCallValue implements Statement, Value {
+
+    private static final Logger logger = LoggerFactory.getLogger(MethodCallValue.class);
 
     private final String call;
 
@@ -26,18 +32,22 @@ public class MethodCallValue implements Value {
         return "$" + call;
     }
 
-    public double toNumber() {
+    public BigDecimal toNumber() {
         throw new ClassCastException("MethodCallValue can't be cast to Number");
     }
 
-    public Value evaluate(ScriptSession session) {
-        //TODO: асинхронный вывод по аналогии с input
-        List<Value> argValues = args.stream().map(e -> e.evaluate(session)).collect(Collectors.toList());
+    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+        try {
+            return executionContext.onExec(call, args.stream().map(e -> e.evaluate(session, executionContext)).collect(Collectors.toList()), session);
 
-        //return new NULLValue();
-        MapValue result = new MapValue(new LinkedHashMap<>());
-        //result.put("error", new StringValue("Сообщение от @BotFather не содержит имени созданного бота и токена"));
-        result.put("domain", new StringValue("https://domain.bitrix.ru"));
-        return result;
+        } catch (Exception | Error e) {
+            logger.error("CallMethodError[" + call + "]", e);
+            throw new Error("ERROR when call function " + call + ": " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+        return evaluate(session, executionContext);
     }
 }

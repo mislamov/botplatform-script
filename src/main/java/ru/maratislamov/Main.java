@@ -5,10 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import ru.maratislamov.script.BotScript;
+import ru.maratislamov.script.ScriptConsoleImplementator;
 import ru.maratislamov.script.ScriptSession;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 public class Main {
 
@@ -16,11 +18,14 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        Resource resource = new ClassPathResource("mainscript.bas");
+        Resource resource = new ClassPathResource("demo.bas");
+
         try (InputStream inputStream = resource.getInputStream()) {
-            BotScript botScript = new BotScript();
+
+            BotScript botScript = new BotScript(new ScriptConsoleImplementator());
+
             botScript.load(inputStream);
-            botScript.interpret(new ScriptSession());
+            botScript.interpret(new ScriptSession(UUID.randomUUID().toString()));
         }
     }
 

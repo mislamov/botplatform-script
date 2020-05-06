@@ -1,9 +1,11 @@
 package ru.maratislamov.script.values;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -16,14 +18,14 @@ public class LazyMapValue implements Value, MapValueInterface {
     }
 
     @Override
-    public MapValue evaluate(ScriptSession session) {
+    public MapValue evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
         MapValue result = new MapValue(new LinkedHashMap<>());
-        body.forEach((k,v) -> result.put(k, v.evaluate(session)));
+        body.forEach((k, v) -> result.put(k, v.evaluate(session, executionContext)));
         return result;
     }
 
     @Override
-    public double toNumber() {
+    public BigDecimal toNumber() {
         throw new ClassCastException("LazyMapValue to Number");
     }
 
@@ -38,8 +40,8 @@ public class LazyMapValue implements Value, MapValueInterface {
     }
 
     @Override
-    public Value get(String name, ScriptSession session) {
+    public Value get(String name, ScriptSession session, ScriptFunctionsImplemntator context) {
         Expression expression = body.get(name);
-        return expression==null?new NULLValue() : expression.evaluate(session);
+        return expression == null ? new NULLValue() : expression.evaluate(session, context);
     }
 }

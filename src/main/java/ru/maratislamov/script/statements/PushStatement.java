@@ -1,8 +1,10 @@
 package ru.maratislamov.script.statements;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.values.ListValue;
+import ru.maratislamov.script.values.Value;
 
 import java.util.ArrayList;
 
@@ -20,9 +22,9 @@ public class PushStatement implements Statement {
         this.value = value;
     }
 
-    public void execute(ScriptSession session) {
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
         ListValue valCollection = (ListValue) session.getVariables().computeIfAbsent(name, k -> new ListValue(new ArrayList<>()));
-        valCollection.push(value.evaluate(session));
+        return valCollection.push(value.evaluate(session, executionContext));
     }
 
 }

@@ -1,7 +1,9 @@
 package ru.maratislamov.script.statements;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.values.Value;
 
 /**
  * An assignment statement evaluates an expression and stores the result in
@@ -14,8 +16,8 @@ public class AssignStatement implements Statement {
         this.value = value;
     }
 
-    public void execute(ScriptSession session) {
-        session.getVariables().put(name, value.evaluate(session));
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+        return session.getVariables().put(name, value.evaluate(session, executionContext));
     }
 
     private final String name;

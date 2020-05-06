@@ -11,5 +11,5 @@ package ru.maratislamov.script.parser;
  */
 public enum TokenType {
     WORD, NUMBER, STRING, LABEL, LINE,
-    EQUALS, NOT, OPERATOR, LEFT_PAREN, RIGHT_PAREN, EOF
+    EQUALS, NOEQUALS, OPERATOR, LEFT_PAREN, RIGHT_PAREN, BEGIN_LIST, END_LIST, EOF, SEP_LIST;
 }

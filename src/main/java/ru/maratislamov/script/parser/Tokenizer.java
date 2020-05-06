@@ -1,4 +1,163 @@
 package ru.maratislamov.script.parser;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.maratislamov.script.BotScript;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Tokenizer {
+
+    private static final Logger logger = LoggerFactory.getLogger(Tokenizer.class);
+
+    // Tokenizing (lexing) -----------------------------------------------------
+
+    /**
+     * This function takes a script as a string of characters and chunks it into
+     * a sequence of tokens. Each token is a meaningful unit of program, like a
+     * variable name, a number, a string, or an operator.
+     */
+    public static List<Token> tokenize(InputStream inputStream) {
+        List<Token> tokens = new ArrayList<>();
+
+        String token = "";
+        TokenizeState state = TokenizeState.DEFAULT;
+
+        // Many tokens are a single character, like operators and ().
+        String charTokens = "\n=!+-*/<>()[],";
+        TokenType[] tokenTypes = {TokenType.LINE, TokenType.EQUALS, TokenType.NOEQUALS,
+                TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
+                TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
+                TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN, TokenType.BEGIN_LIST, TokenType.END_LIST, TokenType.SEP_LIST
+        };
+
+        // Scan through the code one character at a time, building up the list
+        // of tokens.
+
+        try (InputStreamReader source = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+
+            int iC = source.read();
+            char c = 0;
+
+            while (true) {
+                c = (char) iC;
+
+                switch (state) {
+
+                    case DEFAULT:
+                        if (iC == -1) return tokens;
+
+                        if (c == '!') {
+                            token += c;
+                            iC = source.read();
+                            c = (char) iC;
+                            if (c == '=') {
+                                tokens.add(new Token("!=", TokenType.NOEQUALS));
+                            } else {
+                                throw new Error("Unexpected token here: !" + debugString(iC, source));
+                            }
+
+                        } else if (charTokens.indexOf(c) != -1) {
+                            tokens.add(new Token(Character.toString(c), tokenTypes[charTokens.indexOf(c)]));
+                        } else if (Character.isLetter(c) || c == '_') {
+                            token += c;
+                            state = TokenizeState.WORD;
+                        } else if (Character.isDigit(c)) {
+                            token += c;
+                            state = TokenizeState.NUMBER;
+                        } else if (c == '"') {
+                            state = TokenizeState.STRING;
+                        } else if (c == '\'') {
+                            state = TokenizeState.COMMENT;
+                        }
+                        break;
+
+                    case WORD:
+                        if (Character.isLetterOrDigit(c) || c == '.' || c == '_') {
+                            token += c;
+                        } else if (c == ':') {
+                            tokens.add(new Token(token, TokenType.LABEL));
+                            token = "";
+                            state = TokenizeState.DEFAULT;
+                        } else {
+                            tokens.add(new Token(token, TokenType.WORD));
+                            token = "";
+                            state = TokenizeState.DEFAULT;
+                            ////i--; // Reprocess this character in the default state.
+                            continue;
+                        }
+                        break;
+
+                    case NUMBER:
+                        // HACK: Negative numbers and floating points aren't supported.
+                        // To get a negative number, just do 0 - <your number>.
+                        // To get a floating point, divide.
+                        if (Character.isDigit(c) || c == '.') {
+                            token += c;
+                        } else {
+                            tokens.add(new Token(token, TokenType.NUMBER));
+                            token = "";
+                            state = TokenizeState.DEFAULT;
+                            ////i--; // Reprocess this character in the default state.
+                            continue;
+                        }
+                        break;
+
+                    case STRING:
+                        if (c == '"') {
+                            tokens.add(new Token(token, TokenType.STRING));
+                            token = "";
+                            state = TokenizeState.DEFAULT;
+                        } else {
+                            token += c;
+                        }
+                        break;
+
+                    case COMMENT:
+                        if (c == '\n') {
+                            state = TokenizeState.DEFAULT;
+                            ////i--;
+                            continue;
+                        }
+                        break;
+
+                    default:
+                        throw new Error("Unexpected token here: " + debugString(iC, source));
+                }
+
+                iC = source.read();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // HACK: Silently ignore any in-progress token when we run out of
+        // characters. This means that, for example, if a script has a string
+        // that's missing the closing ", it will just ditch it.
+        return tokens;
+    }
+
+
+    private static String debugString(int iC, InputStreamReader source) {
+        String substring = "" + iC;
+
+        while (iC != -1) {
+            if (iC == '\n') break;
+            substring += (char) iC;
+            try {
+                iC = source.read();
+
+            } catch (IOException e) {
+                logger.error(e.toString());
+            }
+        }
+        return substring;
+    }
+
 }

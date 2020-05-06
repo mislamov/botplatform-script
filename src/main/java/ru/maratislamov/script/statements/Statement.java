@@ -1,6 +1,8 @@
 package ru.maratislamov.script.statements;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
+import ru.maratislamov.script.values.Value;
 
 /**
  * Base interface for a Jasic statement. The different supported statement
@@ -12,5 +14,5 @@ public interface Statement {
      * statement causes. "print" statements will display text here, "goto"
      * statements will change the current statement, etc.
      */
-    void execute(ScriptSession session);
+    Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext);
 }

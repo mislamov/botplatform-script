@@ -1,5 +1,6 @@
 package ru.maratislamov.script.expressions;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.Value;
 
@@ -17,5 +18,5 @@ public interface Expression {
      *
      * @return The value of the calculated expression.
      */
-    Value evaluate(ScriptSession session);
+    Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext);
 }

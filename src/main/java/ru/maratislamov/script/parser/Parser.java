@@ -1,18 +1,14 @@
 package ru.maratislamov.script.parser;
 
 import ru.maratislamov.script.BotScript;
+import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.OperatorExpression;
 import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.statements.*;
-import ru.maratislamov.script.values.MethodCallValue;
-import ru.maratislamov.script.values.NULLValue;
-import ru.maratislamov.script.values.NumberValue;
-import ru.maratislamov.script.values.StringValue;
+import ru.maratislamov.script.values.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This defines the Jasic parser. The parser takes in a sequence of tokens
@@ -61,7 +57,7 @@ public class Parser {
         List<Statement> statements = new ArrayList<Statement>();
 
         while (true) {
-            // Ignore empty lines.
+            // Counting empty lines.
             while (match(TokenType.LINE)) {
                 positionLine++;
             }
@@ -77,14 +73,16 @@ public class Parser {
                 statements.add(new AssignStatement(name, value));
 
             } else if (match("print")) {
-                statements.add(new PrintStatement(expression(), "text"));
+                statements.add(new MethodCallValue("print", Collections.singletonList(expression())));
+
             } else if (match("inline")) {
-                statements.add(new PrintStatement(expression(), "inline"));
+                statements.add(new MethodCallValue("inline", Collections.singletonList(expression())));
+
             } else if (match("button")) {
-                statements.add(new PrintStatement(expression(), "button"));
+                statements.add(new MethodCallValue("button", Collections.singletonList(expression())));
 
             } else if (match("input")) {
-                statements.add(new InputStatement(botScript, consume(TokenType.WORD).text, positionLine));
+                statements.add(new MethodCallValue("input", Collections.singletonList(new TermValue(consume(TokenType.WORD).text))));
 
             } else if (match("goto")) {
                 statements.add(new GotoStatement(botScript, consume(TokenType.WORD).text));
@@ -126,6 +124,20 @@ public class Parser {
      * @return The parsed expression.
      */
     private Expression expression() {
+        // список
+        if (match(TokenType.BEGIN_LIST)){
+            List<Expression> expressionList = new ArrayList<>();
+
+            while (!match(TokenType.END_LIST)){
+                expressionList.add(expression());
+                if (!match(TokenType.SEP_LIST) && !peek(TokenType.END_LIST)){
+                    throw new Error("List parse error here: " + debugCurrentPosition());
+                }
+            }
+            return new ListValue(expressionList);
+        }
+
+        // оператор
         return operator();
     }
 
@@ -155,10 +167,10 @@ public class Parser {
         Expression expression = atomic();
 
         // Keep building operator expressions as long as we have operators.
-        while (match(TokenType.OPERATOR) ||
-                match(TokenType.EQUALS) || (match(TokenType.NOT, TokenType.EQUALS))) {
-            char operator = last(1).text.charAt(0);
-            if (operator == '=' && last(2).text.charAt(0) == '!') operator = '!';
+        while (match(TokenType.OPERATOR) || match(TokenType.EQUALS) || (match(TokenType.NOEQUALS))) {
+            String operator = last(1).text;
+//            if (operator == '=' && last(2).text.charAt(0) == '!')
+//                operator = '!';
             Expression right = atomic();
             expression = new OperatorExpression(expression, operator, right);
         }
@@ -174,6 +186,7 @@ public class Parser {
      * @return The parsed expression.
      */
     private Expression atomic() {
+
         if (match(TokenType.WORD)) {
             // A word is a reference to a variable.
             String prev = last(1).text;
@@ -188,21 +201,22 @@ public class Parser {
                 assert get(0).type == TokenType.STRING;
                 ++position;
 
-                List argList = new ArrayList<>();
+                List<Expression> argList = new ArrayList<>();
 
                 while (get(0).type != TokenType.LINE) {
                     Expression expression = expression();
                     argList.add(expression);
                 }
-
                 return new MethodCallValue(call, argList);
             }
-
             return new VariableExpression(prev);
+
         } else if (match(TokenType.NUMBER)) {
-            return new NumberValue(Double.parseDouble(last(1).text));
+            return new NumberValue(last(1).text);
+
         } else if (match(TokenType.STRING)) {
             return new StringValue(last(1).text);
+
         } else if (match(TokenType.LEFT_PAREN)) {
             // The contents of a parenthesized expression can be any
             // expression. This lets us "restart" the precedence cascade
@@ -212,6 +226,7 @@ public class Parser {
             consume(TokenType.RIGHT_PAREN);
             return expression;
         }
+
         throw new Error("Can't parse line " + (positionLine + 1) + ": " + debugCurrentPosition());
     }
 
@@ -254,6 +269,11 @@ public class Parser {
         return true;
     }
 
+    private boolean peek(TokenType type) {
+        if (get(0).type != type) return false;
+        return true;
+    }
+
     /**
      * Consumes the next token if it's a word token with the given name.
      *
@@ -289,7 +309,8 @@ public class Parser {
      * @return The consumed token.
      */
     private Token consume(String name) {
-        if (!match(name)) throw new Error("Expected '" + name + "' in line " + (positionLine + 1) + " but: " + debugCurrentPosition());
+        if (!match(name))
+            throw new Error("Expected '" + name + "' in line " + (positionLine + 1) + " but: " + debugCurrentPosition());
         return last(1);
     }
 

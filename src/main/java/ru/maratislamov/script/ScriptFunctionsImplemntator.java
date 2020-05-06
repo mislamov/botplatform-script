@@ -5,10 +5,10 @@ import ru.maratislamov.script.values.Value;
 import java.util.List;
 
 /**
- * Контекст выполнения скрипта
+ * Обработчик функций и методов скрипта
  */
-public abstract class ScriptExecutionContext {
+public abstract class ScriptFunctionsImplemntator<T> {
 
-    public abstract Value onExec(String fname, List<Value> args, ScriptSession scriptSession) throws Exception;
+    public abstract Value onExec(String fname, List<Value> args, ScriptSession<T> scriptSession) throws Exception;
 
 }

@@ -1,38 +1,41 @@
 package ru.maratislamov.script.values;
 
+import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
+import ru.maratislamov.script.expressions.Expression;
 
-import java.util.Arrays;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * A numeric value. Jasic uses doubles internally for all numbers.
  */
-public class ListValue implements Value, MapValueInterface {
+public class ListValue implements Expression, Value, MapValueInterface {
 
-    private final List<Value> list;
+    private final List<Expression> list;
 
-    public ListValue(List<Value> value) {
+    public ListValue(List<Expression> value) {
         this.list = value;
     }
 
     @Override
     public String toString() {
-        return list == null ? "null" : Arrays.toString(list.toArray());
+        return list == null ? "null" : "[" + list.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
     }
 
-    public double toNumber() {
+    public BigDecimal toNumber() {
         throw new RuntimeException("can't cast List to Number for " + toString());
     }
 
-    public ListValue evaluate(ScriptSession session) {
-        return new ListValue(this.list.stream().map(v -> v.evaluate(session)).collect(Collectors.toList()));
+    public ListValue evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+        return new ListValue(this.list.stream().map(v -> v.evaluate(session, executionContext)).collect(Collectors.toList()));
     }
 
-    public void push(Value value) {
+    public Value push(Value value) {
         if (list == null) throw new RuntimeException("Unexpected value == null when push in List");
         list.add(value);
+        return value;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class ListValue implements Value, MapValueInterface {
     }
 
     @Override
-    public Value get(String name, ScriptSession session) {
+    public Value get(String name, ScriptSession session, ScriptFunctionsImplemntator context) {
         if (name.equals("size")) return new NumberValue(list.size());
         return null;
     }

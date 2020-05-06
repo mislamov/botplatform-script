@@ -15,12 +15,12 @@ import java.util.stream.Collectors;
 /**
  * Контекст выполнения скрипта
  */
-public class ConsoleContextExecution extends ScriptFunctionsImplemntator {
+public class ScriptConsoleImplementator<T> extends ScriptFunctionsImplemntator<T> {
 
-    Logger logger = LoggerFactory.getLogger(ConsoleContextExecution.class);
+    Logger logger = LoggerFactory.getLogger(ScriptConsoleImplementator.class);
 
     @Override
-    public Value onExec(String fname, List<Value> args, ScriptSession session) throws Exception {
+    public Value onExec(String fname, List<Value> args, ScriptSession<T> session) throws Exception {
         String function = fname.toLowerCase();
 
         switch (function) {
