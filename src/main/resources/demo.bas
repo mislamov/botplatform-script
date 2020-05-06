@@ -1,6 +1,7 @@
 start:
     print "Приветствую!\n\nЯ создам для вас бота, который сам опросит лидов и сохранит их со всеми ответами в ваш Битрикс24.\n\nВсё максимально просто - никаких конструкторов и программирования!\n\nОтвечайте на мои вопросы, следуйте моим инструкциям и уже через несколько минут у вас будет свой бот, который автоматизирует прием заявок."
-    inline "Мне нужен бот"
+    xxx = 2 + 0.2
+    inline ["Мне нужен бот", "Отмена" + xxx, [1,2,3]]
     input cmd
     if cmd = "Мне нужен бот" then newbot
     goto start
@@ -43,11 +44,10 @@ _botfather:
 
     input botFatherMessage
     botResult = EXEC "VERIFYBOT" botFatherMessage
-    if botResult.error = NULL then bye
-    print botError
+    if botResult.error == NULL then bye
+    print botResult.error
     goto _botfather
 
 bye:
     print "На этом всё! Создайте своего первого лида в своем новом боте"
     print welcomeText + questions
-    
