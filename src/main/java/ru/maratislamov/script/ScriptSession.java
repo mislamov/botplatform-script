@@ -6,19 +6,19 @@ import java.util.HashMap;
 
 public class ScriptSession<T> {
 
-    private T uid;
+    private T user;
 
     private MapValue variables = new MapValue(new HashMap<>());
 
     private int currentStatement;
 
-    public ScriptSession(T uid) {
-        this.uid = uid;
+    public ScriptSession(T user) {
+        this.user = user;
         this.currentStatement = 0;
     }
 
-    public ScriptSession(T uid, MapValue variables, int currentStatement) {
-        this.uid = uid;
+    public ScriptSession(T user, MapValue variables, int currentStatement) {
+        this.user = user;
         this.variables = variables;
         this.currentStatement = currentStatement;
     }
@@ -47,11 +47,11 @@ public class ScriptSession<T> {
         --currentStatement;
     }
 
-    public T getUid() {
-        return uid;
+    public T getUser() {
+        return user;
     }
 
-    public void setUid(T uid) {
-        this.uid = uid;
+    public void setUser(T user) {
+        this.user = user;
     }
 }

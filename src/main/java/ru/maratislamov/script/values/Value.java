@@ -54,4 +54,22 @@ public interface Value extends Expression {
             return "$SUSPEND";
         }
     };
+
+    public static final Value NULL = new Value() {
+        @Override
+        public BigDecimal toNumber() {
+            return null;
+        }
+
+        @Override
+        public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+            return this;
+        }
+
+        @Override
+        public String toString() {
+            return "NULL";
+        }
+    };
+
 }

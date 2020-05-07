@@ -8,22 +8,12 @@ import ru.maratislamov.script.values.Value;
 /**
  * A "goto" statement jumps execution to another place in the program.
  */
-public class GotoStatement implements Statement {
-    private final BotScript botScript;
+public class EOFStatement implements Statement {
 
-    private final String label;
-
-
-    public GotoStatement(BotScript botScript, String label) {
-        this.botScript = botScript;
-        this.label = label;
+    public EOFStatement() {
     }
 
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
-        if (botScript.labels.containsKey(label)) {
-            session.setCurrentStatement(botScript.labels.get(label).intValue());
-            return null;
-        }
-        throw new Error("Label " + label + " not found");
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
+        return null;
     }
 }

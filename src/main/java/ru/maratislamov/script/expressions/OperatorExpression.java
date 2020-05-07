@@ -4,11 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
-import ru.maratislamov.script.values.NULLValue;
 import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.Value;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -45,21 +45,31 @@ public class OperatorExpression implements Expression {
             Value leftVal = left.evaluate(session, executionContext);
             Value rightVal = right.evaluate(session, executionContext);
 
+
+            // операции с NULL
+            if (leftVal == Value.NULL || rightVal == Value.NULL) {
+                if (Objects.equals(operator, "=") || operator.equals("=="))
+                    return new NumberValue(leftVal == rightVal ? 1 : 0);
+                if (Objects.equals(operator, "!=")) return new NumberValue(leftVal == rightVal ? 0 : 1);
+                Value secondValue = leftVal == Value.NULL ? rightVal : leftVal;
+                if (secondValue instanceof NumberValue) throw new Error("Unsupported operation " + operator + " for NULL and Number");
+            }
+
+
             switch (operator) {
                 case "=":
                 case "==":
                 case "!=":
                     // Coerce to the left argument's type, then compare.
                     if (leftVal instanceof NumberValue) {
-                        return new NumberValue((leftVal.toNumber() ==
-                                rightVal.toNumber()) == (!Objects.equals(operator, "!=")) ? 1 : 0);
+                        return new NumberValue((Objects.equals(leftVal.toNumber(), rightVal.toNumber())) == (!Objects.equals(operator, "!=")) ? 1 : 0);
 
-                    } else if (leftVal instanceof NULLValue) {
-                        return new NumberValue(rightVal instanceof NULLValue && !Objects.equals(operator, "!=") ? 1 : 0);
+                    } else if (leftVal == Value.NULL) {
+                        return new NumberValue(rightVal == Value.NULL && !Objects.equals(operator, "!=") ? 1 : 0);
 
                     } else {
                         return new NumberValue(leftVal.toString().equals(
-                                rightVal.toString()) == (!Objects.equals(operator, "!=") ) ? 1 : 0);
+                                rightVal.toString()) == (!Objects.equals(operator, "!=")) ? 1 : 0);
                     }
 
                 case "+":

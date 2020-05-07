@@ -75,12 +75,6 @@ public class Parser {
             } else if (match("print")) {
                 statements.add(new MethodCallValue("print", Collections.singletonList(expression())));
 
-            } else if (match("inline")) {
-                statements.add(new MethodCallValue("inline", Collections.singletonList(expression())));
-
-            } else if (match("button")) {
-                statements.add(new MethodCallValue("button", Collections.singletonList(expression())));
-
             } else if (match("input")) {
                 statements.add(new MethodCallValue("input", Collections.singletonList(new TermValue(consume(TokenType.WORD).text))));
 
@@ -99,6 +93,9 @@ public class Parser {
                 consume("then");
                 String label = consume(TokenType.WORD).text;
                 statements.add(new IfThenStatement(botScript, condition, label));
+
+            } else if (match(TokenType.WORD)) {
+                statements.add(new MethodCallValue(last(1).text, Collections.singletonList(expression())));
 
             } else {
                 if (match(TokenType.EOF))
@@ -125,12 +122,12 @@ public class Parser {
      */
     private Expression expression() {
         // список
-        if (match(TokenType.BEGIN_LIST)){
+        if (match(TokenType.BEGIN_LIST)) {
             List<Expression> expressionList = new ArrayList<>();
 
-            while (!match(TokenType.END_LIST)){
+            while (!match(TokenType.END_LIST)) {
                 expressionList.add(expression());
-                if (!match(TokenType.SEP_LIST) && !peek(TokenType.END_LIST)){
+                if (!match(TokenType.SEP_LIST) && !peek(TokenType.END_LIST)) {
                     throw new Error("List parse error here: " + debugCurrentPosition());
                 }
             }
@@ -192,7 +189,7 @@ public class Parser {
             String prev = last(1).text;
 
             if ("NULL".equals(prev)) {
-                return new NULLValue();
+                return Value.NULL;
             }
 
             if ("EXEC".equals(prev)) {

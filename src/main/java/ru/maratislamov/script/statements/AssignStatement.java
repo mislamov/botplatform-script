@@ -16,8 +16,8 @@ public class AssignStatement implements Statement {
         this.value = value;
     }
 
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
-        return session.getVariables().put(name, value.evaluate(session, executionContext));
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
+        return session.getVariables().put(name, value.evaluate(session, functionsImplemntator));
     }
 
     private final String name;

@@ -5,7 +5,10 @@ import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +39,13 @@ public class ListValue implements Expression, Value, MapValueInterface {
         if (list == null) throw new RuntimeException("Unexpected value == null when push in List");
         list.add(value);
         return value;
+    }
+
+    public void forEach(Consumer<Value> action, ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+        Objects.requireNonNull(action);
+        for (Expression t : list) {
+            action.accept(t instanceof Value ? (Value) t : t.evaluate(session, executionContext));
+        }
     }
 
     @Override

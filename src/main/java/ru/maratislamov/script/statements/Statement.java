@@ -14,5 +14,5 @@ public interface Statement {
      * statement causes. "print" statements will display text here, "goto"
      * statements will change the current statement, etc.
      */
-    Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext);
+    Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator);
 }

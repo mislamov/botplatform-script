@@ -18,7 +18,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        Resource resource = new ClassPathResource("demo.bas");
+       Resource resource = new ClassPathResource("demo.bas");
 
         try (InputStream inputStream = resource.getInputStream()) {
 

@@ -2,7 +2,6 @@ package ru.maratislamov.script.expressions;
 
 import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
-import ru.maratislamov.script.values.NULLValue;
 import ru.maratislamov.script.values.MapValueInterface;
 import ru.maratislamov.script.values.Value;
 
@@ -31,16 +30,16 @@ public class VariableExpression implements Expression {
             for (String vr : path) {
                 value = variables.get(vr, session, context);
 
-                if (value == null) return new NULLValue();
+                if (value == null) return Value.NULL;
 
                 if (value instanceof MapValueInterface) {
                     variables = (MapValueInterface) value;
                 }
             }
-            return value == null ? new NULLValue() : value;
+            return value == null ? Value.NULL : value;
         }
 
-        return new NULLValue();
+        return Value.NULL;
     }
 
     @Override

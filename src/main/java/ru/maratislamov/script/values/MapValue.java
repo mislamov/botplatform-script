@@ -5,6 +5,8 @@ import ru.maratislamov.script.ScriptSession;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -24,6 +26,10 @@ public class MapValue implements Value, MapValueInterface {
     @Override
     public String toString() {
         return "{" + StringUtils.join(body.keySet(), ",") + "}";
+    }
+
+    public static MapValue error(String text){
+        return new MapValue(Collections.singletonMap("error", new StringValue(text)));
     }
 
     @Override

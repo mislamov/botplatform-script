@@ -47,7 +47,7 @@ public class MethodCallValue implements Statement, Value {
     }
 
     @Override
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
-        return evaluate(session, executionContext);
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
+        return evaluate(session, functionsImplemntator);
     }
 }

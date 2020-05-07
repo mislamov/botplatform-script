@@ -25,9 +25,9 @@ public class PrintStatement implements Statement {
         this.expression = expression;
     }
 
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
         //todo: use type: text, inline, button
-        Value value = expression.evaluate(session, executionContext);
+        Value value = expression.evaluate(session, functionsImplemntator);
         System.out.println(type + ": " + value.toString());
         return value;
     }

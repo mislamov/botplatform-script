@@ -175,9 +175,15 @@ public class BotScript {
                 session.decCurrentStatement();
                 return;
             }
-
-
         }
 
+        onFinish(session);
+    }
+
+    public <TSession extends ScriptSession> void onFinish(TSession session) {
+
+        logger.info("THE END");
+        // todo: сохраняем итоги
+        session.setCurrentStatement(0);
     }
 }

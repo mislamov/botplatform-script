@@ -1,4 +1,5 @@
 start:
+    keyboard NULL
     print "Приветствую!\n\nЯ создам для вас бота, который сам опросит лидов и сохранит их со всеми ответами в ваш Битрикс24.\n\nВсё максимально просто - никаких конструкторов и программирования!\n\nОтвечайте на мои вопросы, следуйте моим инструкциям и уже через несколько минут у вас будет свой бот, который автоматизирует прием заявок."
     xxx = 2 + 0.2
     inline ["Мне нужен бот", "Отмена" + xxx, [1,2,3]]
@@ -12,11 +13,12 @@ newbot:
 
     print "Далее заполните пункты вашего опросника. По одному вопросу на одно отдельное сообщение. Сообщения можно редактировать при необходимости. Когда опросник будет заполнен - нажмите на /finish"
     button "/finish"
+    questions = []
 _askquestion:
     input cmd
     if cmd = "/finish" then _questionresult
     push questions cmd
-    goto askquestion
+    goto _askquestion
 _questionresult:
     print "questions.size = " + questions.size
     if questions.size > 0 then _bitrix
@@ -44,7 +46,7 @@ _botfather:
 
     input botFatherMessage
     botResult = EXEC "VERIFYBOT" botFatherMessage
-    if botResult.error == NULL then bye
+    if botResult.error = NULL then bye
     print botResult.error
     goto _botfather
 

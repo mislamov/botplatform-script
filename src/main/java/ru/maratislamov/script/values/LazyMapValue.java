@@ -42,6 +42,6 @@ public class LazyMapValue implements Value, MapValueInterface {
     @Override
     public Value get(String name, ScriptSession session, ScriptFunctionsImplemntator context) {
         Expression expression = body.get(name);
-        return expression == null ? new NULLValue() : expression.evaluate(session, context);
+        return expression == null ? Value.NULL : expression.evaluate(session, context);
     }
 }
