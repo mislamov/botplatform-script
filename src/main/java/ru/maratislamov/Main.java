@@ -25,7 +25,9 @@ public class Main {
             BotScript botScript = new BotScript(new ScriptConsoleImplementator());
 
             botScript.load(inputStream);
-            botScript.interpret(new ScriptSession(UUID.randomUUID().toString()));
+            ScriptSession session = new ScriptSession(UUID.randomUUID().toString());
+            session.setActive(true);
+            botScript.interpret(session);
         }
     }
 

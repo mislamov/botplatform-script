@@ -1,14 +1,16 @@
 package ru.maratislamov.script.parser;
 
 import ru.maratislamov.script.BotScript;
-import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.OperatorExpression;
 import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.statements.*;
 import ru.maratislamov.script.values.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This defines the Jasic parser. The parser takes in a sequence of tokens
@@ -35,8 +37,13 @@ public class Parser {
     }
 
     public String debugCurrentPosition() {
+        int i = 0;
+        while (get(i).type == TokenType.LINE) {
+            --i;
+        }
+
         StringBuilder result = new StringBuilder();
-        for (int i = 0; i < 10; ++i) {
+        for (; i < 10; ++i) {
             result.append(get(i).text);
             result.append(" ");
         }
@@ -72,27 +79,37 @@ public class Parser {
                 Expression value = expression();
                 statements.add(new AssignStatement(name, value));
 
-            } else if (match("print")) {
-                statements.add(new MethodCallValue("print", Collections.singletonList(expression())));
-
-            } else if (match("input")) {
-                statements.add(new MethodCallValue("input", Collections.singletonList(new TermValue(consume(TokenType.WORD).text))));
-
             } else if (match("goto")) {
                 statements.add(new GotoStatement(botScript, consume(TokenType.WORD).text));
+
+            } else if (match("flush")) {
+                statements.add(new MethodCallValue("flush", null));
+
+            } else if (match("getcontact")) {
+                List<Expression> argList = new ArrayList<>();
+                while (get(0).type != TokenType.LINE) {
+                    Expression expression = expression();
+                    argList.add(expression);
+                }
+
+                statements.add(new MethodCallValue("getcontact", argList));
 
             } else if (match("push")) {
                 String varMap = consume(TokenType.WORD).text;
                 Expression value = expression();
                 statements.add(new PushStatement(varMap, value));
 
-                //} else if (match("EXEC")) {
-
             } else if (match("if")) {
                 Expression condition = expression();
                 consume("then");
                 String label = consume(TokenType.WORD).text;
                 statements.add(new IfThenStatement(botScript, condition, label));
+
+//            } else if (match("print")) {
+//                statements.add(new MethodCallValue("print", Collections.singletonList(expression())));
+//
+            } else if (match("input")) {
+                statements.add(new MethodCallValue("input", Collections.singletonList(new TermValue(consume(TokenType.WORD).text))));
 
             } else if (match(TokenType.WORD)) {
                 statements.add(new MethodCallValue(last(1).text, Collections.singletonList(expression())));
@@ -187,12 +204,17 @@ public class Parser {
         if (match(TokenType.WORD)) {
             // A word is a reference to a variable.
             String prev = last(1).text;
+            String prevUpper = prev.toUpperCase();
 
-            if ("NULL".equals(prev)) {
+            if ("NULL".equals(prevUpper)) {
                 return Value.NULL;
             }
 
-            if ("EXEC".equals(prev)) {
+//            if ("FLUSH".equals(prev)) {
+//                return new MethodCallValue("flush", null);
+//            }
+
+            if ("EXEC".equals(prevUpper) || "CALL".equals(prevUpper)) {
                 // вызов внешней функции
                 String call = get(0).text;
                 assert get(0).type == TokenType.STRING;

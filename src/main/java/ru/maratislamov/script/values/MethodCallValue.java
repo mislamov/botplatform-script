@@ -36,9 +36,15 @@ public class MethodCallValue implements Statement, Value {
         throw new ClassCastException("MethodCallValue can't be cast to Number");
     }
 
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+    @Override
+    public Value copy() {
+        throw new RuntimeException("NYR");
+    }
+
+    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
         try {
-            return executionContext.onExec(call, args.stream().map(e -> e.evaluate(session, executionContext)).collect(Collectors.toList()), session);
+            List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> e.evaluate(session, funcImpl)).collect(Collectors.toList());
+            return funcImpl.onExec(call, args, session);
 
         } catch (Exception | Error e) {
             logger.error("CallMethodError[" + call + "]", e);

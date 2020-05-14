@@ -18,6 +18,9 @@ public class ScriptConsoleImplementator<T> extends ScriptFunctionsImplemntator<T
 
     Logger logger = LoggerFactory.getLogger(ScriptConsoleImplementator.class);
 
+    public ScriptConsoleImplementator() {
+    }
+
     @Override
     public Value onExec(String fname, List<Value> args, ScriptSession<T> session) throws Exception {
         String function = fname.toLowerCase();
@@ -25,7 +28,8 @@ public class ScriptConsoleImplementator<T> extends ScriptFunctionsImplemntator<T
         switch (function) {
             case "print":
             case "inline":
-            case "button":
+            case "keyboard":
+            case "getcontact":
                 System.out.println(args.stream().map(Value::toString).collect(Collectors.joining(" ")));
                 return null;
 

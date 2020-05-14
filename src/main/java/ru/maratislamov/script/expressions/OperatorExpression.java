@@ -4,11 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
-import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.NumberValue;
+import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.Value;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -40,10 +39,10 @@ public class OperatorExpression implements Expression {
         return a.compareTo(b);
     }
 
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
         try {
-            Value leftVal = left.evaluate(session, executionContext);
-            Value rightVal = right.evaluate(session, executionContext);
+            Value leftVal = left.evaluate(session, funcImpl);
+            Value rightVal = right.evaluate(session, funcImpl);
 
 
             // операции с NULL

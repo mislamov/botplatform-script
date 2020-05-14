@@ -5,9 +5,7 @@ import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 
 import java.math.BigDecimal;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -22,6 +20,11 @@ public class ListValue implements Expression, Value, MapValueInterface {
         this.list = value;
     }
 
+    public ListValue(Expression... values) {
+        this.list = new ArrayList<>();
+        Collections.addAll(this.list, values);
+    }
+
     @Override
     public String toString() {
         return list == null ? "null" : "[" + list.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
@@ -31,8 +34,13 @@ public class ListValue implements Expression, Value, MapValueInterface {
         throw new RuntimeException("can't cast List to Number for " + toString());
     }
 
-    public ListValue evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
-        return new ListValue(this.list.stream().map(v -> v.evaluate(session, executionContext)).collect(Collectors.toList()));
+    @Override
+    public Value copy() {
+        return new ListValue(new ArrayList<>(list));
+    }
+
+    public ListValue evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+        return new ListValue(this.list.stream().map(v -> v.evaluate(session, funcImpl)).collect(Collectors.toList()));
     }
 
     public Value push(Value value) {
@@ -41,10 +49,24 @@ public class ListValue implements Expression, Value, MapValueInterface {
         return value;
     }
 
-    public void forEach(Consumer<Value> action, ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+    public Value popLast(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+        if (list == null) throw new RuntimeException("Unexpected value == null when popLast in List");
+        if (list.isEmpty()) return NULL;
+        Expression expression = list.remove(list.size() - 1);
+        return expression.evaluate(session, funcImpl);
+    }
+
+    public Value popFirst(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+        if (list == null) throw new RuntimeException("Unexpected value == null when popFirst in List");
+        if (list.isEmpty()) return NULL;
+        Expression expression = list.remove(0);
+        return expression.evaluate(session, funcImpl);
+    }
+
+    public void forEach(Consumer<Value> action, ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
         Objects.requireNonNull(action);
         for (Expression t : list) {
-            action.accept(t instanceof Value ? (Value) t : t.evaluate(session, executionContext));
+            action.accept(t instanceof Value ? (Value) t : t.evaluate(session, funcImpl));
         }
     }
 
@@ -57,5 +79,9 @@ public class ListValue implements Expression, Value, MapValueInterface {
     public Value get(String name, ScriptSession session, ScriptFunctionsImplemntator context) {
         if (name.equals("size")) return new NumberValue(list.size());
         return null;
+    }
+
+    public List<Expression> getList() {
+        return list;
     }
 }

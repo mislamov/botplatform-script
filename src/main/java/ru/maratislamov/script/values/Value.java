@@ -35,17 +35,24 @@ public interface Value extends Expression {
      */
     BigDecimal toNumber();
 
+    Value copy();
+
     /**
      * service internal message value for suspend when acynch call
      */
-    public static final Value SUSPEND = new Value() {
+    Value SUSPEND = new Value() {
         @Override
         public BigDecimal toNumber() {
             return null;
         }
 
         @Override
-        public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+        public Value copy() {
+            return this;
+        }
+
+        @Override
+        public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
             return null;
         }
 
@@ -55,21 +62,6 @@ public interface Value extends Expression {
         }
     };
 
-    public static final Value NULL = new Value() {
-        @Override
-        public BigDecimal toNumber() {
-            return null;
-        }
-
-        @Override
-        public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
-            return this;
-        }
-
-        @Override
-        public String toString() {
-            return "NULL";
-        }
-    };
+    Value NULL = NULLValue.NULL;
 
 }

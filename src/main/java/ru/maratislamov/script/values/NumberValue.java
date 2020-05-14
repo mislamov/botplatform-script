@@ -10,7 +10,18 @@ import java.math.BigDecimal;
  */
 public class NumberValue implements Value {
 
-    private final BigDecimal value;
+    private BigDecimal value;
+
+    public BigDecimal getValue() {
+        return value;
+    }
+
+    public void setValue(BigDecimal value) {
+        this.value = value;
+    }
+
+    public NumberValue() {
+    }
 
     public NumberValue(BigDecimal value) {
         this.value = value;
@@ -37,7 +48,12 @@ public class NumberValue implements Value {
         return value;
     }
 
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+    @Override
+    public Value copy() {
+        return new NumberValue(value);
+    }
+
+    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
         return this;
     }
 }

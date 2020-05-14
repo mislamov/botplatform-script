@@ -64,14 +64,18 @@ public class Tokenizer {
 
                         } else if (charTokens.indexOf(c) != -1) {
                             tokens.add(new Token(Character.toString(c), tokenTypes[charTokens.indexOf(c)]));
-                        } else if (Character.isLetter(c) || c == '_') {
+
+                        } else if (Character.isLetter(c) || c == '_' || c == '$') {
                             token += c;
                             state = TokenizeState.WORD;
+
                         } else if (Character.isDigit(c)) {
                             token += c;
                             state = TokenizeState.NUMBER;
+
                         } else if (c == '"') {
                             state = TokenizeState.STRING;
+
                         } else if (c == '\'') {
                             state = TokenizeState.COMMENT;
                         }

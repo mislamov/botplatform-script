@@ -12,6 +12,8 @@ public class ScriptSession<T> {
 
     private int currentStatement;
 
+    private boolean active = false; // активировать сессию нужно явно. Изначально неактивна
+
     public ScriptSession(T user) {
         this.user = user;
         this.currentStatement = 0;
@@ -29,6 +31,11 @@ public class ScriptSession<T> {
 
     public void setCurrentStatement(int currentStatement) {
         this.currentStatement = currentStatement;
+    }
+
+    public void clear(){
+        this.variables.getBody().clear();
+        currentStatement = 0;
     }
 
     public MapValue getVariables() {
@@ -53,5 +60,13 @@ public class ScriptSession<T> {
 
     public void setUser(T user) {
         this.user = user;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

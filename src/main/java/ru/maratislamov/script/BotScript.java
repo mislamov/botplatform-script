@@ -1,9 +1,11 @@
 package ru.maratislamov.script;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.parser.*;
 import ru.maratislamov.script.statements.Statement;
+import ru.maratislamov.script.values.MapValue;
 import ru.maratislamov.script.values.Value;
 
 import java.io.InputStream;
@@ -104,9 +106,13 @@ public class BotScript {
     // Loaded program as tokens
     List<Statement> statements;
 
+    @JsonIgnore
     ScriptFunctionsImplemntator functionsImplemntator;
 
     public final Map<String, Integer> labels;
+
+    // todo: вынести константы скрипта в персистентную сущность по логике близкой к ScriptSession (один скрипт на разных пользователей)
+    public MapValue constants;
 
     // Token data --------------------------------------------------------------
 
@@ -136,6 +142,16 @@ public class BotScript {
         this.functionsImplemntator = context;
     }
 
+    public BotScript(ScriptFunctionsImplemntator context, MapValue constants) {
+        this.labels = new HashMap<>();
+        this.functionsImplemntator = context;
+        this.constants = constants;
+    }
+
+    public ScriptFunctionsImplemntator getFunctionsImplemntator() {
+        return functionsImplemntator;
+    }
+
     /**
      * @param source A string containing the source code of a .jas script to interpret.
      */
@@ -161,8 +177,10 @@ public class BotScript {
      * In an interpreter that didn't mix the interpretation logic in with the
      * AST node classes, this would be doing a lot more work.
      */
-    public <TSession extends ScriptSession> void interpret(TSession session) {
+    public <TSession extends ScriptSession> TSession interpret(TSession session) {
         if (statements == null) throw new RuntimeException("script is not loaded");
+
+        if (!session.isActive()) throw new RuntimeException("Not active session for interpret");
 
         // Interpret until we're done.
         while (session.getCurrentStatement() < statements.size()) {
@@ -173,17 +191,20 @@ public class BotScript {
 
             if (value == SUSPEND) {
                 session.decCurrentStatement();
-                return;
+                return session;
             }
         }
 
-        onFinish(session);
+        return doFinish(session);
     }
 
-    public <TSession extends ScriptSession> void onFinish(TSession session) {
+    public <TSession extends ScriptSession> TSession doFinish(TSession session) {
 
+        session.setActive(false);
         logger.info("THE END");
         // todo: сохраняем итоги
         session.setCurrentStatement(0);
+
+        return session;
     }
 }

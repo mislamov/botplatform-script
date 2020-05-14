@@ -6,6 +6,7 @@ import ru.maratislamov.script.expressions.Expression;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -18,15 +19,22 @@ public class LazyMapValue implements Value, MapValueInterface {
     }
 
     @Override
-    public MapValue evaluate(ScriptSession session, ScriptFunctionsImplemntator executionContext) {
+    public MapValue evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
         MapValue result = new MapValue(new LinkedHashMap<>());
-        body.forEach((k, v) -> result.put(k, v.evaluate(session, executionContext)));
+        body.forEach((k, v) -> result.put(k, v.evaluate(session, funcImpl)));
         return result;
     }
 
     @Override
     public BigDecimal toNumber() {
         throw new ClassCastException("LazyMapValue to Number");
+    }
+
+    @Override
+    public Value copy() {
+        HashMap<String, Expression> map = new HashMap<>();
+        map.putAll(body);
+        return new LazyMapValue(map);
     }
 
     @Override

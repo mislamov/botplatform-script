@@ -1,5 +1,6 @@
 package ru.maratislamov.script;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.values.Value;
 
 import java.util.List;
@@ -10,5 +11,9 @@ import java.util.List;
 public abstract class ScriptFunctionsImplemntator<T> {
 
     public abstract Value onExec(String fname, List<Value> args, ScriptSession<T> scriptSession) throws Exception;
+
+    public ScriptFunctionsImplemntator() {
+    }
+
 
 }

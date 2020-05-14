@@ -5,30 +5,30 @@ import ru.maratislamov.script.ScriptSession;
 
 import java.math.BigDecimal;
 
-public class TermValue implements Value {
-    private final String word;
+public class NULLValue implements Value {
 
-    public TermValue(String word) {
-        this.word = word;
-    }
+    public static final NULLValue NULL = new NULLValue();
 
-    @Override
-    public String toString() {
-        return word;
+    private NULLValue() {
     }
 
     @Override
     public BigDecimal toNumber() {
-        throw new ClassCastException("Term to Number: \"" + word + "\".toNumber()");
+        return null;
     }
 
     @Override
     public Value copy() {
-        return new TermValue(word);
+        return this;
     }
 
     @Override
     public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "NULL";
     }
 }
