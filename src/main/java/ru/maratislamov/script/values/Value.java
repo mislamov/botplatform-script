@@ -64,4 +64,9 @@ public interface Value extends Expression {
 
     Value NULL = NULLValue.NULL;
 
+    public static Value from(Object val){
+        if (val == null) return NULL;
+        if (val instanceof Number) return new NumberValue(((Number) val).doubleValue());
+        return new StringValue(String.valueOf(val));
+    }
 }
