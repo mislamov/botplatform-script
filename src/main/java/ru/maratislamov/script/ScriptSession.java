@@ -4,9 +4,9 @@ import ru.maratislamov.script.values.MapValue;
 
 import java.util.HashMap;
 
-public class ScriptSession<T> {
+public class ScriptSession<ID> {
 
-    private T user;
+    private ID sessionId;
 
     private MapValue variables = new MapValue(new HashMap<>());
 
@@ -14,13 +14,13 @@ public class ScriptSession<T> {
 
     private boolean active = false; // активировать сессию нужно явно. Изначально неактивна
 
-    public ScriptSession(T user) {
-        this.user = user;
+    public ScriptSession(ID sessionId) {
+        this.sessionId = sessionId;
         this.currentStatement = 0;
     }
 
-    public ScriptSession(T user, MapValue variables, int currentStatement) {
-        this.user = user;
+    public ScriptSession(ID sessionId, MapValue variables, int currentStatement) {
+        this.sessionId = sessionId;
         this.variables = variables;
         this.currentStatement = currentStatement;
     }
@@ -54,12 +54,12 @@ public class ScriptSession<T> {
         --currentStatement;
     }
 
-    public T getUser() {
-        return user;
+    public ID getSessionId() {
+        return sessionId;
     }
 
-    public void setUser(T user) {
-        this.user = user;
+    public void setSessionId(ID sessionId) {
+        this.sessionId = sessionId;
     }
 
     public boolean isActive() {
