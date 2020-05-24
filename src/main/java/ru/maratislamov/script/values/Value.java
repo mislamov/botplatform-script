@@ -4,7 +4,9 @@ import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.*;
 
 /**
  * This is the base interface for a value. Values are the data that the
@@ -64,9 +66,51 @@ public interface Value extends Expression {
 
     Value NULL = NULLValue.NULL;
 
-    public static Value from(Object val){
+    static Value from(Object val) {
         if (val == null) return NULL;
         if (val instanceof Number) return new NumberValue(((Number) val).doubleValue());
+        if (val instanceof Map) {
+            MapValue mapValue = new MapValue();
+            Map mapVal = (Map) val;
+            mapVal.forEach((k, v) -> {
+                mapValue.put((String) k, from(v));
+            });
+            return mapValue;
+        }
+        if (val instanceof Collection) {
+            ListValue listValue = new ListValue();
+            ((Collection) val).forEach(v -> {
+                listValue.push(from(v));
+            });
+            return listValue;
+        }
+
         return new StringValue(String.valueOf(val));
+    }
+
+    static Serializable asObject(Value val) {
+        if (val == null) return null;
+        if (val instanceof MapValue) return asMap((MapValue) val);
+        if (val instanceof ListValue) return asList((ListValue) val);
+        if (val instanceof NumberValue) return ((NumberValue) val).getValue();
+        return val.toString();
+
+    }
+
+    static ArrayList asList(ListValue val) {
+        ArrayList result = new ArrayList();
+        val.getList().forEach(ex -> {
+            result.add(ex.evaluate(null, null));
+        });
+        return result;
+
+    }
+
+    static HashMap<String, Serializable> asMap(MapValue mapValue) {
+        HashMap<String, Serializable> result = new HashMap<>();
+        mapValue.getAll().forEach(e -> {
+            result.put(e.getKey(), asObject(e.getValue()));
+        });
+        return result;
     }
 }
