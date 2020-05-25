@@ -89,7 +89,7 @@ public interface Value extends Expression {
     }
 
     static Serializable asObject(Value val) {
-        if (val == null) return null;
+        if (val == null || val == NULL) return null;
         if (val instanceof MapValue) return asMap((MapValue) val);
         if (val instanceof ListValue) return asList((ListValue) val);
         if (val instanceof NumberValue) return ((NumberValue) val).getValue();
@@ -100,7 +100,7 @@ public interface Value extends Expression {
     static ArrayList asList(ListValue val) {
         ArrayList result = new ArrayList();
         val.getList().forEach(ex -> {
-            result.add(ex.evaluate(null, null));
+            result.add(asObject(ex.evaluate(null, null)));
         });
         return result;
 
