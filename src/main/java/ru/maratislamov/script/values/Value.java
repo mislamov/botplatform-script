@@ -6,7 +6,10 @@ import ru.maratislamov.script.expressions.Expression;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This is the base interface for a value. Values are the data that the
@@ -23,7 +26,7 @@ import java.util.*;
  * not the parser) as both runtime values, and as object representing
  * literals in code.
  */
-public interface Value extends Expression {
+public interface Value extends Expression, Serializable {
 
     /**
      * Value types override this to convert themselves to a string

@@ -58,6 +58,7 @@ public class Tokenizer {
                             c = (char) iC;
                             if (c == '=') {
                                 tokens.add(new Token("!=", TokenType.NOEQUALS));
+                                token = "";
                             } else {
                                 throw new Error("Unexpected token here: !" + debugString(iC, source));
                             }

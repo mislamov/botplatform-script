@@ -2,9 +2,10 @@ package ru.maratislamov.script;
 
 import ru.maratislamov.script.values.MapValue;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class ScriptSession<ID> {
+public class ScriptSession<ID> implements Serializable {
 
     private ID sessionId;
 
@@ -13,6 +14,9 @@ public class ScriptSession<ID> {
     private int currentStatement;
 
     private boolean active = false; // активировать сессию нужно явно. Изначально неактивна
+
+    protected ScriptSession() {
+    }
 
     public ScriptSession(ID sessionId) {
         this.sessionId = sessionId;

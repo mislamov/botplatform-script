@@ -9,7 +9,7 @@ public class NULLValue implements Value {
 
     public static final NULLValue NULL = new NULLValue();
 
-    private NULLValue() {
+    public NULLValue() {
     }
 
     @Override
