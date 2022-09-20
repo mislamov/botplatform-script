@@ -60,7 +60,7 @@ public class OperatorExpression implements Expression {
                 case "==":
                 case "!=":
                     // Coerce to the left argument's type, then compare.
-                    if (leftVal instanceof NumberValue) {
+                    if (leftVal instanceof NumberValue && rightVal instanceof NumberValue) {
                         return new NumberValue((Objects.equals(leftVal.toNumber(), rightVal.toNumber())) == (!Objects.equals(operator, "!=")) ? 1 : 0);
 
                     } else if (leftVal == Value.NULL) {

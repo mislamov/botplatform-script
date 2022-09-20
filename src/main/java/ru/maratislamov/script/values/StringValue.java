@@ -37,7 +37,11 @@ public class StringValue implements Value {
 
     @JsonIgnore
     public BigDecimal toNumber() {
-        return BigDecimal.valueOf(Double.parseDouble(value));
+        try {
+            return BigDecimal.valueOf(Double.parseDouble(value));
+        } catch (NumberFormatException ex){
+            return null; // NYR. Должна ли строка всегда преобразовываться в null если не число?
+        }
     }
 
     @JsonIgnore
