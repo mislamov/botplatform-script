@@ -28,7 +28,7 @@ public class TermValue implements Value {
     }
 
     @Override
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public Value evaluate(ScriptSession session) {
         return this;
     }
 }

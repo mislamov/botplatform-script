@@ -25,9 +25,9 @@ public class IfThenStatement implements Statement {
         this.label = label;
     }
 
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
+    public Value execute(ScriptSession session) {
         if (botScript.labels.containsKey(label)) {
-            BigDecimal value = condition.evaluate(session, functionsImplemntator).toNumber();
+            BigDecimal value = condition.evaluate(session).toNumber();
             if (!Objects.equals(value, BigDecimal.ZERO)) {
                 session.setCurrentStatement(botScript.labels.get(label).intValue());
             }

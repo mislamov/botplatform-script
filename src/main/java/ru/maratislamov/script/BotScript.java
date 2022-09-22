@@ -106,9 +106,6 @@ public class BotScript {
     // Loaded program as tokens
     List<Statement> statements;
 
-    @JsonIgnore
-    ScriptFunctionsImplemntator functionsImplemntator;
-
     public final Map<String, Integer> labels;
 
     // todo: вынести константы скрипта в персистентную сущность по логике близкой к ScriptSession (один скрипт на разных пользователей)
@@ -137,19 +134,13 @@ public class BotScript {
      * the interpreter such as the values of all of the variables and the
      * current statement.
      */
-    public BotScript(ScriptFunctionsImplemntator context) {
+    public BotScript() {
         this.labels = new HashMap<>();
-        this.functionsImplemntator = context;
     }
 
-    public BotScript(ScriptFunctionsImplemntator context, MapValue constants) {
+    public BotScript(MapValue constants) {
         this.labels = new HashMap<>();
-        this.functionsImplemntator = context;
         this.constants = constants;
-    }
-
-    public ScriptFunctionsImplemntator getFunctionsImplemntator() {
-        return functionsImplemntator;
     }
 
     /**
@@ -187,7 +178,7 @@ public class BotScript {
             int thisStatement = session.getCurrentStatement();
             Statement statementEntity = statements.get(thisStatement);
             session.incCurrentStatement();
-            Value value = statementEntity.execute(session, functionsImplemntator);
+            Value value = statementEntity.execute(session/*, functionsImplemntator*/);
 
             if (value == SUSPEND) {
                 session.decCurrentStatement();

@@ -5,7 +5,7 @@
     <groupId>ru.maratislamov</groupId>
     <artifactId>botplatform-script</artifactId>
     <packaging>jar</packaging>
-    <version>0.1</version>
+    <version>0.2</version>
     <name>botplatform-script</name>
     <url>http://maven.apache.org</url>
 

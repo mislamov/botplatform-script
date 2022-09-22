@@ -19,9 +19,9 @@ public class LazyMapValue implements Value, MapValueInterface {
     }
 
     @Override
-    public MapValue evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public MapValue evaluate(ScriptSession session) {
         MapValue result = new MapValue(new LinkedHashMap<>());
-        body.forEach((k, v) -> result.put(k, v.evaluate(session, funcImpl)));
+        body.forEach((k, v) -> result.put(k, v.evaluate(session)));
         return result;
     }
 
@@ -48,8 +48,8 @@ public class LazyMapValue implements Value, MapValueInterface {
     }
 
     @Override
-    public Value get(String name, ScriptSession session, ScriptFunctionsImplemntator context) {
+    public Value get(String name, ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
         Expression expression = body.get(name);
-        return expression == null ? Value.NULL : expression.evaluate(session, context);
+        return expression == null ? Value.NULL : expression.evaluate(session/*, context*/);
     }
 }

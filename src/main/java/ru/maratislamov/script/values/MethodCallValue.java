@@ -3,6 +3,7 @@ package ru.maratislamov.script.values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptFunctionsImplemntator;
+import ru.maratislamov.script.ScriptFunctionsImplemntatorFactory;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.statements.Statement;
@@ -41,10 +42,10 @@ public class MethodCallValue implements Statement, Value {
         throw new RuntimeException("NYR");
     }
 
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public Value evaluate(ScriptSession session) {
         try {
-            List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> e.evaluate(session, funcImpl)).collect(Collectors.toList());
-            return funcImpl.onExec(call, args, session);
+            List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> e.evaluate(session)).collect(Collectors.toList());
+            return ScriptFunctionsImplemntatorFactory.onExec(call, args, session);
 
         } catch (Exception | Error e) {
             logger.error("CallMethodError[" + call + "]", e);
@@ -53,7 +54,9 @@ public class MethodCallValue implements Statement, Value {
     }
 
     @Override
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
-        return evaluate(session, functionsImplemntator);
+    public Value execute(ScriptSession session/*, ScriptFunctionsImplemntator functionsImplemntator*/) {
+        return evaluate(session/*, functionsImplemntator*/);
     }
+
+
 }

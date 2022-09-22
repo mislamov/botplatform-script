@@ -19,7 +19,7 @@ public class GotoStatement implements Statement {
         this.label = label;
     }
 
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
+    public Value execute(ScriptSession session) {
         if (botScript.labels.containsKey(label)) {
             session.setCurrentStatement(botScript.labels.get(label).intValue());
             return null;

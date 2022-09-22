@@ -13,7 +13,7 @@ public class EOFStatement implements Statement {
     public EOFStatement() {
     }
 
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
+    public Value execute(ScriptSession session/*, ScriptFunctionsImplemntator functionsImplemntator*/) {
         return null;
     }
 }

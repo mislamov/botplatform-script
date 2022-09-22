@@ -53,7 +53,7 @@ public class NumberValue implements Value {
         return new NumberValue(value);
     }
 
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public Value evaluate(ScriptSession session) {
         return this;
     }
 }

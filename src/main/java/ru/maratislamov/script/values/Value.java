@@ -57,7 +57,7 @@ public interface Value extends Expression, Serializable {
         }
 
         @Override
-        public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+        public Value evaluate(ScriptSession session) {
             return null;
         }
 
@@ -68,6 +68,7 @@ public interface Value extends Expression, Serializable {
     };
 
     Value NULL = NULLValue.NULL;
+    Value NotFound = NotFoundValue.NOT_FOUND_VALUE;
 
     static Value from(Object val) {
         if (val == null) return NULL;
@@ -103,7 +104,7 @@ public interface Value extends Expression, Serializable {
     static ArrayList asList(ListValue val) {
         ArrayList result = new ArrayList();
         val.getList().forEach(ex -> {
-            result.add(asObject(ex.evaluate(null, null)));
+            result.add(asObject(ex.evaluate(null/*, null*/)));
         });
         return result;
 

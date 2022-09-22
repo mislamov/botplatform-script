@@ -22,9 +22,9 @@ public class PushStatement implements Statement {
         this.value = value;
     }
 
-    public Value execute(ScriptSession session, ScriptFunctionsImplemntator functionsImplemntator) {
+    public Value execute(ScriptSession session) {
         ListValue valCollection = (ListValue) session.getVariables().computeIfAbsent(name, k -> new ListValue(new ArrayList<>()));
-        return valCollection.push(value.evaluate(session, functionsImplemntator));
+        return valCollection.push(value.evaluate(session));
     }
 
 }

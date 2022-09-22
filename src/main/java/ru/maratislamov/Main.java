@@ -6,6 +6,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import ru.maratislamov.script.BotScript;
 import ru.maratislamov.script.ScriptConsoleImplementator;
+import ru.maratislamov.script.ScriptFunctionsImplemntatorFactory;
 import ru.maratislamov.script.ScriptSession;
 
 import java.io.IOException;
@@ -20,9 +21,11 @@ public class Main {
 
        Resource resource = new ClassPathResource("demo.bas");
 
+        ScriptFunctionsImplemntatorFactory.registrate(new ScriptConsoleImplementator());
+
         try (InputStream inputStream = resource.getInputStream()) {
 
-            BotScript botScript = new BotScript(new ScriptConsoleImplementator());
+            BotScript botScript = new BotScript();
 
             botScript.load(inputStream);
             ScriptSession session = new ScriptSession(UUID.randomUUID().toString());

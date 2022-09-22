@@ -2,6 +2,7 @@ package ru.maratislamov.script;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.maratislamov.script.values.NotFoundValue;
 import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.Value;
@@ -56,7 +57,8 @@ public class ScriptConsoleImplementator<T> extends ScriptFunctionsImplemntator<T
                 return Value.NULL;
 
             default:
-                throw new Error("Unknown function: " + fname);
+                //throw new Error("Unknown function: " + fname);
+                return NotFoundValue.NOT_FOUND_VALUE;
         }
     }
 

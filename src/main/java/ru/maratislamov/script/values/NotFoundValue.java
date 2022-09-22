@@ -4,11 +4,11 @@ import ru.maratislamov.script.ScriptSession;
 
 import java.math.BigDecimal;
 
-public class NULLValue implements Value {
+public class NotFoundValue implements Value {
 
-    public static final NULLValue NULL = new NULLValue();
+    public static final NotFoundValue NOT_FOUND_VALUE = new NotFoundValue();
 
-    public NULLValue() {
+    public NotFoundValue() {
     }
 
     @Override
@@ -28,6 +28,6 @@ public class NULLValue implements Value {
 
     @Override
     public String toString() {
-        return "NULL";
+        return "$NotFound";
     }
 }

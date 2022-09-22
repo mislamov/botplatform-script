@@ -39,8 +39,8 @@ public class ListValue implements Expression, Value, MapValueInterface {
         return new ListValue(new ArrayList<>(list));
     }
 
-    public ListValue evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
-        return new ListValue(this.list.stream().map(v -> v.evaluate(session, funcImpl)).collect(Collectors.toList()));
+    public ListValue evaluate(ScriptSession session) {
+        return new ListValue(this.list.stream().map(v -> v.evaluate(session)).collect(Collectors.toList()));
     }
 
     public Value push(Value value) {
@@ -49,24 +49,24 @@ public class ListValue implements Expression, Value, MapValueInterface {
         return value;
     }
 
-    public Value popLast(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public Value popLast(ScriptSession session) {
         if (list == null) throw new RuntimeException("Unexpected value == null when popLast in List");
         if (list.isEmpty()) return NULL;
         Expression expression = list.remove(list.size() - 1);
-        return expression.evaluate(session, funcImpl);
+        return expression.evaluate(session);
     }
 
-    public Value popFirst(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public Value popFirst(ScriptSession session) {
         if (list == null) throw new RuntimeException("Unexpected value == null when popFirst in List");
         if (list.isEmpty()) return NULL;
         Expression expression = list.remove(0);
-        return expression.evaluate(session, funcImpl);
+        return expression.evaluate(session);
     }
 
-    public void forEach(Consumer<Value> action, ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public void forEach(Consumer<Value> action, ScriptSession session) {
         Objects.requireNonNull(action);
         for (Expression t : list) {
-            action.accept(t instanceof Value ? (Value) t : t.evaluate(session, funcImpl));
+            action.accept(t instanceof Value ? (Value) t : t.evaluate(session));
         }
     }
 
@@ -76,7 +76,7 @@ public class ListValue implements Expression, Value, MapValueInterface {
     }
 
     @Override
-    public Value get(String name, ScriptSession session, ScriptFunctionsImplemntator context) {
+    public Value get(String name, ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
         if (name.equals("size")) return new NumberValue(list.size());
         return null;
     }
@@ -84,4 +84,5 @@ public class ListValue implements Expression, Value, MapValueInterface {
     public List<Expression> getList() {
         return list;
     }
+
 }

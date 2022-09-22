@@ -39,10 +39,10 @@ public class OperatorExpression implements Expression {
         return a.compareTo(b);
     }
 
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public Value evaluate(ScriptSession session) {
         try {
-            Value leftVal = left.evaluate(session, funcImpl);
-            Value rightVal = right.evaluate(session, funcImpl);
+            Value leftVal = left.evaluate(session);
+            Value rightVal = right.evaluate(session);
 
 
             // операции с NULL

@@ -80,12 +80,12 @@ public class MapValue implements Value, MapValueInterface {
 
     @JsonIgnore
     @Override
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public Value evaluate(ScriptSession session) {
         return this;
     }
 
     @JsonIgnore
-    public Value get(String name, ScriptSession session, ScriptFunctionsImplemntator context) {
+    public Value get(String name, ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
         if (!body.containsKey(name)) {
             if (name.equals("size")) return new NumberValue(body.size());
         }
@@ -94,7 +94,7 @@ public class MapValue implements Value, MapValueInterface {
 
     @JsonIgnore
     public Value get(String name) {
-        return get(name, null, null);
+        return get(name, null/*, null*/);
     }
 
     /**

@@ -51,7 +51,7 @@ public class StringValue implements Value {
     }
 
     @JsonIgnore
-    public Value evaluate(ScriptSession session, ScriptFunctionsImplemntator funcImpl) {
+    public Value evaluate(ScriptSession session) {
         return this;
     }
 }
