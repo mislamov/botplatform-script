@@ -2,7 +2,7 @@ package ru.maratislamov.script.values;
 
 import ru.maratislamov.script.ScriptSession;
 
-import java.math.BigDecimal;
+
 
 public class TermValue implements Value {
     private final String word;
@@ -17,7 +17,7 @@ public class TermValue implements Value {
     }
 
     @Override
-    public BigDecimal toNumber() {
+    public Double toNumber() {
         throw new ClassCastException("Term to Number: \"" + word + "\".toNumber()");
     }
 

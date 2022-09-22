@@ -7,7 +7,7 @@ import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.statements.Statement;
 
-import java.math.BigDecimal;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +32,7 @@ public class MethodCallValue implements Statement, Value {
         return "$" + call;
     }
 
-    public BigDecimal toNumber() {
+    public Double toNumber() {
         throw new ClassCastException("MethodCallValue can't be cast to Number");
     }
 

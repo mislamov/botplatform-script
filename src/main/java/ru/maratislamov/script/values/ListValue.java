@@ -3,7 +3,7 @@ package ru.maratislamov.script.values;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 
-import java.math.BigDecimal;
+
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -29,7 +29,7 @@ public class ListValue implements Expression, Value, MapValueInterface {
         return list == null ? "null" : "[" + list.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
     }
 
-    public BigDecimal toNumber() {
+    public Double toNumber() {
         throw new RuntimeException("can't cast List to Number for " + toString());
     }
 

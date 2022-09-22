@@ -2,48 +2,48 @@ package ru.maratislamov.script.values;
 
 import ru.maratislamov.script.ScriptSession;
 
-import java.math.BigDecimal;
+
 
 /**
  * A numeric value. Jasic uses doubles internally for all numbers.
  */
 public class NumberValue implements Value {
 
-    private BigDecimal value;
+    private Double value;
 
-    public BigDecimal getValue() {
+    public Double getValue() {
         return value;
     }
 
-    public void setValue(BigDecimal value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 
     public NumberValue() {
     }
 
-    public NumberValue(BigDecimal value) {
+    public NumberValue(Double value) {
         this.value = value;
     }
 
     public NumberValue(int val) {
-        value = new BigDecimal(val);
+        value = new Double(val);
     }
 
     public NumberValue(double val) {
-        value = new BigDecimal(val);
+        value = new Double(val);
     }
 
     public NumberValue(String val) {
-        value = BigDecimal.valueOf(Double.parseDouble(val));
+        value = Double.valueOf(Double.parseDouble(val));
     }
 
     @Override
     public String toString() {
-        return value.remainder(BigDecimal.ONE).doubleValue() == 0.0 ? String.valueOf(value.longValueExact()) : String.valueOf(value);
+        return value.longValue() - value == 0 ? String.valueOf(value.longValue()) : String.valueOf(value);
     }
 
-    public BigDecimal toNumber() {
+    public Double toNumber() {
         return value;
     }
 

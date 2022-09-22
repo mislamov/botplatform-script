@@ -42,9 +42,6 @@ public class OperatorExpression implements Expression {
 
     public Value evaluate(ScriptSession session) {
         try {
-
-            System.out.println(toString());
-
             Value leftVal = left.evaluate(session);
             Value rightVal = right.evaluate(session);
 
@@ -79,17 +76,17 @@ public class OperatorExpression implements Expression {
                     // Addition if the left argument is a number, otherwise do
                     // string concatenation.
                     if (leftVal instanceof NumberValue) {
-                        return new NumberValue(leftVal.toNumber().add(rightVal.toNumber()));
+                        return new NumberValue(leftVal.toNumber() + rightVal.toNumber());
                     } else {
                         return new StringValue(leftVal.toString() +
                                 rightVal.toString());
                     }
                 case "-":
-                    return new NumberValue(leftVal.toNumber().subtract(rightVal.toNumber()));
+                    return new NumberValue(leftVal.toNumber() - rightVal.toNumber());
                 case "*":
-                    return new NumberValue(leftVal.toNumber().multiply(rightVal.toNumber()));
+                    return new NumberValue(leftVal.toNumber() * rightVal.toNumber());
                 case "/":
-                    return new NumberValue(leftVal.toNumber().divide(rightVal.toNumber(), MathContext.DECIMAL32));
+                    return new NumberValue(leftVal.toNumber() / rightVal.toNumber());
                 case "<":
                     // Coerce to the left argument's type, then compare.
                     if (leftVal instanceof NumberValue) {

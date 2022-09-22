@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 import org.apache.commons.text.StringEscapeUtils;
 
-import java.math.BigDecimal;
+
 
 /**
  * A string value.
@@ -35,9 +35,9 @@ public class StringValue implements Value {
     }
 
     @JsonIgnore
-    public BigDecimal toNumber() {
+    public Double toNumber() {
         try {
-            return BigDecimal.valueOf(Double.parseDouble(value));
+            return Double.valueOf(Double.parseDouble(value));
         } catch (NumberFormatException ex){
             return null; // NYR. Должна ли строка всегда преобразовываться в null если не число?
         }

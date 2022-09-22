@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 import org.apache.commons.lang3.StringUtils;
 
-import java.math.BigDecimal;
+
 import java.util.*;
 import java.util.function.Function;
 
@@ -54,7 +54,7 @@ public class MapValue implements Value, MapValueInterface {
 
     @JsonIgnore
     @Override
-    public BigDecimal toNumber() {
+    public Double toNumber() {
         throw new ClassCastException("MapValue to Number");
     }
 

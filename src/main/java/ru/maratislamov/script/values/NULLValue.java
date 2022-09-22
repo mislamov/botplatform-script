@@ -2,7 +2,7 @@ package ru.maratislamov.script.values;
 
 import ru.maratislamov.script.ScriptSession;
 
-import java.math.BigDecimal;
+
 
 public class NULLValue implements Value {
 
@@ -12,7 +12,7 @@ public class NULLValue implements Value {
     }
 
     @Override
-    public BigDecimal toNumber() {
+    public Double toNumber() {
         return null;
     }
 

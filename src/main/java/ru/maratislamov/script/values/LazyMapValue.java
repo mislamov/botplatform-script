@@ -4,7 +4,7 @@ import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import org.apache.commons.lang3.StringUtils;
 
-import java.math.BigDecimal;
+
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class LazyMapValue implements Value, MapValueInterface {
     }
 
     @Override
-    public BigDecimal toNumber() {
+    public Double toNumber() {
         throw new ClassCastException("LazyMapValue to Number");
     }
 

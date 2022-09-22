@@ -4,7 +4,7 @@ import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ public interface Value extends Expression, Serializable {
      * Value types override this to convert themselves to a numeric
      * representation.
      */
-    BigDecimal toNumber();
+    Double toNumber();
 
     Value copy();
 
@@ -46,7 +46,7 @@ public interface Value extends Expression, Serializable {
      */
     Value SUSPEND = new Value() {
         @Override
-        public BigDecimal toNumber() {
+        public Double toNumber() {
             return null;
         }
 
