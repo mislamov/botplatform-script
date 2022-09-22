@@ -1,13 +1,11 @@
 package ru.maratislamov.script.values;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class MapValue implements Value, MapValueInterface {

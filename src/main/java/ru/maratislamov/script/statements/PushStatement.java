@@ -1,6 +1,5 @@
 package ru.maratislamov.script.statements;
 
-import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.values.ListValue;

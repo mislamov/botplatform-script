@@ -2,12 +2,13 @@ package ru.maratislamov.script.expressions;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.Value;
 
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 /**
@@ -41,6 +42,9 @@ public class OperatorExpression implements Expression {
 
     public Value evaluate(ScriptSession session) {
         try {
+
+            System.out.println(toString());
+
             Value leftVal = left.evaluate(session);
             Value rightVal = right.evaluate(session);
 
@@ -85,7 +89,7 @@ public class OperatorExpression implements Expression {
                 case "*":
                     return new NumberValue(leftVal.toNumber().multiply(rightVal.toNumber()));
                 case "/":
-                    return new NumberValue(leftVal.toNumber().divide(rightVal.toNumber()));
+                    return new NumberValue(leftVal.toNumber().divide(rightVal.toNumber(), MathContext.DECIMAL32));
                 case "<":
                     // Coerce to the left argument's type, then compare.
                     if (leftVal instanceof NumberValue) {

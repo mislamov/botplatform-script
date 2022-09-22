@@ -1,6 +1,5 @@
 package ru.maratislamov.script;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.parser.*;
@@ -100,8 +99,8 @@ import static ru.maratislamov.script.values.Value.SUSPEND;
  *
  * @author Marat Islamov, Bob Nystrom
  */
-public class BotScript {
-    private static final Logger logger = LoggerFactory.getLogger(BotScript.class);
+public class ScriptEngine {
+    private static final Logger logger = LoggerFactory.getLogger(ScriptEngine.class);
 
     // Loaded program as tokens
     List<Statement> statements;
@@ -134,11 +133,11 @@ public class BotScript {
      * the interpreter such as the values of all of the variables and the
      * current statement.
      */
-    public BotScript() {
+    public ScriptEngine() {
         this.labels = new HashMap<>();
     }
 
-    public BotScript(MapValue constants) {
+    public ScriptEngine(MapValue constants) {
         this.labels = new HashMap<>();
         this.constants = constants;
     }

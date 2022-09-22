@@ -15,15 +15,23 @@ import java.util.stream.Collectors;
 /**
  * Контекст выполнения скрипта
  */
-public class ScriptConsoleImplementator<T> extends ScriptFunctionsImplemntator<T> {
+public class ScriptFunctionDemoExecutor extends ScriptFunctionsExecutor {
 
-    Logger logger = LoggerFactory.getLogger(ScriptConsoleImplementator.class);
+    Logger logger = LoggerFactory.getLogger(ScriptFunctionDemoExecutor.class);
 
-    public ScriptConsoleImplementator() {
+    public ScriptFunctionDemoExecutor() {
     }
 
+    /**
+     * выполняет библиотечную функцию. Если функция @fname неизвестна, метод должен вернуть NOT_FOUND_VALUE
+     * @param fname
+     * @param args
+     * @param session
+     * @return
+     * @throws Exception
+     */
     @Override
-    public Value onExec(String fname, List<Value> args, ScriptSession<T> session) throws Exception {
+    public Value onExec(String fname, List<Value> args, ScriptSession session) throws Exception {
         String function = fname.toLowerCase();
 
         switch (function) {
@@ -51,10 +59,6 @@ public class ScriptConsoleImplementator<T> extends ScriptFunctionsImplemntator<T
                     session.getVariables().put(args.get(0).toString(), result);
                 }
                 return result;
-
-            case "verifybitrix":
-            case "verifybot":
-                return Value.NULL;
 
             default:
                 //throw new Error("Unknown function: " + fname);

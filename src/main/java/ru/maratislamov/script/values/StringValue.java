@@ -1,7 +1,6 @@
 package ru.maratislamov.script.values;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import ru.maratislamov.script.ScriptFunctionsImplemntator;
 import ru.maratislamov.script.ScriptSession;
 import org.apache.commons.text.StringEscapeUtils;
 

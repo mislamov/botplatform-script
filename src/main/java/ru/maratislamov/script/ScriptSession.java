@@ -5,9 +5,9 @@ import ru.maratislamov.script.values.MapValue;
 import java.io.Serializable;
 import java.util.HashMap;
 
-public class ScriptSession<ID> implements Serializable {
+public class ScriptSession implements Serializable {
 
-    private ID sessionId;
+    private String sessionId;
 
     private MapValue variables = new MapValue(new HashMap<>());
 
@@ -18,12 +18,12 @@ public class ScriptSession<ID> implements Serializable {
     protected ScriptSession() {
     }
 
-    public ScriptSession(ID sessionId) {
+    public ScriptSession(String sessionId) {
         this.sessionId = sessionId;
         this.currentStatement = 0;
     }
 
-    public ScriptSession(ID sessionId, MapValue variables, int currentStatement) {
+    public ScriptSession(String sessionId, MapValue variables, int currentStatement) {
         this.sessionId = sessionId;
         this.variables = variables;
         this.currentStatement = currentStatement;
@@ -58,11 +58,11 @@ public class ScriptSession<ID> implements Serializable {
         --currentStatement;
     }
 
-    public ID getSessionId() {
+    public String getSessionId() {
         return sessionId;
     }
 
-    public void setSessionId(ID sessionId) {
+    public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }
 

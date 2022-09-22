@@ -1,6 +1,6 @@
 package ru.maratislamov.script.parser;
 
-import ru.maratislamov.script.BotScript;
+import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.OperatorExpression;
 import ru.maratislamov.script.expressions.VariableExpression;
@@ -23,13 +23,13 @@ import java.util.Map;
  * label in the program. It's a bit gross, but it works.
  */
 public class Parser {
-    private final BotScript botScript;
+    private final ScriptEngine botScript;
 
     private final List<Token> tokens;
     private int position;
     private int positionLine;
 
-    public Parser(BotScript botScript, List<Token> tokens) {
+    public Parser(ScriptEngine botScript, List<Token> tokens) {
         this.botScript = botScript;
         this.tokens = tokens;
         position = 0;

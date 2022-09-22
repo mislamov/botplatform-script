@@ -1,7 +1,6 @@
 package ru.maratislamov.script.statements;
 
-import ru.maratislamov.script.BotScript;
-import ru.maratislamov.script.ScriptFunctionsImplemntator;
+import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.values.Value;
@@ -14,12 +13,12 @@ import java.util.Objects;
  * only if an expression evaluates to something other than 0.
  */
 public class IfThenStatement implements Statement {
-    private final BotScript botScript;
+    private final ScriptEngine botScript;
 
     private final Expression condition;
     private final String label;
 
-    public IfThenStatement(BotScript botScript, Expression condition, String label) {
+    public IfThenStatement(ScriptEngine botScript, Expression condition, String label) {
         this.botScript = botScript;
         this.condition = condition;
         this.label = label;

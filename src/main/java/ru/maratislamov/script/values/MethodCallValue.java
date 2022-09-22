@@ -2,8 +2,7 @@ package ru.maratislamov.script.values;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.maratislamov.script.ScriptFunctionsImplemntator;
-import ru.maratislamov.script.ScriptFunctionsImplemntatorFactory;
+import ru.maratislamov.script.ScriptFunctionsService;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.statements.Statement;
@@ -45,7 +44,7 @@ public class MethodCallValue implements Statement, Value {
     public Value evaluate(ScriptSession session) {
         try {
             List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> e.evaluate(session)).collect(Collectors.toList());
-            return ScriptFunctionsImplemntatorFactory.onExec(call, args, session);
+            return ScriptFunctionsService.execFunction(call, args, session);
 
         } catch (Exception | Error e) {
             logger.error("CallMethodError[" + call + "]", e);
