@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.UUID;
 
 public class MainTest {

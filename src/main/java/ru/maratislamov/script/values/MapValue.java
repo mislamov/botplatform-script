@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 public class MapValue implements Value, MapValueInterface {
 
-    private Map<String, Value> body = new HashMap<>();;
+    private Map<String, Value> body = new LinkedHashMap<>();;
 
     public Map<String, Value> getBody() {
         return body;

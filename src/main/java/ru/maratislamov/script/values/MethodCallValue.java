@@ -53,8 +53,8 @@ public class MethodCallValue implements Statement, Value {
     }
 
     @Override
-    public Value execute(ScriptSession session/*, ScriptFunctionsImplemntator functionsImplemntator*/) {
-        return evaluate(session/*, functionsImplemntator*/);
+    public Value execute(ScriptSession session) {
+        return evaluate(session);
     }
 
 
