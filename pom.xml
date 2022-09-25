@@ -18,31 +18,6 @@
         <start-class>ru.maratislamov.Application</start-class>
     </properties>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>aws-snapshot</id>
-            <url>s3p://mislamov.mvn.repo/snapshot</url>
-        </snapshotRepository>
-        <repository>
-            <id>aws-release</id>
-            <url>s3p://mislamov.mvn.repo/release</url>
-        </repository>
-    </distributionManagement>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>clojars.org</id>
-            <name>Clojars Repository</name>
-            <url>http://clojars.org/repo</url>
-        </pluginRepository>
-    </pluginRepositories>
-
-    <repositories>
-        <repository>
-            <id>aws-release</id>
-            <url>s3p://mislamov.mvn.repo/release</url>
-        </repository>
-    </repositories>
 
     <dependencies>
 
@@ -107,13 +82,6 @@
             </plugin>
         </plugins>
 
-        <extensions>
-            <extension>
-                <groupId>s3-wagon-private</groupId>
-                <artifactId>s3-wagon-private</artifactId>
-                <version>1.3.1</version>
-            </extension>
-        </extensions>
 
     </build>
 

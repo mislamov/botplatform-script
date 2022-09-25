@@ -10,12 +10,12 @@ import java.util.List;
 public class ScriptFunctionsService {
 
     /**
-     * все зарегистрированные библиотеки функций
+     * вычислитель встроенных функций
      */
     private static ScriptFunctionsExecutor scriptFunctionsExecutor = null;
 
     /**
-     * регистрация библиотеки функций
+     * регистрация вычислителя функций
      */
     public static void register(ScriptFunctionsExecutor impl) {
         scriptFunctionsExecutor = impl;
