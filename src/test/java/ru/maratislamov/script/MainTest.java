@@ -23,6 +23,11 @@ public class MainTest {
         runScript("sample\\mandel.jas");
     }
 
+    //@Test
+    public void runDemo() throws IOException {
+        runScript("demo.bas");
+    }
+
     public void runScript(String fname) throws IOException {
         System.out.println("ok");
 

@@ -7,10 +7,7 @@ import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.statements.*;
 import ru.maratislamov.script.values.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This defines the Jasic parser. The parser takes in a sequence of tokens
@@ -217,7 +214,7 @@ public class Parser {
             if ("EXEC".equals(prevUpper) || "CALL".equals(prevUpper)) {
                 // вызов внешней функции
                 String call = get(0).text;
-                assert get(0).type == TokenType.STRING;
+                assert get(0).type == TokenType.STRING || get(0).type == TokenType.WORD;
                 ++position;
 
                 List<Expression> argList = new ArrayList<>();
@@ -316,7 +313,13 @@ public class Parser {
      * @return The consumed token.
      */
     private Token consume(TokenType type) {
-        if (get(0).type != type) throw new Error("Expected " + type + ".");
+        if (get(0).type != type)
+            throw new Error("Expected " + type + " on line " + (positionLine + 1));
+        return tokens.get(position++);
+    }
+
+    private Token consume(TokenType... types) {
+        if (Arrays.stream(types).noneMatch(get(0).type::equals)) throw new Error("Expected one of type " + Arrays.toString(types) + ".");
         return tokens.get(position++);
     }
 
