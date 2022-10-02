@@ -79,10 +79,13 @@ public class Parser {
             } else if (match("goto")) {
                 statements.add(new GotoStatement(botScript, consume(TokenType.WORD).text));
 
+            } else if (match(TokenType.WORD, TokenType.LINE)) { // процедура без аргументов
+                statements.add(new MethodCallValue(last(2).text, Collections.emptyList()));
+
             } else if (match("flush")) {
                 statements.add(new MethodCallValue("flush", null));
 
-            } else if (match("getcontact")) {
+            }/* else if (match("getcontact")) {
                 List<Expression> argList = new ArrayList<>();
                 while (get(0).type != TokenType.LINE) {
                     Expression expression = expression();
@@ -91,7 +94,7 @@ public class Parser {
 
                 statements.add(new MethodCallValue("getcontact", argList));
 
-            } else if (match("push")) {
+            }*/ else if (match("push")) {
                 String varMap = consume(TokenType.WORD).text;
                 Expression value = expression();
                 statements.add(new PushStatement(varMap, value));
@@ -105,11 +108,20 @@ public class Parser {
 //            } else if (match("print")) {
 //                statements.add(new MethodCallValue("print", Collections.singletonList(expression())));
 //
-            } else if (match("input")) {
-                statements.add(new MethodCallValue("input", Collections.singletonList(new TermValue(consume(TokenType.WORD).text))));
+            } else if (match("input")) { // аргументы (TermValue) у input не должны вычисляться перед вызовом
+                List<Expression> args = Collections.singletonList(new TermValue(consume(TokenType.WORD).text));
+                statements.add(new MethodCallValue("input", args));
+                consume(TokenType.LINE, TokenType.EOF);
 
-            } else if (match(TokenType.WORD)) {
-                statements.add(new MethodCallValue(last(1).text, Collections.singletonList(expression())));
+            } else if (match(TokenType.WORD)) { // команда/процедура с аргументами, которые вычисляются перед вызовом
+                //statements.add(new MethodCallValue(last(1).text, Collections.singletonList(expression())));
+                String fname = last(1).text;
+                List<Expression> argList = new ArrayList<>();
+                while (get(0).type != TokenType.LINE && get(0).type != TokenType.EOF) {
+                    Expression expression = expression();
+                    argList.add(expression);
+                }
+                statements.add(new MethodCallValue(fname, argList));
 
             } else {
                 if (match(TokenType.EOF))
@@ -319,7 +331,8 @@ public class Parser {
     }
 
     private Token consume(TokenType... types) {
-        if (Arrays.stream(types).noneMatch(get(0).type::equals)) throw new Error("Expected one of type " + Arrays.toString(types) + ".");
+        if (Arrays.stream(types).noneMatch(get(0).type::equals))
+            throw new Error("Expected one of type " + Arrays.toString(types) + "' in line " + (positionLine + 1) + "+");
         return tokens.get(position++);
     }
 

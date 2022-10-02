@@ -1,6 +1,6 @@
 package ru.maratislamov.script;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,15 +23,18 @@ public class MainTest {
         runScript("sample\\mandel.jas");
     }
 
+    @Test
+    public void runDemoMaps() throws IOException {
+        runScript("sample\\demomaps.jas");
+    }
     //@Test
     public void runDemo() throws IOException {
         runScript("demo.bas");
     }
 
     public void runScript(String fname) throws IOException {
-        System.out.println("ok");
 
-        ScriptFunctionsService.register(new ScriptFunctionDemoExecutor());
+        ScriptFunctionsService.register(new ru.maratislamov.script.ScriptFunctionDemoExecutor());
 
         //try (InputStream inputStream = new ClassPathResource("demo.bas").getInputStream()) {
         try (InputStream inputStream = MainTest.class.getClassLoader().getResourceAsStream(fname)) {

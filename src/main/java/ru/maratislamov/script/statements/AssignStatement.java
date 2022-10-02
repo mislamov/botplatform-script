@@ -16,6 +16,13 @@ public class AssignStatement implements Statement {
     }
 
     public Value execute(ScriptSession session) {
+        String[] names = name.split(".");
+        for (String name : names){
+            Value var = session.getVariables().get(name);
+            //if ()
+        }
+
+
         return session.getVariables().put(name, value.evaluate(session));
     }
 

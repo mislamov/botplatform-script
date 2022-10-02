@@ -1,0 +1,6 @@
+print varmap + " == NULL"
+varmap.x = 1
+print varmap + " == {x=1}"
+varmap.z.y.a = 2
+varmap.z.y.b = 3
+print varmap + " == " + "{x:1,z.y:2}"
