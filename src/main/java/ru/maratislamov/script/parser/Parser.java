@@ -1,5 +1,6 @@
 package ru.maratislamov.script.parser;
 
+import org.apache.commons.lang3.StringUtils;
 import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.OperatorExpression;
@@ -8,6 +9,7 @@ import ru.maratislamov.script.statements.*;
 import ru.maratislamov.script.values.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This defines the Jasic parser. The parser takes in a sequence of tokens
@@ -35,7 +37,7 @@ public class Parser {
 
     public String debugCurrentPosition() {
         int i = 0;
-        while (get(i).type == TokenType.LINE) {
+        while (get(i).type == TokenType.LINE ) {
             --i;
         }
 
@@ -44,7 +46,15 @@ public class Parser {
             result.append(get(i).text);
             result.append(" ");
         }
-        return result.toString();
+        String rest = StringUtils.defaultIfEmpty(result.toString().trim(), null);
+        return rest == null ? lastTokensAsString() : rest;
+    }
+
+    protected String lastTokensAsString() {
+        if (tokens.size() >= 2){
+            return tokens.subList(tokens.size() - 2, tokens.size()).stream().map(token -> token.text).collect(Collectors.joining());
+        }
+        return tokens.isEmpty() ? "" : tokens.get(0).text;
     }
 
 
@@ -70,7 +80,7 @@ public class Parser {
                 // Mark the index of the statement after the label.
                 labels.put(last(1).text, statements.size());
 
-            } else if (match(TokenType.WORD, TokenType.EQUALS)) {
+            } else if (match(TokenType.WORD, TokenType.EQUALS, TokenType.EQUALS) || match(TokenType.WORD, TokenType.EQUALS)) {
                 // присваивание
                 String name = last(2).text;
                 Expression value = expression();
@@ -81,20 +91,12 @@ public class Parser {
 
             } else if (match(TokenType.WORD, TokenType.LINE)) { // процедура без аргументов
                 statements.add(new MethodCallValue(last(2).text, Collections.emptyList()));
+                positionLine++;
 
             } else if (match("flush")) {
                 statements.add(new MethodCallValue("flush", null));
 
-            }/* else if (match("getcontact")) {
-                List<Expression> argList = new ArrayList<>();
-                while (get(0).type != TokenType.LINE) {
-                    Expression expression = expression();
-                    argList.add(expression);
-                }
-
-                statements.add(new MethodCallValue("getcontact", argList));
-
-            }*/ else if (match("push")) {
+            } else if (match("push")) {
                 String varMap = consume(TokenType.WORD).text;
                 Expression value = expression();
                 statements.add(new PushStatement(varMap, value));
@@ -112,6 +114,7 @@ public class Parser {
                 List<Expression> args = Collections.singletonList(new TermValue(consume(TokenType.WORD).text));
                 statements.add(new MethodCallValue("input", args));
                 consume(TokenType.LINE, TokenType.EOF);
+                positionLine++;
 
             } else if (match(TokenType.WORD)) { // команда/процедура с аргументами, которые вычисляются перед вызовом
                 //statements.add(new MethodCallValue(last(1).text, Collections.singletonList(expression())));
@@ -121,6 +124,7 @@ public class Parser {
                     Expression expression = expression();
                     argList.add(expression);
                 }
+                positionLine++;
                 statements.add(new MethodCallValue(fname, argList));
 
             } else {
@@ -255,7 +259,8 @@ public class Parser {
             return expression;
         }
 
-        throw new Error("Can't parse line " + (positionLine + 1) + ": " + debugCurrentPosition());
+        String position = debugCurrentPosition();
+        throw new Error("Can't parse line " + (positionLine + 1) + ": " + position);
     }
 
     // The following functions are the core low-level operations that the

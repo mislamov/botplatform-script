@@ -18,14 +18,21 @@ public class AssignStatement implements Statement {
     public Value execute(ScriptSession session) {
         String[] names = name.split(".");
         for (String name : names){
-            Value var = session.getVariables().get(name);
+            Value var = session.getSessionScope().get(name);
             //if ()
         }
 
 
-        return session.getVariables().put(name, value.evaluate(session));
+        return session.getSessionScope().put(name, value.evaluate(session));
     }
 
     private final String name;
     private final Expression value;
+
+    @Override
+    public String toString() {
+        return "AssignStatement{" +
+                name + " = " + value +
+                '}';
+    }
 }

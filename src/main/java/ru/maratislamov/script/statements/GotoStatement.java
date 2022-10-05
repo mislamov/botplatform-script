@@ -20,9 +20,19 @@ public class GotoStatement implements Statement {
 
     public Value execute(ScriptSession session) {
         if (botScript.labels.containsKey(label)) {
+            if (session.getParentSession() != null){
+                throw new RuntimeException("GOTO deprecated for inline scripts");
+            }
+
             session.setCurrentStatement(botScript.labels.get(label).intValue());
             return null;
         }
         throw new Error("Label " + label + " not found");
+    }
+
+    @Override
+    public String toString() {
+        return "GotoStatement{" +  label + '\'' +
+                '}';
     }
 }

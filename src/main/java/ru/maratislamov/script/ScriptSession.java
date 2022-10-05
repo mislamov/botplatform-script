@@ -1,53 +1,96 @@
 package ru.maratislamov.script;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.values.MapValue;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.UUID;
 
+/**
+ * сеанс выполнения скрипта
+ */
 public class ScriptSession implements Serializable {
+
+    /**
+     * родительский сеанс, внутри которого был создан этот. Либо null
+     */
+    private ScriptSession parentSession = null;
 
     private String sessionId;
 
-    private MapValue variables = new MapValue(new HashMap<>());
+    // переменные уровня сеанса выполнения скрипта
+    private MapValue sessionScope = new MapValue(new HashMap<>());
 
-    private int currentStatement;
+    private Integer currentStatement;
 
-    private boolean active = false; // активировать сессию нужно явно. Изначально неактивна
-
-    private ScriptSession(){}
-    
-    public ScriptSession(String sessionId) {
-        this.sessionId = sessionId;
-        this.currentStatement = 0;
+    public ScriptSession(){
+        this(UUID.randomUUID().toString());
     }
 
-    public ScriptSession(String sessionId, MapValue variables, int currentStatement) {
+    public ScriptSession(MapValue sessionScope) {
+        this.sessionScope = sessionScope;
+    }
+
+    public ScriptSession(String sessionId) {
         this.sessionId = sessionId;
-        this.variables = variables;
+        this.currentStatement = null;
+    }
+
+    public ScriptSession(String sessionId, MapValue sessionScope, int currentStatement) {
+        this.sessionId = sessionId;
+        this.sessionScope = sessionScope;
         this.currentStatement = currentStatement;
+    }
+
+    /**
+     * создаем дочернюю сессию для выполнения вложенных скриптов и подпрограмм
+     * @return новая сессия
+     */
+    @JsonIgnore
+    public ScriptSession createSubSession(){
+        ScriptSession session = new ScriptSession(getSessionScope());
+        session.setParentSession(this);
+        return session;
     }
 
     public int getCurrentStatement() {
         return currentStatement;
     }
 
-    public void setCurrentStatement(int currentStatement) {
+    public void setCurrentStatement(Integer currentStatement) {
         this.currentStatement = currentStatement;
     }
 
     public void clear(){
-        this.variables.getBody().clear();
+        this.sessionScope.getBody().clear();
+        currentStatement = null;
+    }
+
+    public boolean isActive(){
+        return currentStatement != null;
+    }
+
+    public ScriptSession activate(){
         currentStatement = 0;
+        return this;
     }
 
-    public MapValue getVariables() {
-        return variables;
+    public ScriptSession getParentSession() {
+        return parentSession;
     }
 
-    public void setVariables(MapValue variables) {
-        this.variables = variables;
+    public void setParentSession(ScriptSession parentSession) {
+        this.parentSession = parentSession;
+    }
+
+    public MapValue getSessionScope() {
+        return sessionScope;
+    }
+
+    public void setSessionScope(MapValue sessionScope) {
+        this.sessionScope = sessionScope;
     }
 
     public void incCurrentStatement() {
@@ -64,14 +107,6 @@ public class ScriptSession implements Serializable {
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
     }
 
     @Override
@@ -91,9 +126,12 @@ public class ScriptSession implements Serializable {
     public String toString() {
         return "ScriptSession{" +
                 "sessionId='" + sessionId + '\'' +
-                ", variables=" + variables +
+                ", variables=" + sessionScope +
                 ", currentStatement=" + currentStatement +
-                ", active=" + active +
                 '}';
+    }
+
+    public void close() {
+        currentStatement = null;
     }
 }

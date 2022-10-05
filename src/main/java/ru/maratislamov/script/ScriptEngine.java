@@ -144,16 +144,19 @@ public class ScriptEngine {
 
     /**
      * @param source A string containing the source code of a .jas script to interpret.
+     * @return
      */
-    public void load(InputStream source) {
-
+    public List<Statement> scriptToStatements(InputStream source) {
         // Tokenize.
         List<Token> tokens = Tokenizer.tokenize(source);
 
         // Parse.
         Parser parser = new Parser(this, tokens);
-        statements = parser.parse(labels);
+        return parser.parse(labels);
 
+    }
+    public void load(InputStream source) {
+        statements = scriptToStatements(source);
     }
 
 
@@ -167,9 +170,8 @@ public class ScriptEngine {
      * In an interpreter that didn't mix the interpretation logic in with the
      * AST node classes, this would be doing a lot more work.
      */
-    public <TSession extends ScriptSession> TSession interpret(TSession session) {
+    public <TSession extends ScriptSession> TSession interpret(TSession session, List<Statement> statements) {
         if (statements == null) throw new RuntimeException("script is not loaded");
-
         if (!session.isActive()) throw new RuntimeException("Not active session for interpret");
 
         // Interpret until we're done.
@@ -184,17 +186,30 @@ public class ScriptEngine {
                 return session;
             }
         }
-
         return doFinish(session);
     }
 
+    public <TSession extends ScriptSession> TSession interpret() {
+        return (TSession) interpret(new ScriptSession().activate());
+    }
+
+    public <TSession extends ScriptSession> TSession interpret(TSession session) {
+        TSession resultSession = interpret(session, this.statements);
+        return resultSession;
+    }
+
     public <TSession extends ScriptSession> TSession doFinish(TSession session) {
-
-        session.setActive(false);
         logger.info("THE END");
-        // todo: сохраняем итоги
-        session.setCurrentStatement(0);
-
+        session.close();
         return session;
+    }
+
+    /**
+     * @deprecated только для отладки
+     * @return
+     */
+    @Deprecated
+    public List<Statement> getStatements() {
+        return statements;
     }
 }

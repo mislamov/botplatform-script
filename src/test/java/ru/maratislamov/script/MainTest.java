@@ -1,6 +1,7 @@
 package ru.maratislamov.script;
 
 import org.junit.jupiter.api.Test;
+import ru.maratislamov.script.debug.DebugExecutor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +35,7 @@ public class MainTest {
 
     public void runScript(String fname) throws IOException {
 
-        ScriptFunctionsService.register(new ru.maratislamov.script.ScriptFunctionDemoExecutor());
+        ScriptFunctionsService.register(new DebugExecutor());
 
         //try (InputStream inputStream = new ClassPathResource("demo.bas").getInputStream()) {
         try (InputStream inputStream = MainTest.class.getClassLoader().getResourceAsStream(fname)) {
@@ -42,9 +43,8 @@ public class MainTest {
             ScriptEngine botScript = new ScriptEngine();
 
             botScript.load(inputStream);
-            ScriptSession session = new ScriptSession(UUID.randomUUID().toString());
-            session.setActive(true);
-            botScript.interpret(session);
+
+            botScript.interpret();
         }
 
     }

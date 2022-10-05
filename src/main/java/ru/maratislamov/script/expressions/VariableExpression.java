@@ -17,7 +17,7 @@ public class VariableExpression implements Expression {
     }
 
     public Value evaluate(ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
-        MapValueInterface variables = session.getVariables();
+        MapValueInterface variables = session.getSessionScope();
 
         if (variables.containsKey(name)) {
             return variables.get(name, session/*, context*/);

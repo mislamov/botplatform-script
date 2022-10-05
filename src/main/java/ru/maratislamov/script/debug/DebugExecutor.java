@@ -1,7 +1,9 @@
-package ru.maratislamov.script;
+package ru.maratislamov.script.debug;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.maratislamov.script.ScriptFunctionsExecutor;
+import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.NotFoundValue;
 import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
@@ -15,11 +17,11 @@ import java.util.stream.Collectors;
 /**
  * Контекст выполнения скрипта
  */
-public class ScriptFunctionDemoExecutor extends ScriptFunctionsExecutor {
+public class DebugExecutor extends ScriptFunctionsExecutor {
 
-    Logger logger = LoggerFactory.getLogger(ScriptFunctionDemoExecutor.class);
+    Logger logger = LoggerFactory.getLogger(DebugExecutor.class);
 
-    public ScriptFunctionDemoExecutor() {
+    public DebugExecutor() {
     }
 
     /**
@@ -52,11 +54,11 @@ public class ScriptFunctionDemoExecutor extends ScriptFunctionsExecutor {
                     result = new NumberValue(value);
 
                     if (args.size() != 1) throw new Error("1 arg expected for input");
-                    session.getVariables().put(args.get(0).toString(), result);
+                    session.getSessionScope().put(args.get(0).toString(), result);
 
                 } catch (NumberFormatException e) {
                     result = new StringValue(input);
-                    session.getVariables().put(args.get(0).toString(), result);
+                    session.getSessionScope().put(args.get(0).toString(), result);
                 }
                 return result;
 

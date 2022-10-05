@@ -27,11 +27,6 @@ public class MethodCallValue implements Statement, Value {
         this.args = args;
     }
 
-    @Override
-    public String toString() {
-        return "$" + call;
-    }
-
     public Double toNumber() {
         throw new ClassCastException("MethodCallValue can't be cast to Number");
     }
@@ -48,7 +43,7 @@ public class MethodCallValue implements Statement, Value {
 
         } catch (Exception | Error e) {
             logger.error("CallMethodError[" + call + "]", e);
-            throw new Error("ERROR when call function " + call + ": " + e.getMessage());
+            throw new Error("ERROR when call function " + call + ": " + e.getMessage() + "\n" + "### Do you use ScriptFunctionsService.register(new YourCustomExecutor()) ?");
         }
     }
 
@@ -57,5 +52,9 @@ public class MethodCallValue implements Statement, Value {
         return evaluate(session);
     }
 
+    @Override
+    public String toString() {
+        return "CALL " + call + " " + args;
+    }
 
 }

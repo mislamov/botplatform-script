@@ -14,4 +14,9 @@ public class EOFStatement implements Statement {
     public Value execute(ScriptSession session) {
         return null;
     }
+
+    @Override
+    public String toString() {
+        return "EOFStatement{}";
+    }
 }

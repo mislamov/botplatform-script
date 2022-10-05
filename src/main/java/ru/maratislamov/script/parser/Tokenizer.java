@@ -51,7 +51,19 @@ public class Tokenizer {
                     case DEFAULT:
                         if (iC == -1) return tokens;
 
-                        if (c == '!') {
+                        if (c == '=') {
+                            tokens.add(new Token("=", TokenType.EQUALS));
+                            token = "";
+
+                            iC = source.read();
+                            c = (char) iC;
+                            if (c == '=') {
+                                break;
+                            }
+                            continue;
+
+
+                        } else if (c == '!') {
                             token += c;
                             iC = source.read();
                             c = (char) iC;
@@ -113,17 +125,31 @@ public class Tokenizer {
                         break;
 
                     case STRING:
-                        if (c == '"') {
+                        if (c == '\\') { // экранирование
+                            iC = source.read();
+                            c = (char) iC;
+                            token += esc(c);
+                            break;
+
+                        } else if (c == '"') {
+                            iC = source.read();
+                            c = (char) iC;
+                            if (c == '"') {  //   двойные кавычки внутри текста = экранирование
+                                token += '"';
+                                break;
+                            }
+
                             tokens.add(new Token(token, TokenType.STRING));
                             token = "";
                             state = TokenizeState.DEFAULT;
+                            continue;
                         } else {
                             token += c;
                         }
                         break;
 
                     case COMMENT:
-                        if (c == '\n') {
+                        if (c == '\n' || c == (char) -1) {
                             state = TokenizeState.DEFAULT;
                             ////i--;
                             continue;
@@ -134,6 +160,7 @@ public class Tokenizer {
                         throw new Error("Unexpected token here: " + debugString(iC, source));
                 }
 
+                if (iC == -1) return tokens;
                 iC = source.read();
             }
 
@@ -145,6 +172,15 @@ public class Tokenizer {
         // characters. This means that, for example, if a script has a string
         // that's missing the closing ", it will just ditch it.
         return tokens;
+    }
+
+    // escape codes
+    private static String esc(char c) {
+        switch (c){
+            case 'n': return "\n";
+            case 't': return "\t";
+            default: return String.valueOf(c);
+        }
     }
 
 
