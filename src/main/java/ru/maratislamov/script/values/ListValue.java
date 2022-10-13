@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 /**
  * A numeric value. Jasic uses doubles internally for all numbers.
  */
-public class ListValue implements Expression, Value, MapValueInterface {
+public class ListValue implements Value, MapValueInterface {
 
     private final List<Expression> list;
 
@@ -77,6 +77,7 @@ public class ListValue implements Expression, Value, MapValueInterface {
     @Override
     public Value get(String name, ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
         if (name.equals("size")) return new NumberValue(list.size());
+        if (name.equals("first")) return list.get(0).evaluate(session);
         return null;
     }
 

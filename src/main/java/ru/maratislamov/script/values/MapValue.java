@@ -23,8 +23,8 @@ public class MapValue implements Value, MapValueInterface {
     private static final Logger logger = LoggerFactory.getLogger(MapValue.class);
 
     public static final String PROPERTY_SIZE = "size";
-    private Map<String, Value> body = new LinkedHashMap<>();
-    ;
+
+    private Map<String, Value> body = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public Map<String, Value> getBody() {
         return body;

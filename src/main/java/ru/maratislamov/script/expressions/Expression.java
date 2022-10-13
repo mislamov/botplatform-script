@@ -18,4 +18,5 @@ public interface Expression {
      * @return The value of the calculated expression.
      */
     Value evaluate(ScriptSession session);
+
 }
