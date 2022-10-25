@@ -125,13 +125,14 @@ public class Tokenizer {
                         break;
 
                     case STRING:
-                        if (c == '\\') { // экранирование
+                        /*if (c == '\\') { // экранирование
                             iC = source.read();
                             c = (char) iC;
-                            token += esc(c);
+                            //token += esc(c);  - в StringValue применяется StringEscapeUtils.unescapeJava для этого
+                            token += c;
                             break;
 
-                        } else if (c == '"') {
+                        } else*/ if (c == '"') {
                             iC = source.read();
                             c = (char) iC;
                             if (c == '"') {  //   двойные кавычки внутри текста = экранирование
@@ -179,6 +180,7 @@ public class Tokenizer {
         switch (c){
             case 'n': return "\n";
             case 't': return "\t";
+            case '\\': return "\\";
             default: return String.valueOf(c);
         }
     }

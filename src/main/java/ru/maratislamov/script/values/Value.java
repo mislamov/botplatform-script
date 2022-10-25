@@ -69,15 +69,14 @@ public interface Value extends Expression, Serializable {
     Value NULL = NULLValue.NULL;
     Value NotFound = NotFoundValue.NOT_FOUND_VALUE;
 
+    @SuppressWarnings("unchecked")
     static Value from(Object val) {
         if (val == null) return NULL;
         if (val instanceof Number) return new NumberValue(((Number) val).doubleValue());
         if (val instanceof Map) {
             MapValue mapValue = new MapValue();
             Map mapVal = (Map) val;
-            mapVal.forEach((k, v) -> {
-                mapValue.put((String) k, from(v));
-            });
+            mapVal.forEach((k, v) -> mapValue.put((String) k, from(v)));
             return mapValue;
         }
         if (val instanceof Collection) {
@@ -100,8 +99,8 @@ public interface Value extends Expression, Serializable {
 
     }
 
-    static ArrayList asList(ListValue val) {
-        ArrayList result = new ArrayList();
+    static ArrayList<Serializable> asList(ListValue val) {
+        ArrayList<Serializable> result = new ArrayList<>();
         val.getList().forEach(ex -> {
             result.add(asObject(ex.evaluate(null/*, null*/)));
         });

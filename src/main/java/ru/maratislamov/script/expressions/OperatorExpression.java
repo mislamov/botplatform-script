@@ -41,7 +41,7 @@ public class OperatorExpression implements Expression {
     }
 
     public Value evaluate(ScriptSession session) {
-        try {
+        //try {
             Value leftVal = left.evaluate(session);
             Value rightVal = right.evaluate(session);
 
@@ -108,10 +108,9 @@ public class OperatorExpression implements Expression {
             }
             throw new Error("Unknown operator: " + operator);
 
-        } catch (Throwable tr) {
-            tr.printStackTrace();
-            logger.error("Error evalution for operator " + toString() + ": " + tr.toString());
+        /*} catch (Throwable tr) {
+            logger.error("Error evalution for operator " + this + ": " + tr);
             return null;
-        }
+        }*/
     }
 }

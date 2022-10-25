@@ -28,6 +28,6 @@ public class NULLValue implements Value {
 
     @Override
     public String toString() {
-        return "NULL";
+        return "$NULL";
     }
 }

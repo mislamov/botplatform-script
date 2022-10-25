@@ -26,6 +26,7 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
 
     /**
      * выполняет библиотечную функцию. Если функция @fname неизвестна, метод должен вернуть NOT_FOUND_VALUE
+     *
      * @param fname
      * @param args
      * @param session
@@ -45,22 +46,24 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
                 return null;
 
             case "input":
-                InputStreamReader converter = new InputStreamReader(System.in);
-                BufferedReader lineIn = new BufferedReader(converter);
-                String input = lineIn.readLine();
-                Value result;
-                try {
-                    double value = Double.parseDouble(input);
-                    result = new NumberValue(value);
+                try (InputStreamReader converter = new InputStreamReader(System.in)) {
+                    BufferedReader lineIn = new BufferedReader(converter);
+                    String input = lineIn.readLine();
+                    Value result;
 
-                    if (args.size() != 1) throw new Error("1 arg expected for input");
-                    session.getSessionScope().put(args.get(0).toString(), result);
+                    try {
+                        double value = Double.parseDouble(input);
+                        result = new NumberValue(value);
 
-                } catch (NumberFormatException e) {
-                    result = new StringValue(input);
-                    session.getSessionScope().put(args.get(0).toString(), result);
+                        if (args.size() != 1) throw new Error("1 arg expected for input");
+                        session.getSessionScope().put(args.get(0).toString(), result);
+
+                    } catch (NumberFormatException e) {
+                        result = new StringValue(input);
+                        session.getSessionScope().put(args.get(0).toString(), result);
+                    }
+                    return result;
                 }
-                return result;
 
             default:
                 //throw new Error("Unknown function: " + fname);

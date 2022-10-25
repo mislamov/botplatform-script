@@ -105,7 +105,7 @@ public class MapValue implements Value, MapValueInterface {
                 return find(name, false);
 
             } catch (ParseException e) {
-                logger.error("map parsing by path failed", e);
+                logger.error("map parsing by path failed");
                 //return null;
                 throw new RuntimeException("map parsing by path failed", e);
             }
@@ -191,13 +191,17 @@ public class MapValue implements Value, MapValueInterface {
         try {
             find(key, true); // инициализируем весь preLastPath
             old = find(preLastPath);
+            if (old instanceof NULLValue){
+                old = new MapValue();
+                put(preLastPath, old);
+            }
             MapValue prev = (MapValue) old;
             prev.put(lastPathName, value);
             return value;
 
         } catch (Throwable e) {
-            logger.error(e.getMessage(), e);
-            throw new RuntimeException("path to wrong map value: " + key + " (" + ClassUtils.getSimpleName(old, null) + ")");
+            logger.error(e.getMessage());
+            throw new RuntimeException("path to wrong map value: " + key + " (" + ClassUtils.getSimpleName(old, null) + ")", e);
         }
 
 

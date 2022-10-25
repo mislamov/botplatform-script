@@ -31,16 +31,16 @@ class TokenizerTest {
     }
 
 
-    @Test
+    /*@Test
     public void testEscapeN(){
         // двойное экранирование кавычек
-        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("\"line 1\\nline 2\"".getBytes(StandardCharsets.UTF_8)));
+        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("\"line 1\\nline\\\\ 2\"".getBytes(StandardCharsets.UTF_8)));
         System.out.println(tokens);
 
         Assertions.assertEquals(1, tokens.size());
         Assertions.assertEquals(TokenType.STRING, tokens.get(0).type);
-        Assertions.assertEquals("line 1\nline 2", tokens.get(0).text);
-    }
+        Assertions.assertEquals("line 1\nline\\ 2", tokens.get(0).text);
+    }*/
 
     @Test
     public void testList(){

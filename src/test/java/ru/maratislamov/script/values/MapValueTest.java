@@ -33,6 +33,17 @@ public class MapValueTest {
 
         // создаем мапу через инициализацию вложенного значения
         mapValue.put("newvar.newsubvar.newsubsubvar", new StringValue("the value"));
+        Assertions.assertTrue(mapValue.get("newvar") instanceof MapValue);
+        Assertions.assertTrue(mapValue.get("newvar.newsubvar") instanceof MapValue);
+        Assertions.assertTrue(mapValue.get("newvar.newsubvar.newsubsubvar") instanceof StringValue);
+        Assertions.assertEquals(((StringValue) mapValue.get("newvar.newsubvar.newsubsubvar")).getValue(), "the value");
+
+        mapValue.put("aaa.bbb", Value.NULL);
+        Assertions.assertTrue(mapValue.get("aaa.bbb") instanceof NULLValue);
+        mapValue.put("aaa.bbb.ccc", new StringValue("str"));
+        Assertions.assertTrue(mapValue.get("aaa.bbb") instanceof MapValue);
+        Assertions.assertTrue(mapValue.get("aaa.bbb.ccc") instanceof StringValue);
+        Assertions.assertEquals(((StringValue) mapValue.get("aaa.bbb.ccc")).getValue(), "str");
     }
 
 

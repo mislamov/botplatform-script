@@ -27,15 +27,15 @@ public class NumberValue implements Value {
     }
 
     public NumberValue(int val) {
-        value = new Double(val);
+        value = (double) val;
     }
 
     public NumberValue(double val) {
-        value = new Double(val);
+        value = val;
     }
 
     public NumberValue(String val) {
-        value = Double.valueOf(Double.parseDouble(val));
+        value = Double.parseDouble(val);
     }
 
     @Override
