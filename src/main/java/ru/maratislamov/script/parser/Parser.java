@@ -257,14 +257,12 @@ public class Parser {
             }
 
             // arr[exp] - элемент переменной-списка
-/*
             if (peek(TokenType.BEGIN_LIST)){
                 match(TokenType.BEGIN_LIST);
                 Expression itemIdxExpr = expression();
                 match(TokenType.END_LIST);
                 return new ArrayVariableExpression(prev, itemIdxExpr);
             }
-*/
 
             return new VariableExpression(prev);
 

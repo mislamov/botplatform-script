@@ -1,5 +1,6 @@
 package ru.maratislamov.script.values;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 
@@ -42,6 +43,23 @@ public class ListValue implements Value, MapValueInterface {
         return new ListValue(this.list.stream().map(v -> v.evaluate(session)).collect(Collectors.toList()));
     }
 
+    @Override
+    public Value put(String key, Value value) {
+        if (!NumberUtils.isDigits(key)) throw new RuntimeException("integer index expected for put value, but: " + key);
+        Integer index = Integer.parseInt(key);
+
+        if (list.size() > index){
+            list.set(index, value);
+            return value;
+        }
+
+        while (list.size() < index){
+            list.add(Value.NULL);
+        }
+        list.add(value);
+        return value;
+    }
+
     public Value push(Value value) {
         if (list == null) throw new RuntimeException("Unexpected value == null when push in List");
         list.add(value);
@@ -78,6 +96,9 @@ public class ListValue implements Value, MapValueInterface {
     public Value get(String name, ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
         if (name.equals("size")) return new NumberValue(list.size());
         if (name.equals("first")) return list.get(0).evaluate(session);
+        if (NumberUtils.isDigits(name)) {
+            return getList().get(Integer.parseInt(name)).evaluate(session);
+        }
         return null;
     }
 

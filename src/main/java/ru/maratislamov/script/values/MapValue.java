@@ -201,7 +201,7 @@ public class MapValue implements Value, MapValueInterface {
                 old = new MapValue();
                 put(preLastPath, old);
             }
-            MapValue prev = (MapValue) old;
+            MapValueInterface prev = (MapValueInterface) old;
             prev.put(lastPathName, value);
             return value;
 

@@ -53,4 +53,7 @@ public class LazyMapValue implements Value, MapValueInterface {
         return expression == null ? Value.NULL : expression.evaluate(session/*, context*/);
     }
 
+    public Value put(String key, Value value) {
+        throw new RuntimeException("NYR");
+    }
 }
