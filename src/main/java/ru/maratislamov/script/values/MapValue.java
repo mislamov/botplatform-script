@@ -122,6 +122,12 @@ public class MapValue implements Value, MapValueInterface {
         return get(name, null/*, null*/);
     }
 
+    @JsonIgnore
+    public Value getOrDefault(String name, Value def) {
+        final Value value = get(name, null);
+        return value == null ? def : value;
+    }
+
     /**
      * Поиск выражение по пути вида Слово.Слово.Слово
      *

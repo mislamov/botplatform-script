@@ -24,7 +24,7 @@ public class InlineScriptTest {
         System.out.println(session);
         Map<String, Value> varMap = session.getSessionScope().getBody();
         assert varMap.size() == 1;
-        assert varMap.get("i").equals("hello, world");
+        assert Objects.equals(varMap.get("i").toString(), "hello, world");
 
     }
 

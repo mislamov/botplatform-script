@@ -2,6 +2,7 @@ package ru.maratislamov.script.parser;
 
 import org.apache.commons.lang3.StringUtils;
 import ru.maratislamov.script.ScriptEngine;
+import ru.maratislamov.script.expressions.ArrayVariableExpression;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.OperatorExpression;
 import ru.maratislamov.script.expressions.VariableExpression;
@@ -50,6 +51,7 @@ public class Parser {
         return rest == null ? lastTokensAsString() : rest;
     }
 
+    // два последних токена
     protected String lastTokensAsString() {
         if (tokens.size() >= 2){
             return tokens.subList(tokens.size() - 2, tokens.size()).stream().map(token -> token.text).collect(Collectors.joining());
@@ -82,12 +84,21 @@ public class Parser {
 
             } else if (match(TokenType.WORD, TokenType.EQUALS, TokenType.EQUALS) || match(TokenType.WORD, TokenType.EQUALS)) {
                 // присваивание
-                String name = last(2).text;
+                String name = last(2).text; // todo: correct for '=' ?
                 Expression value = expression();
                 statements.add(new AssignStatement(name, value));
 
+            } else if (match(TokenType.WORD, TokenType.OPERATOR) && last(1).text.endsWith("=")) { // word *=   word +=
+                // присваивание
+                String name = last(2).text;
+                assert last(1).type == TokenType.OPERATOR;
+                String modify = null;
+                if (last(1).text.endsWith("=")) modify = "" + last(1).text.charAt(0);
+                Expression value = expression();
+                statements.add(new AssignStatement(name, modify, value));
+
             } else if (match("goto")) {
-                statements.add(new GotoStatement(botScript, consume(TokenType.WORD).text));
+                statements.add(new GotoStatement(botScript, expression()));
 
             } else if (match(TokenType.WORD, TokenType.LINE)) { // процедура без аргументов
                 statements.add(new MethodCallValue(last(2).text, Collections.emptyList()));
@@ -175,6 +186,9 @@ public class Parser {
      * 1 + 2 * 3 - 4 / 5
      * like:
      * ((((1 + 2) * 3) - 4) / 5)
+     *
+     * TODO: REFACTOR!
+     *
      * <p>
      * It works by building the expression tree one at a time. So, given
      * this code: 1 + 2 * 3, this will:
@@ -241,6 +255,17 @@ public class Parser {
                 }
                 return new MethodCallValue(call, argList);
             }
+
+            // arr[exp] - элемент переменной-списка
+/*
+            if (peek(TokenType.BEGIN_LIST)){
+                match(TokenType.BEGIN_LIST);
+                Expression itemIdxExpr = expression();
+                match(TokenType.END_LIST);
+                return new ArrayVariableExpression(prev, itemIdxExpr);
+            }
+*/
+
             return new VariableExpression(prev);
 
         } else if (match(TokenType.NUMBER)) {

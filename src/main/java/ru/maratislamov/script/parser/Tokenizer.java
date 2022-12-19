@@ -74,6 +74,20 @@ public class Tokenizer {
                                 throw new Error("Unexpected token here: !" + debugString(iC, source));
                             }
 
+                        } else if ((c == '+' || c == '-' || c == '*' || c == '\\')) {
+                            token += c;
+                            iC = source.read();
+                            token = "";
+
+                            if (iC == '=') {
+                                tokens.add(new Token(c + "=", TokenType.OPERATOR));
+                                break;
+                            } else {
+                                tokens.add(new Token("" + c, TokenType.OPERATOR));
+                                c = (char) iC;
+                                continue;
+                            }
+
                         } else if (charTokens.indexOf(c) != -1) {
                             tokens.add(new Token(Character.toString(c), tokenTypes[charTokens.indexOf(c)]));
 
@@ -132,7 +146,8 @@ public class Tokenizer {
                             token += c;
                             break;
 
-                        } else*/ if (c == '"') {
+                        } else*/
+                        if (c == '"') {
                             iC = source.read();
                             c = (char) iC;
                             if (c == '"') {  //   двойные кавычки внутри текста = экранирование
@@ -177,11 +192,15 @@ public class Tokenizer {
 
     // escape codes
     private static String esc(char c) {
-        switch (c){
-            case 'n': return "\n";
-            case 't': return "\t";
-            case '\\': return "\\";
-            default: return String.valueOf(c);
+        switch (c) {
+            case 'n':
+                return "\n";
+            case 't':
+                return "\t";
+            case '\\':
+                return "\\";
+            default:
+                return String.valueOf(c);
         }
     }
 

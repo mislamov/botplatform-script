@@ -52,7 +52,7 @@ public class OperatorExpression implements Expression {
                     return new NumberValue(leftVal == rightVal ? 1 : 0);
                 if (Objects.equals(operator, "!=")) return new NumberValue(leftVal == rightVal ? 0 : 1);
                 Value secondValue = leftVal == Value.NULL ? rightVal : leftVal;
-                if (secondValue instanceof NumberValue) throw new Error("Unsupported operation " + operator + " for NULL and Number");
+                if (secondValue instanceof NumberValue) throw new Error("Unsupported operation " + operator + " for NULL and Number: " + left.toString() + " vs " + right.toString());
             }
 
 

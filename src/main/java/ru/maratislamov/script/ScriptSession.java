@@ -1,6 +1,7 @@
 package ru.maratislamov.script;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.maratislamov.script.values.MapValue;
 
 import java.io.Serializable;
@@ -55,7 +56,7 @@ public class ScriptSession implements Serializable {
         return session;
     }
 
-    public int getCurrentStatement() {
+    public Integer getCurrentStatement() {
         return currentStatement;
     }
 
@@ -68,6 +69,7 @@ public class ScriptSession implements Serializable {
         currentStatement = null;
     }
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public boolean isActive(){
         return currentStatement != null;
     }
@@ -108,6 +110,8 @@ public class ScriptSession implements Serializable {
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }
+
+
 
     @Override
     public boolean equals(Object o) {

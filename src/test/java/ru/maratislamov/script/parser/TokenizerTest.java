@@ -22,12 +22,48 @@ class TokenizerTest {
     @Test
     public void testEscape(){
         // двойное экранирование кавычек
-        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("\"hello \\\"Monkey\\\" bye\"".getBytes(StandardCharsets.UTF_8)));
+        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("\"hello \"\"Monkey\"\" bye\"".getBytes(StandardCharsets.UTF_8)));
         System.out.println(tokens);
 
         Assertions.assertEquals(1, tokens.size());
         Assertions.assertEquals(TokenType.STRING, tokens.get(0).type);
         Assertions.assertEquals("hello \"Monkey\" bye", tokens.get(0).text);
+    }
+
+
+    @Test
+    public void testEq(){
+        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x = 10".getBytes(StandardCharsets.UTF_8)));
+        System.out.println(tokens);
+
+        Assertions.assertEquals(3, tokens.size());
+        Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
+        Assertions.assertEquals(TokenType.EQUALS, tokens.get(1).type);
+        Assertions.assertEquals(TokenType.NUMBER, tokens.get(2).type);
+    }
+
+    @Test
+    public void testPlusEq(){
+        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x += (10 + 1)".getBytes(StandardCharsets.UTF_8)));
+        System.out.println(tokens);
+
+        Assertions.assertEquals(7, tokens.size());
+        Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
+        Assertions.assertEquals(TokenType.OPERATOR, tokens.get(1).type);
+        Assertions.assertEquals(TokenType.LEFT_PAREN, tokens.get(2).type);
+    }
+
+
+    @Test
+    public void testStrPlus(){
+        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("print \"Hello, world! \" + count".getBytes(StandardCharsets.UTF_8)));
+        System.out.println(tokens);
+
+        Assertions.assertEquals(4, tokens.size());
+        Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
+        Assertions.assertEquals(TokenType.STRING, tokens.get(1).type);
+        Assertions.assertEquals(TokenType.OPERATOR, tokens.get(2).type);
+        Assertions.assertEquals(TokenType.WORD, tokens.get(3).type);
     }
 
 

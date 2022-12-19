@@ -16,9 +16,11 @@ iterloop: ' iterate the complex function p <- p^2 + seed
           y1 = 2 * x0 * y0
           
           ' add the seed
-          x1 = x1 + x
-          y1 = y1 + y
-          
+          'x1 = x1 + x
+          'y1 = y1 + y
+          x1 += x
+          y1 += y
+
           x0 = x1
           y0 = y1
           

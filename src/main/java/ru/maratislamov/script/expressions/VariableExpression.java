@@ -16,18 +16,24 @@ public class VariableExpression implements Expression {
         this.name = name;
     }
 
-    public Value evaluate(ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
+    public Value evaluate(ScriptSession session) {
         MapValueInterface variables = session.getSessionScope();
 
-        if (variables.containsKey(name)) {
-            return variables.get(name, session/*, context*/);
+        return findByName(variables, name, session);
+    }
+
+    private Value findByName(MapValueInterface variables, String nameSearch, ScriptSession session) {
+        // переменная присутствует точь-в-точь по имени
+        if (variables.containsKey(nameSearch)) {
+            return variables.get(nameSearch, session);
         }
 
-        if (name.contains(".")) {
-            String[] path = name.split("\\.");
+        // задан путь до переменной
+        if (nameSearch.contains(".")) {
+            String[] path = nameSearch.split("\\.");
             Value value = null;
             for (String vr : path) {
-                value = variables.get(vr, session/*, context*/);
+                value = variables.get(vr, session);
 
                 if (value == null) return Value.NULL;
 
