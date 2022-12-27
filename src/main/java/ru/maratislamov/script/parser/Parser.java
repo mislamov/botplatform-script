@@ -1,8 +1,9 @@
 package ru.maratislamov.script.parser;
 
+import org.apache.commons.lang3.CharSequenceUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringSubstitutor;
 import ru.maratislamov.script.ScriptEngine;
-import ru.maratislamov.script.expressions.ArrayVariableExpression;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.OperatorExpression;
 import ru.maratislamov.script.expressions.VariableExpression;
@@ -38,7 +39,7 @@ public class Parser {
 
     public String debugCurrentPosition() {
         int i = 0;
-        while (get(i).type == TokenType.LINE ) {
+        while (get(i).type == TokenType.LINE) {
             --i;
         }
 
@@ -53,7 +54,7 @@ public class Parser {
 
     // два последних токена
     protected String lastTokensAsString() {
-        if (tokens.size() >= 2){
+        if (tokens.size() >= 2) {
             return tokens.subList(tokens.size() - 2, tokens.size()).stream().map(token -> token.text).collect(Collectors.joining());
         }
         return tokens.isEmpty() ? "" : tokens.get(0).text;
@@ -75,7 +76,7 @@ public class Parser {
         while (true) {
             // Counting empty lines.
             while (match(TokenType.LINE)) {
-                positionLine++;
+                positionLine++; // todo: не учитывает переносы строки внутри текста!!!
             }
 
             if (match(TokenType.LABEL)) {
@@ -127,6 +128,10 @@ public class Parser {
                 consume(TokenType.LINE, TokenType.EOF);
                 positionLine++;
 
+            } else if (match(TokenType.STRING_FRAME)) {
+                statements.add(new MethodCallValue("print", List.of(new StringFrameValue(frameTextToArgList(get(-1).text))))); // todo: eval vars
+                positionLine++;
+
             } else if (match(TokenType.WORD)) { // команда/процедура с аргументами, которые вычисляются перед вызовом
                 //statements.add(new MethodCallValue(last(1).text, Collections.singletonList(expression())));
                 String fname = last(1).text;
@@ -150,6 +155,55 @@ public class Parser {
         return statements;
     }
 
+    protected List<Expression> frameTextToArgList(String text) {
+        List<Expression> result = new ArrayList<>();
+
+        final String[] parts = text.split("\\$");
+
+        if (!"".equals(parts[0])) {
+            result.add(new StringValue(parts[0]));
+        }
+
+        for (int i = 1; i < parts.length; i++) {
+            String ln = parts[i];
+            if (ln.equals("")) {  // $$
+                result.add(new StringValue("$"));
+                if (!"".equals(parts[i + 1])) {
+                    result.add(new StringValue(parts[i + 1]));
+                    i += 1;
+                }
+                continue;
+            } else {
+                int idx = endOfVarName(ln);
+
+                if (idx == 0) { // _$_
+                    result.add(new StringValue("$" + ln));
+                    continue;
+                }
+
+                result.add(new VariableExpression(ln.substring(0, idx)));
+                if (idx < ln.length() - 1) {
+                    result.add(new StringValue(ln.substring(idx)));
+                }
+            }
+        } //  fff$$ddd ; fff$$$ddd
+
+        if (text.endsWith("$")){
+            result.add(new StringValue("$"));
+        }
+
+        return result;
+    }
+
+    private int endOfVarName(String code) {
+        for (int i = 0; i < code.length(); ++i) {
+            if (List.of('.', '_', '[', ']').contains(code.charAt(i))) continue;
+            if (Character.isLetterOrDigit(code.charAt(i))) continue;
+            return i;
+        }
+        return code.length();
+    }
+
     // The following functions each represent one grammatical part of the
     // language. If this parsed English, these functions would be named like
     // noun() and verb().
@@ -168,7 +222,7 @@ public class Parser {
 
             while (!match(TokenType.END_LIST)) {
                 expressionList.add(expression());
-                if (!match(TokenType.SEP_LIST) && !peek(TokenType.END_LIST)) {
+                if (!match(TokenType.COMMA) && !peek(TokenType.END_LIST)) {
                     throw new Error("List parse error here: " + debugCurrentPosition());
                 }
             }
@@ -186,7 +240,7 @@ public class Parser {
      * 1 + 2 * 3 - 4 / 5
      * like:
      * ((((1 + 2) * 3) - 4) / 5)
-     *
+     * <p>
      * TODO: REFACTOR!
      *
      * <p>
@@ -237,10 +291,6 @@ public class Parser {
                 return Value.NULL;
             }
 
-//            if ("FLUSH".equals(prev)) {
-//                return new MethodCallValue("flush", null);
-//            }
-
             if ("EXEC".equals(prevUpper) || "CALL".equals(prevUpper)) {
                 // вызов внешней функции
                 String call = get(0).text;
@@ -256,12 +306,29 @@ public class Parser {
                 return new MethodCallValue(call, argList);
             }
 
-            // arr[exp] - элемент переменной-списка
-            if (peek(TokenType.BEGIN_LIST)){
-                match(TokenType.BEGIN_LIST);
-                Expression itemIdxExpr = expression();
-                match(TokenType.END_LIST);
-                return new ArrayVariableExpression(prev, itemIdxExpr);
+            // fn(a,b,c)
+            if (peek(TokenType.LEFT_PAREN)) {
+                String fname = prev;
+                List<Expression> argList = new ArrayList<>();
+                match(TokenType.LEFT_PAREN);
+
+                // fn()
+                if (peek(TokenType.RIGHT_PAREN)) {
+                    consume(TokenType.RIGHT_PAREN);
+                    return new MethodCallValue(fname, argList);
+                }
+
+                //fn(a
+                Expression arg = expression();
+                argList.add(arg);
+
+                // fn(a,b,c
+                while (peek(TokenType.COMMA)) {
+                    match(TokenType.COMMA);
+                    argList.add(expression());
+                }
+                consume(TokenType.RIGHT_PAREN);
+                return new MethodCallValue(fname, argList);
             }
 
             return new VariableExpression(prev);

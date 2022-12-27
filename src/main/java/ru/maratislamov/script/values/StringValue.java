@@ -17,7 +17,7 @@ public class StringValue implements Value {
     }
 
     public StringValue(String value) {
-        this.value = StringEscapeUtils.unescapeJava(value);
+        setValue(StringEscapeUtils.unescapeJava(value));
     }
 
     public String getValue() {
@@ -31,13 +31,13 @@ public class StringValue implements Value {
     @JsonIgnore
     @Override
     public String toString() {
-        return value;
+        return getValue();
     }
 
     @JsonIgnore
     public Double toNumber() {
         try {
-            return Double.valueOf(Double.parseDouble(value));
+            return Double.parseDouble(getValue());
         } catch (NumberFormatException ex){
             return null; // NYR. Должна ли строка всегда преобразовываться в null если не число?
         }

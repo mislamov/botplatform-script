@@ -32,7 +32,7 @@ public class Tokenizer {
         TokenType[] tokenTypes = {TokenType.LINE, TokenType.EQUALS, TokenType.NOEQUALS,
                 TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
                 TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
-                TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN, TokenType.BEGIN_LIST, TokenType.END_LIST, TokenType.SEP_LIST
+                TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN, TokenType.BEGIN_LIST, TokenType.END_LIST, TokenType.COMMA
         };
 
         // Scan through the code one character at a time, building up the list
@@ -100,7 +100,27 @@ public class Tokenizer {
                             state = TokenizeState.NUMBER;
 
                         } else if (c == '"') {
-                            state = TokenizeState.STRING;
+                            // начало строки или фрейм-строки
+
+                            iC = source.read();
+                            c = (char) iC;
+                            if (c != '"') {  //   одна двойная кавычка - это начало строки
+                                state = TokenizeState.STRING;
+                                continue;
+                            }
+
+                            // две двойных кавычки
+                            iC = source.read();
+                            c = (char) iC;
+                            if (c != '"') {  //   всего две двойных кавычки - не фрейм и не строка
+                                throw new Error("Unexpected token here: \"\"" + debugString((char)iC, source));
+                            }
+
+                            // три двойных кавычки
+                            token = "";
+                            state = TokenizeState.STRING_FRAME;
+                            break;
+
 
                         } else if (c == '\'') {
                             state = TokenizeState.COMMENT;
@@ -148,8 +168,7 @@ public class Tokenizer {
 
                         } else*/
                         if (c == '"') {
-                            iC = source.read();
-                            c = (char) iC;
+                            iC = source.read(); c = (char) iC;
                             if (c == '"') {  //   двойные кавычки внутри текста = экранирование
                                 token += '"';
                                 break;
@@ -159,6 +178,27 @@ public class Tokenizer {
                             token = "";
                             state = TokenizeState.DEFAULT;
                             continue;
+                        } else {
+                            token += c;
+                        }
+                        break;
+
+                    case STRING_FRAME:
+                        if (c == '"'){
+                            iC = source.read(); c = (char) iC;
+                            if (c == '"'){
+                                iC = source.read(); c = (char) iC;
+                                if (c == '"'){
+                                    tokens.add(new Token(token.trim(), TokenType.STRING_FRAME));
+                                    token = "";
+                                    state = TokenizeState.DEFAULT;
+                                    break;
+                                } else {
+                                    token += "\"\"";
+                                }
+                            } else {
+                                token += "\"";
+                            }
                         } else {
                             token += c;
                         }
@@ -206,11 +246,11 @@ public class Tokenizer {
 
 
     private static String debugString(int iC, InputStreamReader source) {
-        String substring = "" + iC;
+        StringBuilder substring = new StringBuilder();
 
         while (iC != -1) {
             if (iC == '\n') break;
-            substring += (char) iC;
+            substring.append((char) iC);
             try {
                 iC = source.read();
 
@@ -218,7 +258,7 @@ public class Tokenizer {
                 logger.error(e.toString());
             }
         }
-        return substring;
+        return substring.toString();
     }
 
 }

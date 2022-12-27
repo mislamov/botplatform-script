@@ -1,4 +1,10 @@
 start:
+    x = (2 + 2 * print(1))
+
+    """
+    frame string x = $x
+    """
+
     a.b.c = "abc"
     var.subvar.subsub = [1,2,3, a]
     print "var: {" + var + "}"

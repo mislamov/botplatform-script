@@ -12,5 +12,5 @@ package ru.maratislamov.script.parser;
  * identify how deeply nested you are). The parser is able to handle that.
  */
 public enum TokenizeState {
-    DEFAULT, WORD, NUMBER, STRING, COMMENT
+    DEFAULT, WORD, NUMBER, STRING, STRING_FRAME, COMMENT
 }

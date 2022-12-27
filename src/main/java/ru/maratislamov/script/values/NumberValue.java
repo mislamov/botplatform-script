@@ -2,12 +2,15 @@ package ru.maratislamov.script.values;
 
 import ru.maratislamov.script.ScriptSession;
 
+import java.text.DecimalFormat;
 
 
 /**
  * A numeric value. Jasic uses doubles internally for all numbers.
  */
 public class NumberValue implements Value {
+
+    public static DecimalFormat decimalFormat = new DecimalFormat();
 
     private Double value;
 
@@ -40,7 +43,7 @@ public class NumberValue implements Value {
 
     @Override
     public String toString() {
-        return value.longValue() - value == 0 ? String.valueOf(value.longValue()) : String.valueOf(value);
+        return value.longValue() - value == 0 ? String.valueOf(value.longValue()) : decimalFormat.format(value);
     }
 
     public Double toNumber() {

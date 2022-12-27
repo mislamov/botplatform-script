@@ -43,7 +43,7 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
             case "keyboard":
             case "getcontact":
                 System.out.println(args.stream().map(Value::toString).collect(Collectors.joining(" ")));
-                return null;
+                return args.isEmpty() ? Value.NULL : args.get(0);
 
             case "input":
                 try (InputStreamReader converter = new InputStreamReader(System.in)) {

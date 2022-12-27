@@ -14,6 +14,8 @@ import java.util.UUID;
  */
 public class ScriptSession implements Serializable {
 
+    static final long SerialVersionUID = 1122334455L;
+
     /**
      * родительский сеанс, внутри которого был создан этот. Либо null
      */
