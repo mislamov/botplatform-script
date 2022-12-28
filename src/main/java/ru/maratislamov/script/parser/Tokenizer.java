@@ -112,13 +112,15 @@ public class Tokenizer {
                             // две двойных кавычки
                             iC = source.read();
                             c = (char) iC;
-                            if (c != '"') {  //   всего две двойных кавычки - не фрейм и не строка
-                                throw new Error("Unexpected token here: \"\"" + debugString((char)iC, source));
-                            }
+                            if (c != '"') {  //   всего две двойных кавычки - пустая строка
+                                tokens.add(new Token("", TokenType.STRING));
+                                token = "";
 
-                            // три двойных кавычки
-                            token = "";
-                            state = TokenizeState.STRING_FRAME;
+                            } else {
+                                // три двойных кавычки
+                                token = "";
+                                state = TokenizeState.STRING_FRAME;
+                            }
                             break;
 
 

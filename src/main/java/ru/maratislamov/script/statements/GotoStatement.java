@@ -38,7 +38,7 @@ public class GotoStatement implements Statement {
             session.setCurrentStatement(botScript.labels.get(key).intValue());
             return null;
         }
-        throw new Error("Label " + label + " not found");
+        throw new Error("Label " + evaluated + " not found");
     }
 
     @Override
