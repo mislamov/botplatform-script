@@ -42,7 +42,7 @@ public class MethodCallValue implements Statement, Value {
 
     public Value evaluate(ScriptSession session) {
         try {
-            List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> e.evaluate(session)).collect(Collectors.toList());
+            List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> Expression.evaluate(e , session)).collect(Collectors.toList());
             return ScriptFunctionsService.execFunction(call, args, session);
 
         } catch (Exception | Error e) {

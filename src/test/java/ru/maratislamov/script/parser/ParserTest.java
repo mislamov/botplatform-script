@@ -54,7 +54,10 @@ class ParserTest {
 
         final List<Expression> expressions = parser.frameTextToArgList("hello, $user.name, bye");
         assert expressions.get(0).toString().equals("hello, ");
-        assert expressions.get(1).toString().equals("user.name");
+        assert expressions.get(1) instanceof VariableExpression;
+        assert ((VariableExpression) expressions.get(1)).getName().equals("user");
+        assert ((VariableExpression) expressions.get(1)).getNextInPath().getName().equals("name");
+        assert ((VariableExpression) expressions.get(1)).getNextInPath().getNextInPath() == null;
         assert expressions.get(2).toString().equals(", bye");
 
         assert expressions.get(0) instanceof StringValue;
@@ -71,7 +74,10 @@ class ParserTest {
 
         final List<Expression> expressions = parser.frameTextToArgList("hello, $user.name");
         assert expressions.get(0).toString().equals("hello, ");
-        assert expressions.get(1).toString().equals("user.name");
+        assert expressions.get(1) instanceof VariableExpression;
+        assert ((VariableExpression) expressions.get(1)).getName().equals("user");
+        assert ((VariableExpression) expressions.get(1)).getNextInPath().getName().equals("name");
+        assert ((VariableExpression) expressions.get(1)).getNextInPath().getNextInPath() == null;
 
         assert expressions.get(0) instanceof StringValue;
         assert expressions.get(1) instanceof VariableExpression;
@@ -85,7 +91,7 @@ class ParserTest {
         Parser parser = new Parser(new ScriptEngine(), tokens);
 
         final List<Expression> expressions = parser.frameTextToArgList("$user.name, hello");
-        assert expressions.get(0).toString().equals("user.name");
+        assert expressions.get(0).toString().equals("${user.name}");
         assert expressions.get(1).toString().equals(", hello");
 
         assert expressions.get(0) instanceof VariableExpression;
@@ -102,7 +108,7 @@ class ParserTest {
 
         final List<Expression> expressions = parser.frameTextToArgList("mmm $user.name, hello");
         assert expressions.get(0).toString().equals("mmm ");
-        assert expressions.get(1).toString().equals("user.name");
+        assert expressions.get(1).toString().equals("${user.name}");
         assert expressions.get(2).toString().equals(", hello");
 
         assert expressions.get(0) instanceof StringValue;

@@ -23,7 +23,7 @@ public class PushStatement implements Statement {
 
     public Value execute(ScriptSession session) {
         ListValue valCollection = (ListValue) session.getSessionScope().computeIfAbsent(name, k -> new ListValue(new ArrayList<>()));
-        return valCollection.push(value.evaluate(session));
+        return valCollection.push(Expression.evaluate(value, session));
     }
 
 }

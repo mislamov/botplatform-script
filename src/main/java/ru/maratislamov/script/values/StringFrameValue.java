@@ -2,16 +2,16 @@ package ru.maratislamov.script.values;
 
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.statements.Statement;
 
 import java.util.List;
-import java.util.function.BinaryOperator;
-import java.util.stream.Stream;
 
-public class StringFrameValue extends StringValue {
+public class StringFrameValue extends StringValue implements Statement {
 
     private List<Expression> content;
 
     public StringFrameValue(List<Expression> content) {
+        super();
         this.content = content;
     }
 
@@ -27,7 +27,7 @@ public class StringFrameValue extends StringValue {
 
     @Override
     public Value evaluate(ScriptSession session) {
-        String text = content.stream().map(s -> s.evaluate(session).toString()).reduce((value, value2) -> value + value2).orElse("");
+        String text = content.stream().map(s -> Expression.evaluate(s , session).toString()).reduce((value, value2) -> value + value2).orElse("");
         return new StringValue(text);
     }
 
@@ -46,5 +46,10 @@ public class StringFrameValue extends StringValue {
 
     public void setContent(List<Expression> content) {
         this.content = content;
+    }
+
+    @Override
+    public Value execute(ScriptSession session) {
+        return this;
     }
 }

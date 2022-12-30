@@ -1,24 +1,18 @@
 package ru.maratislamov.script.values;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ser.std.MapSerializer;
-import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptSession;
-import org.apache.commons.lang3.StringUtils;
 import ru.maratislamov.script.utils.ValueUtils;
 
-
-import java.rmi.UnexpectedException;
-import java.text.ParseException;
 import java.util.*;
 import java.util.function.Function;
 
 /**
  * Хеш-таблица для оперирования со сложными структурными объектами (включая json)
  */
-public class MapValue implements Value, MapValueInterface {
+public class MapValue implements Value, MapOrListValueInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(MapValue.class);
 
@@ -98,17 +92,10 @@ public class MapValue implements Value, MapValueInterface {
     }
 
     @JsonIgnore
-    public Value get(String name, ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
+    public Value get(String name) {
 
         if (name.contains(".")) {
-            try {
-                return find(name, false);
-
-            } catch (ParseException e) {
-                logger.error("map parsing by path failed");
-                //return null;
-                throw new RuntimeException("map parsing by path failed", e);
-            }
+            throw new RuntimeException("Don't use DOTs in keys for MapValues: use VarMapUtils.getValueSetterByPath for deep");
         }
 
         if (!body.containsKey(name)) {
@@ -118,62 +105,9 @@ public class MapValue implements Value, MapValueInterface {
     }
 
     @JsonIgnore
-    public Value get(String name) {
-        return get(name, null/*, null*/);
-    }
-
-    @JsonIgnore
     public Value getOrDefault(String name, Value def) {
-        final Value value = get(name, null);
+        final Value value = get(name);
         return value == null ? def : value;
-    }
-
-    /**
-     * Поиск выражение по пути вида Слово.Слово.Слово
-     *
-     * @param path
-     * @return
-     */
-    public Value find(String path) throws ParseException {
-        return find(path, false);
-    }
-
-    public Value find(String path, boolean createSubMaps) throws ParseException {
-        Value value = this;
-        MapValue prevValue = this;
-        String[] split = path.split("\\.");
-
-        for (int i = 0; i < split.length; i++) {
-            String var = split[i];
-
-            // following
-            if (value == null && createSubMaps){
-                value = new MapValue();
-                prevValue.put(split[i-1], value);
-            }
-
-            if (value instanceof MapValue) {
-                prevValue = (MapValue) value;
-                value = prevValue.get(var);
-
-                // todo: list element by index  ...xxx.yy[2].sd...
-
-            } else if (i == split.length - 1) {
-                // last element is not map
-                return value;
-
-            } else if (value != null) {
-                // not last element and not map
-                throw new ParseException("wrong path '" + path + "' for not Map value on step '" + var + "' (type is " + value.getClass().getSimpleName() + ")", i);
-
-            } else {
-                // value == null;
-                if (!createSubMaps) return null;
-                value = new MapValue();
-                prevValue.put(var, value);
-            }
-        }
-        return value;
     }
 
 
@@ -181,36 +115,16 @@ public class MapValue implements Value, MapValueInterface {
      * @param key
      * @param value
      * @return @value
+     * @deprecated присваивать в логике только через {@link ru.maratislamov.script.utils.VarMapUtils#getValueSetterByPath}
      */
+    @Deprecated
     @JsonIgnore
     public Value put(String key, Value value) {
-        if (!key.contains(".")){
-            body.put(key, value);
-            return value;
-        }
-        // у нас есть путь
-        int lastDotIdx = key.lastIndexOf(".");
-        String lastPathName = key.substring(lastDotIdx + 1);
-        String preLastPath = key.substring(0, lastDotIdx);
+        assert !key.contains(".");
+        if (key.contains(".")) throw new RuntimeException("Unexpected key");
 
-        Value old = null;
-        try {
-            find(key, true); // инициализируем весь preLastPath
-            old = find(preLastPath);
-            if (old instanceof NULLValue){
-                old = new MapValue();
-                put(preLastPath, old);
-            }
-            MapValueInterface prev = (MapValueInterface) old;
-            prev.put(lastPathName, value);
-            return value;
-
-        } catch (Throwable e) {
-            logger.error(e.getMessage());
-            throw new RuntimeException("path to wrong map value: " + key + " (" + ClassUtils.getSimpleName(old, null) + ")", e);
-        }
-
-
+        body.put(key, value);
+        return value;
     }
 
     @JsonIgnore

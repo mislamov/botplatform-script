@@ -1,109 +1,72 @@
 package ru.maratislamov.script.values;
 
-import org.apache.commons.lang3.math.NumberUtils;
 import ru.maratislamov.script.ScriptSession;
-import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.values.google.SparseArray;
 
+import java.util.Iterator;
+import java.util.List;
 
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+public class ListValue implements Value, MapOrListValueInterface {
 
-/**
- * A numeric value. Jasic uses doubles internally for all numbers.
- */
-public class ListValue implements Value, MapValueInterface {
+    SparseArray<Value> data;
 
-    private final List<Expression> list;
-
-    public ListValue(List<Expression> value) {
-        this.list = value;
+    public ListValue() {
+        data = new SparseArray<>(10);
     }
 
-    public ListValue(Expression... values) {
-        this.list = new ArrayList<>();
-        Collections.addAll(this.list, values);
+    public ListValue(List<Value> collect) {
+        data = new SparseArray<>();
+        //collect.forEach(c -> data.push(c));
+        data.addAll(collect);
     }
 
     @Override
-    public String toString() {
-        return list == null ? "null" : "[" + list.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
-    }
-
-    public Double toNumber() {
-        throw new RuntimeException("can't cast List to Number for " + toString());
-    }
-
-    @Override
-    public Value copy() {
-        return new ListValue(new ArrayList<>(list));
-    }
-
-    public ListValue evaluate(ScriptSession session) {
-        return new ListValue(this.list.stream().map(v -> v.evaluate(session)).collect(Collectors.toList()));
-    }
-
-    @Override
-    public Value put(String key, Value value) {
-        if (!NumberUtils.isDigits(key)) throw new RuntimeException("integer index expected for put value, but: " + key);
-        Integer index = Integer.parseInt(key);
-
-        if (list.size() > index){
-            list.set(index, value);
-            return value;
-        }
-
-        while (list.size() < index){
-            list.add(Value.NULL);
-        }
-        list.add(value);
-        return value;
-    }
-
-    public Value push(Value value) {
-        if (list == null) throw new RuntimeException("Unexpected value == null when push in List");
-        list.add(value);
-        return value;
-    }
-
-    public Value popLast(ScriptSession session) {
-        if (list == null) throw new RuntimeException("Unexpected value == null when popLast in List");
-        if (list.isEmpty()) return NULL;
-        Expression expression = list.remove(list.size() - 1);
-        return expression.evaluate(session);
-    }
-
-    public Value popFirst(ScriptSession session) {
-        if (list == null) throw new RuntimeException("Unexpected value == null when popFirst in List");
-        if (list.isEmpty()) return NULL;
-        Expression expression = list.remove(0);
-        return expression.evaluate(session);
-    }
-
-    public void forEach(Consumer<Value> action, ScriptSession session) {
-        Objects.requireNonNull(action);
-        for (Expression t : list) {
-            action.accept(t instanceof Value ? (Value) t : t.evaluate(session));
-        }
+    public Value evaluate(ScriptSession session) {
+        return this;
     }
 
     @Override
     public boolean containsKey(String name) {
-        return false;
+        Integer idx = Integer.parseInt(name);
+         return idx <= data.maxIndex();
     }
 
     @Override
-    public Value get(String name, ScriptSession session/*, ScriptFunctionsImplemntator context*/) {
-        if (name.equals("size")) return new NumberValue(list.size());
-        if (name.equals("first")) return list.get(0).evaluate(session);
-        if (NumberUtils.isDigits(name)) {
-            return getList().get(Integer.parseInt(name)).evaluate(session);
-        }
-        return null;
+    public Value get(String name) {
+        Integer idx = Integer.parseInt(name);
+        return data.get(idx);
     }
 
-    public List<Expression> getList() {
-        return list;
+    @Override
+    public Value put(String key, Value value) {
+        Integer idx = Integer.parseInt(key);
+        data.put(idx, value);
+        return value;
     }
 
-}
+    @Override
+    public Double toNumber() {
+        throw new RuntimeException("NYR");
+    }
+
+    @Override
+    public Value copy() {
+        throw new RuntimeException("NYR");
+    }
+
+    public Value push(Value val) {
+        data.push(val);
+        return val;
+    }
+
+    public Iterator<Value> getList() {
+        return data.listIterator();
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(data);
+    }
+};
+
+

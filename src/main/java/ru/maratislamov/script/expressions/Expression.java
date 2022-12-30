@@ -11,12 +11,20 @@ import ru.maratislamov.script.values.Value;
  * expression. Unlike statements, expressions can nest.
  */
 public interface Expression {
+
+    static Value evaluate(Expression value, ScriptSession session) {
+        return value == null ? null : value.evaluate(session);
+    }
+
     /**
      * Expression classes implement this to evaluate the expression and
      * return the value.
      *
      * @return The value of the calculated expression.
+     *
+     * @deprecated use Expression.evaluate()
      */
+    @Deprecated
     Value evaluate(ScriptSession session);
 
 }

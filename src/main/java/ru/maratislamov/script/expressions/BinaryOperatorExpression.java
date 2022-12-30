@@ -7,24 +7,22 @@ import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.Value;
 
-import java.math.MathContext;
-import java.math.RoundingMode;
 import java.util.Objects;
 
 /**
  * An operator expression evaluates two expressions and then performs some
  * arithmetic operation on the results.
  */
-public class OperatorExpression implements Expression {
+public class BinaryOperatorExpression implements Expression {
 
-    Logger logger = LoggerFactory.getLogger(OperatorExpression.class);
+    Logger logger = LoggerFactory.getLogger(BinaryOperatorExpression.class);
 
     private final Expression left;
     private final String operator;
     private final Expression right;
 
-    public OperatorExpression(Expression left, String operator,
-                              Expression right) {
+    public BinaryOperatorExpression(Expression left, String operator,
+                                    Expression right) {
         this.left = left;
         this.operator = operator;
         this.right = right;

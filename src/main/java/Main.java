@@ -1,0 +1,27 @@
+import ru.maratislamov.script.ScriptEngine;
+import ru.maratislamov.script.ScriptFunctionsService;
+import ru.maratislamov.script.ScriptSession;
+import ru.maratislamov.script.debug.DebugExecutor;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+public class Main {
+    public static void main(String[] args) {
+        //String fname = "experiments.bas";
+        String fname = "D:\\WORK\\botplatform-script\\src\\test\\resources\\demo.bas";
+
+        ScriptFunctionsService.register(new DebugExecutor());
+
+        try (InputStream inputStream = new FileInputStream(fname)) {
+
+            ScriptEngine botScript = new ScriptEngine();
+
+            botScript.load(inputStream);
+            botScript.interpret(new ScriptSession(){{ setCurrentStatement(0);}});
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

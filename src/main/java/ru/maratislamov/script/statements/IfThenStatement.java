@@ -23,7 +23,7 @@ public class IfThenStatement implements Statement {
 
     public Value execute(ScriptSession session) {
         if (botScript.labels.containsKey(label)) {
-            Double value = condition.evaluate(session).toNumber();
+            Double value = Expression.evaluate(condition , session).toNumber();
             if (value != 0) {
                 session.setCurrentStatement(botScript.labels.get(label).intValue());
             }

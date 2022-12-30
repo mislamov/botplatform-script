@@ -47,6 +47,20 @@ class TokenizerTest {
     }
 
     @Test
+    public void testEmptyStr2(){
+        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x(\"\")".getBytes(StandardCharsets.UTF_8)));
+        System.out.println(tokens);
+
+        Assertions.assertEquals(4, tokens.size());
+        Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
+        Assertions.assertEquals(TokenType.LEFT_PAREN, tokens.get(1).type);
+        Assertions.assertEquals(TokenType.STRING, tokens.get(2).type);
+        Assertions.assertEquals(TokenType.RIGHT_PAREN, tokens.get(3).type);
+
+        Assertions.assertEquals("", tokens.get(2).text);
+    }
+
+    @Test
     public void testEq(){
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x = 10".getBytes(StandardCharsets.UTF_8)));
         System.out.println(tokens);
@@ -110,5 +124,16 @@ class TokenizerTest {
         assert tokens.get(tokens.size()-1).type == TokenType.END_LIST;
     }
 
+
+
+/*    @Test
+    public void testListVar(){
+        List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("arr[2 + 2] = 1".getBytes(StandardCharsets.UTF_8)));
+        System.out.println(tokens);
+
+        Assertions.assertEquals(4, tokens.size());
+        Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
+
+    }*/
 
 }

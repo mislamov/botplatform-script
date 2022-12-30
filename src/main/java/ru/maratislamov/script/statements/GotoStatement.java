@@ -16,10 +16,10 @@ public class GotoStatement implements Statement {
 
     private final ScriptEngine botScript;
 
-    private final Expression label;
+    private final VariableExpression label;
 
 
-    public GotoStatement(ScriptEngine botScript, Expression label) {
+    public GotoStatement(ScriptEngine botScript, VariableExpression label) {
         this.botScript = botScript;
         this.label = label;
     }
@@ -27,8 +27,8 @@ public class GotoStatement implements Statement {
     public Value execute(ScriptSession session) {
         logger.debug("goto " + label);
 
-        final Value evaluated = label.evaluate(session);
-        final String key = evaluated == Value.NULL ? label.toString() : evaluated.toString();
+        final Value evaluated = Expression.evaluate(label, session);
+        final String key = evaluated == Value.NULL ? label.getName() : evaluated.toString();
 
         if (botScript.labels.containsKey(key)) {
             if (session.getParentSession() != null){

@@ -16,6 +16,16 @@ public class Tokenizer {
 
     // Tokenizing (lexing) -----------------------------------------------------
 
+    // Many tokens are a single character, like operators and ().
+    private static final String charTokens = "\n=!+-*/<>()[],.";
+    private static final TokenType[] tokenTypes = {TokenType.LINE, TokenType.EQUALS, TokenType.NOEQUALS,
+            TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
+            TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
+            TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN, TokenType.BEGIN_LIST, TokenType.END_LIST,
+            TokenType.COMMA, TokenType.DOT
+    };
+
+
     /**
      * This function takes a script as a string of characters and chunks it into
      * a sequence of tokens. Each token is a meaningful unit of program, like a
@@ -26,14 +36,6 @@ public class Tokenizer {
 
         String token = "";
         TokenizeState state = TokenizeState.DEFAULT;
-
-        // Many tokens are a single character, like operators and ().
-        String charTokens = "\n=!+-*/<>()[],";
-        TokenType[] tokenTypes = {TokenType.LINE, TokenType.EQUALS, TokenType.NOEQUALS,
-                TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
-                TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
-                TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN, TokenType.BEGIN_LIST, TokenType.END_LIST, TokenType.COMMA
-        };
 
         // Scan through the code one character at a time, building up the list
         // of tokens.
@@ -115,6 +117,7 @@ public class Tokenizer {
                             if (c != '"') {  //   всего две двойных кавычки - пустая строка
                                 tokens.add(new Token("", TokenType.STRING));
                                 token = "";
+                                continue;
 
                             } else {
                                 // три двойных кавычки
@@ -130,7 +133,7 @@ public class Tokenizer {
                         break;
 
                     case WORD:
-                        if (Character.isLetterOrDigit(c) || c == '.' || c == '_') {
+                        if (Character.isLetterOrDigit(c) || c == '_') {
                             token += c;
                         } else if (c == ':') {
                             tokens.add(new Token(token, TokenType.LABEL));

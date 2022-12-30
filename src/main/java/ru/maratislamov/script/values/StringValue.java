@@ -1,9 +1,8 @@
 package ru.maratislamov.script.values;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import ru.maratislamov.script.ScriptSession;
 import org.apache.commons.text.StringEscapeUtils;
-
+import ru.maratislamov.script.ScriptSession;
 
 
 /**
@@ -14,6 +13,7 @@ public class StringValue implements Value {
     private String value;
 
     public StringValue() {
+        super();
     }
 
     public StringValue(String value) {
@@ -53,4 +53,5 @@ public class StringValue implements Value {
     public Value evaluate(ScriptSession session) {
         return this;
     }
+
 }

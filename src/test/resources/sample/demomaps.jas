@@ -1,6 +1,24 @@
+arr = []
+arr[1] = 1
+arr[2] = arr[1]
+
+varmap = NULL;
 print varmap + " == NULL"
+
 varmap.x = 1
 print varmap + " == {x=1}"
+
 varmap.z.y.a = 2
 varmap.z.y.b = 3
-print varmap + " == " + "{x:1,z.y:2}"
+print varmap + " == " + "{x:1,z.y{a=2, b=3}}"
+
+print "z = " + varmap["z"]
+
+varmap.arr = []
+varmap.arr[2*2].var = arr[0]
+varmap.arr[1].var = arr[1]
+varmap.arr[1].var0 = varmap.arr
+varmap.arr[2].var1 = varmap.arr
+
+print "arr = " + arr
+print "varmap = " + varmap

@@ -2,8 +2,10 @@ package ru.maratislamov.script.statements;
 
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
-import ru.maratislamov.script.expressions.OperatorExpression;
+import ru.maratislamov.script.expressions.VariableExpression;
+import ru.maratislamov.script.utils.VarMapUtils;
 import ru.maratislamov.script.values.Value;
+import ru.maratislamov.script.values.VarWrapper;
 
 /**
  * An assignment statement evaluates an expression and stores the result in
@@ -11,40 +13,27 @@ import ru.maratislamov.script.values.Value;
  */
 public class AssignStatement implements Statement {
 
-    public AssignStatement(String name, Expression value) {
-        this.name = name;
-        this.modifyOperator = null;
-        this.value = value;
-    }
+    private final VariableExpression varExpression;
+    private final Expression value;
 
-    public AssignStatement(String name, String operator, Expression value) {
-        this.name = name;
-        this.modifyOperator = operator;
+    public AssignStatement(VariableExpression name, Expression value) {
+        this.varExpression = name;
         this.value = value;
     }
 
     public Value execute(ScriptSession session) {
-        String[] names = name.split(".");
-        for (String name : names){
-            Value var = session.getSessionScope().get(name);
-            // init by touch
-        }
+        final Value result = Expression.evaluate(this.value, session);
 
-        Expression val = value;
-        if (modifyOperator != null){
-            val = new OperatorExpression(session.getSessionScope().getOrDefault(name, Value.NULL), modifyOperator, value);
-        }
-        return session.getSessionScope().put(name, val.evaluate(session));
+        VarMapUtils.getValueSetterByPath(session, varExpression).accept(result);
+
+        return result;
     }
-
-    private final String name;
-    private final Expression value;
-    private final String modifyOperator;
 
     @Override
     public String toString() {
         return "AssignStatement{" +
-                name + " " + (modifyOperator==null?"":modifyOperator) + "= " + value +
+                "varExpression=" + varExpression +
+                ", value=" + value +
                 '}';
     }
 }

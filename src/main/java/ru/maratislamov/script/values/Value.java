@@ -101,9 +101,7 @@ public interface Value extends Expression, Serializable {
 
     static ArrayList<Serializable> asList(ListValue val) {
         ArrayList<Serializable> result = new ArrayList<>();
-        val.getList().forEach(ex -> {
-            result.add(asObject(ex.evaluate(null/*, null*/)));
-        });
+        val.getList().forEachRemaining(v -> result.add(asObject(Expression.evaluate(v, null))));
         return result;
 
     }

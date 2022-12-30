@@ -1,7 +1,9 @@
 package ru.maratislamov.script.expressions;
 
 import ru.maratislamov.script.ScriptSession;
-import ru.maratislamov.script.values.MapValueInterface;
+import ru.maratislamov.script.values.MapValue;
+import ru.maratislamov.script.values.MapOrListValueInterface;
+import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.Value;
 
 /**
@@ -10,35 +12,71 @@ import ru.maratislamov.script.values.Value;
  */
 public class VariableExpression implements Expression {
 
-    private final String name;
+    private Expression nameExpression = null; // вычислимое выражение для получения имени переменной
+    VariableExpression nextInPath = null; // вложенная переменная (доступ по полю)
 
     public VariableExpression(String name) {
-        this.name = name;
+        String[] split = name.split("\\.", 2);
+        this.nameExpression = new StringValue(split[0]);
+        if (split.length > 1){
+            this.nextInPath = new VariableExpression(split[1]);
+        }
+    }
+
+    public VariableExpression(VariableExpression parent, Expression pathName) {
+        assert parent.getNextInPath() == null;
+
+        this.nameExpression = pathName;
+        parent.setNextInPath(this);
     }
 
     public Value evaluate(ScriptSession session) {
-        MapValueInterface variables = session.getSessionScope();
-
-        return findByName(variables, name, session);
+        return evaluate(session, session.getSessionScope());
     }
 
-    private Value findByName(MapValueInterface variables, String nameSearch, ScriptSession session) {
+    public Value evaluate(ScriptSession session, MapOrListValueInterface scope) {
+        assert nameExpression != null;
+
+        final String evaluatedName = Expression.evaluate(nameExpression , session).toString();
+
+        final Value value = findByName(scope, evaluatedName, session);
+
+        // ныряем в переменную
+        if (nextInPath != null) {
+
+            // не проинициализированные переменные и их параметры равны NULL
+            if (value == null || value == Value.NULL){
+                return Value.NULL;
+            }
+
+            if (!(value instanceof MapOrListValueInterface)) {
+                throw new RuntimeException(String.format("can't take path from ATOMIC value: %s[%s]", value, nextInPath));
+            }
+            return nextInPath.evaluate(session, (MapOrListValueInterface) value);
+        }
+
+        return value;
+    }
+
+    private Value findByName(MapOrListValueInterface variables, String nameSearch, ScriptSession session) {
         // переменная присутствует точь-в-точь по имени
         if (variables.containsKey(nameSearch)) {
-            return variables.get(nameSearch, session);
+            return variables.get(nameSearch)/*.evaluate(session)*/;
         }
+
+        assert !nameSearch.contains("."); // выявить кейсы возникновения и принять решение нужна ли такая обработка
 
         // задан путь до переменной
         if (nameSearch.contains(".")) {
             String[] path = nameSearch.split("\\.");
             Value value = null;
             for (String vr : path) {
-                value = variables.get(vr, session);
+                value = Expression.evaluate(variables.get(vr), session);
 
                 if (value == null) return Value.NULL;
 
-                if (value instanceof MapValueInterface) {
-                    variables = (MapValueInterface) value;
+                if (value instanceof MapOrListValueInterface) {
+                    variables = (MapOrListValueInterface) value;
                 }
             }
             return value == null ? Value.NULL : value;
@@ -47,8 +85,29 @@ public class VariableExpression implements Expression {
         return Value.NULL;
     }
 
+    public Expression getNameExpression() {
+        return nameExpression;
+    }
+
+    public VariableExpression getNextInPath() {
+        return nextInPath;
+    }
+
+    public void setNextInPath(VariableExpression nextInPath) {
+        this.nextInPath = nextInPath;
+    }
+
+    /**
+     * Возвращает имя без оформлений. Применяется, например, для label
+     * @return
+     */
+    public String getName(){
+        return nameExpression.toString();
+    }
+
     @Override
     public String toString() {
-        return name;
+        if (nextInPath == null) return "$" + nameExpression;
+        return "${" + nameExpression + "." + nextInPath.toString().substring(1) + "}";
     }
 }
