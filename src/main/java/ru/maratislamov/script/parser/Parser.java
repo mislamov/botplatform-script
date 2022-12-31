@@ -302,6 +302,10 @@ public class Parser {
                 return Value.NULL;
             }
 
+            if ("IF".equals(prevUpper)) {
+                return new VariableExpression(prev);
+            }
+
             // EXEC cmd arg1 arg2 ... argN \n
             if ("EXEC".equals(prevUpper) || "CALL".equals(prevUpper)) {
                 // вызов внешней функции
@@ -344,7 +348,7 @@ public class Parser {
             }
 
 
-            // ------------ VARIABLES ONLY :
+            // ------------ for VARIABLES ONLY :
             VariableExpression theVariable = null;
             VariableExpression lastSubVariable = null;
 
