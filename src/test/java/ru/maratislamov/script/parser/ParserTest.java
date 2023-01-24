@@ -9,12 +9,11 @@ import ru.maratislamov.script.values.StringValue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 class ParserTest {
 
     @Test
-    public void test(){
+    public void test0(){
         ArrayList<Token> tokens = new ArrayList<>();
         Parser parser = new Parser(new ScriptEngine(), tokens);
 
@@ -213,6 +212,7 @@ class ParserTest {
         assert expressions.get(0) instanceof StringValue;
         assert expressions.get(1) instanceof StringValue;
     }
+
 
 
 }

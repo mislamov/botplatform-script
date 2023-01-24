@@ -16,10 +16,10 @@ public class GotoStatement implements Statement {
 
     private final ScriptEngine botScript;
 
-    private final VariableExpression label;
+    private final Expression label;
 
 
-    public GotoStatement(ScriptEngine botScript, VariableExpression label) {
+    public GotoStatement(ScriptEngine botScript, Expression label) {
         this.botScript = botScript;
         this.label = label;
     }
@@ -27,18 +27,17 @@ public class GotoStatement implements Statement {
     public Value execute(ScriptSession session) {
         logger.debug("goto " + label);
 
-        final Value evaluated = Expression.evaluate(label, session);
-        final String key = evaluated == Value.NULL ? label.getName() : evaluated.toString();
+        final String key = (botScript.labels.containsKey(label.getName())) ? label.getName() : Expression.evaluate(label, session).getName();
 
         if (botScript.labels.containsKey(key)) {
             if (session.getParentSession() != null){
                 throw new RuntimeException("GOTO deprecated for inline scripts");
             }
 
-            session.setCurrentStatement(botScript.labels.get(key).intValue());
+            session.setCurrentStatement(botScript.labels.get(key));
             return null;
         }
-        throw new Error("Label " + evaluated + " not found");
+        throw new Error("Label " + key + " not found");
     }
 
     @Override

@@ -3,10 +3,11 @@ package ru.maratislamov.script.values;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.google.SparseArray;
 
+import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ListValue implements Value, MapOrListValueInterface {
+public class ListValue extends AbstractList<Value> implements Value, MapOrListValueInterface {
 
     SparseArray<Value> data;
 
@@ -16,7 +17,11 @@ public class ListValue implements Value, MapOrListValueInterface {
 
     public ListValue(List<Value> collect) {
         data = new SparseArray<>();
-        //collect.forEach(c -> data.push(c));
+        data.addAll(collect);
+    }
+
+    public ListValue(ListValue collect) {
+        data = new SparseArray<>();
         data.addAll(collect);
     }
 
@@ -28,7 +33,7 @@ public class ListValue implements Value, MapOrListValueInterface {
     @Override
     public boolean containsKey(String name) {
         Integer idx = Integer.parseInt(name);
-         return idx <= data.maxIndex();
+        return idx <= data.maxIndex();
     }
 
     @Override
@@ -46,7 +51,7 @@ public class ListValue implements Value, MapOrListValueInterface {
 
     @Override
     public Double toNumber() {
-        throw new RuntimeException("NYR");
+        return null;
     }
 
     @Override
@@ -59,13 +64,34 @@ public class ListValue implements Value, MapOrListValueInterface {
         return val;
     }
 
-    public Iterator<Value> getList() {
+    @Override
+    public boolean add(Value val) {
+        push(val);
+        return true;
+    }
+
+    public Iterator<Value> getIterator() {
         return data.listIterator();
     }
 
     @Override
     public String toString() {
         return String.valueOf(data);
+    }
+
+    @Override
+    public String getName() {
+        return toString();
+    }
+
+    @Override
+    public Value get(int index) {
+        return data.get(index);
+    }
+
+    @Override
+    public int size() {
+        return data.maxIndex() + 1;
     }
 };
 

@@ -7,6 +7,8 @@ import ru.maratislamov.script.utils.VarMapUtils;
 import ru.maratislamov.script.values.Value;
 import ru.maratislamov.script.values.VarWrapper;
 
+import java.util.function.Consumer;
+
 /**
  * An assignment statement evaluates an expression and stores the result in
  * a variable.
@@ -22,11 +24,19 @@ public class AssignStatement implements Statement {
     }
 
     public Value execute(ScriptSession session) {
+        final Consumer<Value> setter = VarMapUtils.getValueSetterByPath(session, varExpression);
         final Value result = Expression.evaluate(this.value, session);
-
-        VarMapUtils.getValueSetterByPath(session, varExpression).accept(result);
+        setter.accept(result);
 
         return result;
+    }
+
+    public VariableExpression getVarExpression() {
+        return varExpression;
+    }
+
+    public Expression getValue() {
+        return value;
     }
 
     @Override

@@ -39,29 +39,10 @@ public class ArrayUtils {
 
     private ArrayUtils() { /* cannot be instantiated */ }
 
-
-    public static byte[] newUnpaddedByteArray(int minLen) {
-        return (byte[]) Array.newInstance(byte.class, minLen);
-    }
-
-    public static char[] newUnpaddedCharArray(int minLen) {
-        return (char[]) Array.newInstance(char.class, minLen);
-    }
-
     public static int[] newUnpaddedIntArray(int minLen) {
-        return (int[]) Array.newInstance(int.class, minLen);
-    }
-
-    public static boolean[] newUnpaddedBooleanArray(int minLen) {
-        return (boolean[]) Array.newInstance(boolean.class, minLen);
-    }
-
-    public static long[] newUnpaddedLongArray(int minLen) {
-        return (long[]) Array.newInstance(long.class, minLen);
-    }
-
-    public static float[] newUnpaddedFloatArray(int minLen) {
-        return (float[]) Array.newInstance(float.class, minLen);
+        final int[] ints = (int[]) Array.newInstance(int.class, minLen);
+        Arrays.fill(ints, -1);
+        return ints;
     }
 
     public static Object[] newUnpaddedObjectArray(int minLen) {
@@ -157,27 +138,6 @@ public class ArrayUtils {
     }
 
     /**
-     * Checks if given array is null or has zero elements.
-     */
-    public static boolean isEmpty(long[] array) {
-        return array == null || array.length == 0;
-    }
-
-    /**
-     * Checks if given array is null or has zero elements.
-     */
-    public static boolean isEmpty(byte[] array) {
-        return array == null || array.length == 0;
-    }
-
-    /**
-     * Checks if given array is null or has zero elements.
-     */
-    public static boolean isEmpty(boolean[] array) {
-        return array == null || array.length == 0;
-    }
-
-    /**
      * Length of the given array or 0 if it's null.
      */
     public static int size(Object[] array) {
@@ -259,48 +219,6 @@ public class ArrayUtils {
         return false;
     }
 
-    public static boolean contains(long[] array, long value) {
-        if (array == null) return false;
-        for (long element : array) {
-            if (element == value) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean contains(char[] array, char value) {
-        if (array == null) return false;
-        for (char element : array) {
-            if (element == value) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Test if all {@code check} items are contained in {@code array}.
-     */
-    public static <T> boolean containsAll(char[] array, char[] check) {
-        if (check == null) return true;
-        for (char checkItem : check) {
-            if (!contains(array, checkItem)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static long total(long[] array) {
-        long total = 0;
-        if (array != null) {
-            for (long value : array) {
-                total += value;
-            }
-        }
-        return total;
-    }
 
     /**
      * @deprecated use {@code IntArray} instead
@@ -473,87 +391,6 @@ public class ArrayUtils {
             }
         }
         return cur;
-    }
-
-    /**
-     * Removes value from given array if present, providing set-like behavior.
-     */
-    public static String[] removeString(String[] cur, String val) {
-        if (cur == null) {
-            return null;
-        }
-        final int N = cur.length;
-        for (int i = 0; i < N; i++) {
-            if (Objects.equals(cur[i], val)) {
-                String[] ret = new String[N - 1];
-                if (i > 0) {
-                    System.arraycopy(cur, 0, ret, 0, i);
-                }
-                if (i < (N - 1)) {
-                    System.arraycopy(cur, i + 1, ret, i, N - i - 1);
-                }
-                return ret;
-            }
-        }
-        return cur;
-    }
-
-    /**
-     * Adds value to given array if not already present, providing set-like
-     * behavior.
-     */
-    public static long[] appendLong(long[] cur, long val,
-                                    boolean allowDuplicates) {
-        if (cur == null) {
-            return new long[]{val};
-        }
-        final int N = cur.length;
-        if (!allowDuplicates) {
-            for (int i = 0; i < N; i++) {
-                if (cur[i] == val) {
-                    return cur;
-                }
-            }
-        }
-        long[] ret = new long[N + 1];
-        System.arraycopy(cur, 0, ret, 0, N);
-        ret[N] = val;
-        return ret;
-    }
-
-    /**
-     * Adds value to given array if not already present, providing set-like
-     * behavior.
-     */
-    public static long[] appendLong(long[] cur, long val) {
-        return appendLong(cur, val, false);
-    }
-
-    /**
-     * Removes value from given array if present, providing set-like behavior.
-     */
-    public static long[] removeLong(long[] cur, long val) {
-        if (cur == null) {
-            return null;
-        }
-        final int N = cur.length;
-        for (int i = 0; i < N; i++) {
-            if (cur[i] == val) {
-                long[] ret = new long[N - 1];
-                if (i > 0) {
-                    System.arraycopy(cur, 0, ret, 0, i);
-                }
-                if (i < (N - 1)) {
-                    System.arraycopy(cur, i + 1, ret, i, N - i - 1);
-                }
-                return ret;
-            }
-        }
-        return cur;
-    }
-
-    public static long[] cloneOrNull(long[] array) {
-        return (array != null) ? array.clone() : null;
     }
 
     /**

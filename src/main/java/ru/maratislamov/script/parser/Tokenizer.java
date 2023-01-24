@@ -151,11 +151,11 @@ public class Tokenizer {
                     case NUMBER:
                         // HACK: Negative numbers and floating points aren't supported.
                         // To get a negative number, just do 0 - <your number>.
-                        // To get a floating point, divide.
-                        if (Character.isDigit(c) || c == '.') {
+                        // To get a floating point, divide. todo fix description
+                        if (Character.isDigit(c) /*|| c == '.'*/) {
                             token += c;
                         } else {
-                            tokens.add(new Token(token, TokenType.NUMBER));
+                            tokens.add(new Token(token, TokenType.DIGITS));
                             token = "";
                             state = TokenizeState.DEFAULT;
                             ////i--; // Reprocess this character in the default state.
@@ -164,15 +164,14 @@ public class Tokenizer {
                         break;
 
                     case STRING:
-                        /*if (c == '\\') { // экранирование
+                        if (c == '\\') { // экранирование
                             iC = source.read();
                             c = (char) iC;
                             //token += esc(c);  - в StringValue применяется StringEscapeUtils.unescapeJava для этого
-                            token += c;
+                            token += "\\" + c;
                             break;
 
-                        } else*/
-                        if (c == '"') {
+                        } else if (c == '"') {
                             iC = source.read(); c = (char) iC;
                             if (c == '"') {  //   двойные кавычки внутри текста = экранирование
                                 token += '"';
@@ -232,6 +231,8 @@ public class Tokenizer {
         // HACK: Silently ignore any in-progress token when we run out of
         // characters. This means that, for example, if a script has a string
         // that's missing the closing ", it will just ditch it.
+
+
         return tokens;
     }
 

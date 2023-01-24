@@ -1,6 +1,8 @@
 package ru.maratislamov.script.parser;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.BinaryOperatorExpression;
@@ -8,6 +10,7 @@ import ru.maratislamov.script.expressions.ListExpressions;
 import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.statements.*;
 import ru.maratislamov.script.values.*;
+import ru.maratislamov.script.values.google.util.ArrayUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,6 +26,10 @@ import java.util.stream.Collectors;
  * label in the program. It's a bit gross, but it works.
  */
 public class Parser {
+    Logger logger = LoggerFactory.getLogger(Parser.class);
+
+    public static Set<String> KEYWORDS = new HashSet<>(Arrays.asList("GOTO", "IF", "THEN", "ELSE", "INPUT"));
+    public static Set<String> COMMANDS = new HashSet<>(); // резервированные слова команд ("keyboard args")
     private final ScriptEngine botScript;
 
     private final List<Token> tokens;
@@ -74,9 +81,11 @@ public class Parser {
 
         while (true) {
             // Counting empty lines.
-            while (match(TokenType.LINE)) {
+            /*while (match(TokenType.LINE)) {
                 positionLine++; // todo: не учитывает переносы строки внутри текста!!!
-            }
+            }*/
+
+            skipSpaces();
 
             // label:
             if (match(TokenType.LABEL)) {
@@ -87,73 +96,110 @@ public class Parser {
             } else if (peek(TokenType.WORD)) {
                 Expression atom = atomic();
 
-                /////// fn a.b[].c d[]
-                assert atom instanceof VariableExpression;
-                VariableExpression var = (VariableExpression) atom;
+                // терм (служебное слово), не переменная
+                if (atom instanceof TermValue) {
+                    TermValue term = (TermValue) atom;
 
-                // var ==  //  var =
-                if (match(TokenType.EQUALS, TokenType.EQUALS) || match(TokenType.EQUALS)) {
-                    // равенство
-                    Expression value = expression();
-                    statements.add(new AssignStatement(var, value));
+                    // commandkey  arg arg arg \n
+                    if (COMMANDS.contains(term.toString().toUpperCase(Locale.ROOT))) {
+                        List<Expression> argList = new ArrayList<>();
+                        while (get(0).type != TokenType.LINE && get(0).type != TokenType.EOF) {
+                            Expression expression = expression();
+                            argList.add(expression);
+                        }
+                        positionLine++;
+                        statements.add(new MethodCallValue(term.getName(), argList));
 
-                    // var *=  // var +=  // var -=  // var /=
-                } else if (match(TokenType.OPERATOR) && last(1).text.endsWith("=")) {
-                    // присваивание
-                    String modify = String.valueOf(last(1).text.charAt(0));
-                    Expression value = expression();
-                    //statements.add(new AssignStatement(var, modify, value));
-                    statements.add(new AssignStatement(var, new BinaryOperatorExpression(var, modify, value)));
+                        // goto
+                    } else if (term.toString().equals("goto")) {
+                        final Expression label = expression();
+//                        if (!(label instanceof VariableExpression)) {
+//                            logger.error("goto {}({})", label, label.getClass());
+//                            throw new RuntimeException("line [%d]: Unexpected label expression: %s".formatted(positionLine + 1, label));
+//                        }
+                        statements.add(new GotoStatement(botScript, label));
 
-                    // goto
-                } else if (var.getNameExpression().toString().equals("goto")) {
-                    final Expression label = expression();
-                    if (!(label instanceof VariableExpression))
-                        throw new RuntimeException("line [%d]: Unexpected label expression: %s".formatted(positionLine + 1, label));
-                    statements.add(new GotoStatement(botScript, (VariableExpression) label));
+                        // flush
+                    } else if (term.toString().equals("flush")) {
+                        statements.add(new MethodCallValue("flush", null));
 
-                    // flush
-                } else if (var.getNameExpression().toString().equals("flush")) {
-                    statements.add(new MethodCallValue("flush", null));
+                        // push
+                    } else if (term.toString().equals("push")) {
+                        String varMap = consume(TokenType.WORD).text;
+                        Expression value = expression();
+                        statements.add(new PushStatement(varMap, value));
 
-                    // push
-                } else if (var.getNameExpression().toString().equals("push")) {
-                    String varMap = consume(TokenType.WORD).text;
-                    Expression value = expression();
-                    statements.add(new PushStatement(varMap, value));
+                        // if
+                    } else if (term.toString().equals("if")) {
+                        Expression condition = expression();
+                        consume("then");
 
-                    // if
-                } else if (var.getNameExpression().toString().equals("if")) {
-                    Expression condition = expression();
-                    consume("then");
-                    String label = consume(TokenType.WORD).text;
-                    statements.add(new IfThenStatement(botScript, condition, label));
+                        //String label = consume(TokenType.WORD).text;
+                        //statements.add(new IfThenStatement(botScript, condition, label));
 
-                    // input
-                } else if (var.getNameExpression().toString().equals("input")) { // аргументы (TermValue) у input не должны вычисляться перед вызовом
-                    List<Expression> args = Collections.singletonList(new TermValue(consume(TokenType.WORD).text));
-                    statements.add(new MethodCallValue("input", args));
-                    consume(TokenType.LINE, TokenType.EOF);
-                    positionLine++;
+                        int gotoIndex = findIndexOfNext(TokenType.LINE, TokenType.EOF);
+                        if (gotoIndex < 0){
+                            gotoIndex = tokens.size(); // end of script
+                        } else {
+                            ++gotoIndex;
+                        }
+                        String label = "____if" + gotoIndex;
+                        tokens.add(gotoIndex, new Token(label, TokenType.LABEL));
 
-                    // func ... \n
-                } else { // команда/процедура с аргументами, которые вычисляются перед вызовом
+                        statements.add(new IfThenStatement(botScript, condition, null, label));
 
-                    List<Expression> argList = new ArrayList<>();
-                    while (get(0).type != TokenType.LINE && get(0).type != TokenType.EOF) {
-                        Expression expression = expression();
-                        argList.add(expression);
+
+
+                        // input
+                    } else if (term.toString().equals("input")) { // аргументы (TermValue) у input не должны вычисляться перед вызовом
+                        Expression arg = atomic();
+                        assert arg instanceof VariableExpression;
+
+                        /*List<Expression> args = Collections.singletonList(new TermValue(((VariableExpression) arg).getPathName())); // todo: bug - тут позднее переменная будет вычеслена перед вызовом input. Это ошибка. Сделать так, чтобы не вчислялась, при этом могла быть составной
+                        statements.add(new MethodCallValue("input", args));*/
+
+                        statements.add(new AssignStatement((VariableExpression) arg, new MethodCallValue("input", List.of())));
+
+                        consume(TokenType.LINE, TokenType.EOF);
+                        positionLine++;
                     }
-                    positionLine++;
-                    statements.add(new MethodCallValue(var.getNameExpression().toString(), argList));
+
+                    // FN()
+                } else if (atom instanceof MethodCallValue) {
+                    statements.add((MethodCallValue) atom);
+
+                } else {
+                    /////// fn | a.b[].c | d[]
+                    assert atom instanceof VariableExpression;
+                    VariableExpression var = (VariableExpression) atom;
+
+                    // var ==  //  var =
+                    if (match(TokenType.EQUALS, TokenType.EQUALS) || match(TokenType.EQUALS)) {
+                        // равенство
+                        Expression value = expression();
+                        statements.add(new AssignStatement(var, value));
+
+                        // var *=  // var +=  // var -=  // var /=
+                    } else if (match(TokenType.OPERATOR) && last(1).text.endsWith("=")) {
+                        // присваивание
+                        String modify = String.valueOf(last(1).text.charAt(0));
+                        Expression value = expression();
+                        //statements.add(new AssignStatement(var, modify, value));
+                        statements.add(new AssignStatement(var, new BinaryOperatorExpression(var, modify, value)));
+
+                        // func ... \n
+                    } else { // команда/процедура с аргументами, которые вычисляются перед вызовом
+
+                        List<Expression> argList = new ArrayList<>();
+                        while (get(0).type != TokenType.LINE && get(0).type != TokenType.EOF) {
+                            Expression expression = expression();
+                            argList.add(expression);
+                        }
+                        positionLine++;
+                        assert var.getNextInPath() == null;
+                        statements.add(new MethodCallValue(var.getNameExpression().toString(), argList));
+                    }
                 }
-
-
-                // """  any ${text}  """
-            } else if (match(TokenType.STRING_FRAME)) {
-                //statements.add(new MethodCallValue("print", List.of(new StringFrameValue(frameTextToArgList(get(-1).text)))));
-                statements.add(new StringFrameValue(frameTextToArgList(get(-1).text)));
-                positionLine++;
 
             } else if (match(TokenType.EOF)) {
                 break;
@@ -215,6 +261,14 @@ public class Parser {
         return code.length();
     }
 
+    // пропуск разделителей
+    private void skipSpaces() {
+        while (peek(TokenType.LINE)) {
+            ++positionLine;
+            ++position;
+        }
+    }
+
     // The following functions each represent one grammatical part of the
     // language. If this parsed English, these functions would be named like
     // noun() and verb().
@@ -227,12 +281,19 @@ public class Parser {
      * @return The parsed expression.
      */
     private Expression expression() {
+
+        skipSpaces();
+
         // список
         if (match(TokenType.BEGIN_LIST)) {
             List<Expression> expressionList = new ArrayList<>();
 
             while (!match(TokenType.END_LIST)) {
+
                 expressionList.add(expression());
+
+                skipSpaces();
+
                 if (!match(TokenType.COMMA) && !peek(TokenType.END_LIST)) {
                     throw new Error("List parse error here: " + debugCurrentPosition());
                 }
@@ -277,7 +338,8 @@ public class Parser {
             String operator = last(1).text;
 //            if (operator == '=' && last(2).text.charAt(0) == '!')
 //                operator = '!';
-            Expression right = atomic();
+            //Expression right = atomic();
+            Expression right = expression();
             expression = new BinaryOperatorExpression(expression, operator, right);
         }
 
@@ -292,18 +354,26 @@ public class Parser {
      * @return The parsed expression.
      */
     private Expression atomic() {
+        return atomic(false);
+    }
 
-        if (match(TokenType.WORD)) {
+    private Expression atomic(boolean readVariableOnly) {
+
+        if (match(TokenType.WORD) || (readVariableOnly && match(TokenType.DIGITS))) {
             // A word is a reference to a variable.
             String prev = last(1).text;
             String prevUpper = prev.toUpperCase();
+
+            if (KEYWORDS.contains(prevUpper) || COMMANDS.contains(prevUpper)) {
+                return new TermValue(prev);
+            }
 
             if ("NULL".equals(prevUpper)) {
                 return Value.NULL;
             }
 
             if ("IF".equals(prevUpper)) {
-                return new VariableExpression(prev);
+                return new TermValue(prev);
             }
 
             // EXEC cmd arg1 arg2 ... argN \n
@@ -352,7 +422,7 @@ public class Parser {
             VariableExpression theVariable = null;
             VariableExpression lastSubVariable = null;
 
-            // fn[...]
+            // fn[index]
             if (peek(TokenType.BEGIN_LIST)) {
                 Expression arg = expression();
                 assert get(-1).type == TokenType.END_LIST;
@@ -369,13 +439,25 @@ public class Parser {
                 lastSubVariable = theVariable;
             }
 
+            assert theVariable.getLastInPath() == lastSubVariable;
+
             // fn[].
-            if (get(0).type == TokenType.DOT) {
-                ++position; // subvar
-                Expression atomic = atomic();
-                if (atomic instanceof VariableExpression) {
+            while (match(TokenType.DOT)) {
+                // subvar
+                Expression atomic = atomic(true);
+
+                // fn.fn | fn.4
+                if (atomic instanceof TermValue || atomic instanceof NumberValue) {
+                    assert lastSubVariable.getNextInPath() == null;
+                    final VariableExpression variableExpression = new VariableExpression(atomic.toString());
+                    lastSubVariable.setNextInPath(variableExpression);
+                    lastSubVariable = variableExpression.getLastInPath(); // нужно, поскольку Number может быть вида 123.456
+
+                    // fn.var[...]
+                } else if (atomic instanceof VariableExpression) {
                     assert lastSubVariable.getNextInPath() == null;
                     lastSubVariable.setNextInPath((VariableExpression) atomic);
+                    lastSubVariable = ((VariableExpression) atomic).getLastInPath();
 
                 } else {
                     throw new RuntimeException(String.format("Unexpected sub-variable syntax: %s for %s", atomic.toString(), theVariable));
@@ -385,11 +467,22 @@ public class Parser {
             return theVariable;
             // ------------ END VARIABLES ONLY
 
-        } else if (match(TokenType.NUMBER)) {
-            return new NumberValue(last(1).text);
+
+        } else if (match(TokenType.DIGITS)) {
+            final String textNumber = last(1).text;
+            String suffix = "";
+
+            if (match(TokenType.DOT, TokenType.DIGITS)) {
+                suffix = "." + last(1).text;
+            }
+            return readVariableOnly ? new VariableExpression(textNumber + suffix) : new NumberValue(textNumber + suffix);
 
         } else if (match(TokenType.STRING)) {
             return new StringValue(last(1).text);
+
+            // """  any ${text}  """
+        } else if (match(TokenType.STRING_FRAME)) {
+            return new StringFrameValue(frameTextToArgList(last(1).text));
 
         } else if (match(TokenType.LEFT_PAREN)) {
             // The contents of a parenthesized expression can be any
@@ -472,15 +565,19 @@ public class Parser {
      * @return The consumed token.
      */
     private Token consume(TokenType type) {
-        if (get(0).type != type)
+        final Token token = get(0);
+        if (token.type != type)
             throw new Error("Expected " + type + " on line " + (positionLine + 1));
-        return tokens.get(position++);
+        position++;
+        return token;
     }
 
     private Token consume(TokenType... types) {
-        if (Arrays.stream(types).noneMatch(get(0).type::equals))
+        final Token token = get(0);
+        if (Arrays.stream(types).noneMatch(token.type::equals))
             throw new Error("Expected one of type " + Arrays.toString(types) + "' in line " + (positionLine + 1) + "+");
-        return tokens.get(position++);
+        ++position;
+        return token;
     }
 
     /**
@@ -519,6 +616,16 @@ public class Parser {
             return new Token("", TokenType.EOF);
         }
         return tokens.get(position + offset);
+    }
+
+    private int findIndexOfNext(TokenType... types) {
+        int i = 0;
+        int size = tokens.size();
+
+        while (position + i < size && Arrays.stream(types).noneMatch(tokens.get(position + i).type::equals)) {
+            ++i;
+        }
+        return position + i == size ? -1 : position + i;
     }
 
 }

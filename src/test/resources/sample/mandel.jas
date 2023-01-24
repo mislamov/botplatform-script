@@ -26,23 +26,23 @@ iterloop: ' iterate the complex function p <- p^2 + seed
           
           ' stop if the point escaped
           d = (x0 * x0) + (y0 * y0)
-          if d > 4 then enditer
+          if d > 4 then goto enditer
 
           ' else, iterate
           iter = iter + 1
           
           ' if we've iterated enough, give up
-          if iter = MAXITERATIONS then enditer
+          if iter = MAXITERATIONS then goto enditer
           
           goto iterloop
           
 enditer:  ' figure out what "color" to draw the pixel
-          if iter < 2 then draw0
-          if iter < 4 then draw1
-          if iter < 8 then draw2
-          if iter < 14 then draw3
-          if iter < 20 then draw4
-          if iter < 26 then draw5
+          if iter < 2 then goto draw0
+          if iter < 4 then goto draw1
+          if iter < 8 then goto draw2
+          if iter < 14 then goto draw3
+          if iter < 20 then goto draw4
+          if iter < 26 then goto draw5
           
           pixel = "@"
           goto draw
@@ -66,11 +66,11 @@ draw:     ' draw the pixel
 
 enddraw:  ' move to the next x position
           x = x + (1 / 29)
-          if x < (3 / 4) then xloop
+          if x < (3 / 4) then goto xloop
         
           ' print the completed line
           print line
           
           ' move to the next y position
           y = y + (1 / 11)
-          if y < (5 / 4) then yloop
+          if y < (5 / 4) then goto yloop

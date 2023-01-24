@@ -101,6 +101,7 @@ public class VariableExpression implements Expression {
      * Возвращает имя без оформлений. Применяется, например, для label
      * @return
      */
+    @Override
     public String getName(){
         return nameExpression.toString();
     }
@@ -110,4 +111,11 @@ public class VariableExpression implements Expression {
         if (nextInPath == null) return "$" + nameExpression;
         return "${" + nameExpression + "." + nextInPath.toString().substring(1) + "}";
     }
+
+    // возвращает самую глубокую вложенную переменную
+    public VariableExpression getLastInPath() {
+        if (nextInPath == null) return this;
+        return getNextInPath().getLastInPath(); // tail recursion
+    }
+
 }

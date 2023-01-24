@@ -34,6 +34,10 @@ public class StringValue implements Value {
         return getValue();
     }
 
+    @Override
+    public String getName() {
+        return toString();
+    }
     @JsonIgnore
     public Double toNumber() {
         try {

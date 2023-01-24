@@ -30,4 +30,9 @@ public class NotFoundValue implements Value {
     public String toString() {
         return "$NotFound";
     }
+
+    @Override
+    public String getName() {
+        throw new RuntimeException("Unexpected");
+    }
 }

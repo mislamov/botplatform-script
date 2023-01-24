@@ -46,6 +46,11 @@ public class NumberValue implements Value {
         return value.longValue() - value == 0 ? String.valueOf(value.longValue()) : decimalFormat.format(value);
     }
 
+    @Override
+    public String getName() {
+        return toString();
+    }
+
     public Double toNumber() {
         return value;
     }

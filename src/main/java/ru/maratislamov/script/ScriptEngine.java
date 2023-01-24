@@ -179,6 +179,9 @@ public class ScriptEngine {
             int thisStatement = session.getCurrentStatement();
             Statement statementEntity = statements.get(thisStatement);
             session.incCurrentStatement();
+
+            logger.debug("interpret: {}", statementEntity);
+
             Value value = statementEntity.execute(session);
 
             if (value == SUSPEND) {

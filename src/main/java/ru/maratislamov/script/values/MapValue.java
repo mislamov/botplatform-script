@@ -63,7 +63,7 @@ public class MapValue implements Value, MapOrListValueInterface {
     @JsonIgnore
     @Override
     public Double toNumber() {
-        throw new ClassCastException("MapValue to Number");
+        return null;
     }
 
     @JsonIgnore
@@ -78,6 +78,12 @@ public class MapValue implements Value, MapOrListValueInterface {
     public String toString() {
         //return "{" + StringUtils.join(body.entrySet(), ",") + "}";
         return ValueUtils.mapToString(this);
+    }
+
+    @JsonIgnore
+    @Override
+    public String getName() {
+        return toString();
     }
 
     @JsonIgnore

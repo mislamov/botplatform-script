@@ -36,6 +36,11 @@ public class MainTest {
     public void runPlusEq() throws IOException {
         runScript("x = 1; x += 10; print x".getBytes(StandardCharsets.UTF_8));
     }
+
+    ////@Test
+    public void runDummy() throws IOException {
+        runScript("x = NULL\ninput x.y[1+1].x".getBytes(StandardCharsets.UTF_8));
+    }
     //@Test
     public void runDemo() throws IOException {
         runScript("demo.bas");

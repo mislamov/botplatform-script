@@ -14,25 +14,50 @@ public class IfThenStatement implements Statement {
 
     private final Expression condition;
     private final String label;
+    private final String labelIfNot;
 
     public IfThenStatement(ScriptEngine botScript, Expression condition, String label) {
         this.botScript = botScript;
         this.condition = condition;
         this.label = label;
+        this.labelIfNot = null;
+    }
+
+    public IfThenStatement(ScriptEngine botScript, Expression condition, String label, String labelIfNot) {
+        this.botScript = botScript;
+        this.condition = condition;
+        this.label = label;
+        this.labelIfNot = labelIfNot;
     }
 
     public Value execute(ScriptSession session) {
-        if (botScript.labels.containsKey(label)) {
-            Double value = Expression.evaluate(condition , session).toNumber();
-            if (value != 0) {
-                session.setCurrentStatement(botScript.labels.get(label).intValue());
+
+        if (label != null && !botScript.labels.containsKey(label)) {
+            throw new RuntimeException("Unexpected label: '" + label + "'");
+        }
+        if (labelIfNot != null && !botScript.labels.containsKey(labelIfNot)) {
+            throw new RuntimeException("Unexpected label: '" + labelIfNot + "'");
+        }
+
+        Double value = Expression.evaluate(condition, session).toNumber();
+
+        // true
+        if (value != 0) {
+            if (label != null) {
+                session.setCurrentStatement(botScript.labels.get(label));
             }
-        } else throw new RuntimeException("Unexpected label: '" + label + "'");
+            return null;
+        }
+
+        // false
+        if (labelIfNot != null) {
+            session.setCurrentStatement(botScript.labels.get(labelIfNot));
+        }
         return null;
     }
 
     @Override
     public String toString() {
-        return "IfThenStatement{" + condition + "->" + label + '}';
+        return "IfThenStatement{" + condition + "->" + label + " $else$ " + labelIfNot + '}';
     }
 }

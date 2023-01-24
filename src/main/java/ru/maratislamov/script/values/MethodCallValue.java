@@ -18,13 +18,19 @@ public class MethodCallValue implements Statement, Value {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodCallValue.class);
 
-    private final String call;
+    //
+    private final String name;
 
+    //
     private final List<Expression> args;
 
     public MethodCallValue(String call, List<Expression> args) {
-        this.call = call;
+        this.name = call;
         this.args = args;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public List<Expression> getArgs() {
@@ -42,12 +48,12 @@ public class MethodCallValue implements Statement, Value {
 
     public Value evaluate(ScriptSession session) {
         try {
-            List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> Expression.evaluate(e , session)).collect(Collectors.toList());
-            return ScriptFunctionsService.execFunction(call, args, session);
+            List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> Expression.evaluate(e, session)).collect(Collectors.toList());
+            return ScriptFunctionsService.execFunction(name, args, session);
 
         } catch (Exception | Error e) {
-            logger.error("CallMethodError[" + call + "]");
-            throw new Error("ERROR when call function " + call + ": " + e.getMessage(), e);
+            logger.error("CallMethodError[" + name + "]");
+            throw new Error("ERROR when call function " + name + ": " + e.getMessage(), e);
         }
     }
 
@@ -58,7 +64,7 @@ public class MethodCallValue implements Statement, Value {
 
     @Override
     public String toString() {
-        return "{CALL " + call + " " + args + "}";
+        return "{CALL " + name + " " + args + "}";
     }
 
 }

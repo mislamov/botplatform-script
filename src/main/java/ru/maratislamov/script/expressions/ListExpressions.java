@@ -1,5 +1,7 @@
 package ru.maratislamov.script.expressions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.ListValue;
 import ru.maratislamov.script.values.Value;
@@ -9,6 +11,8 @@ import java.util.stream.Collectors;
 
 public class ListExpressions implements Expression {
 
+    public static final Logger logger = LoggerFactory.getLogger(ListExpressions.class);
+
     private List<Expression> list;
 
     public ListExpressions(List<Expression> expressionList) {
@@ -17,7 +21,14 @@ public class ListExpressions implements Expression {
 
     @Override
     public Value evaluate(ScriptSession session) {
-        return new ListValue(list.stream().map(e -> Expression.evaluate(e, session)).collect(Collectors.toList()));
+        final List<Value> collect = list.stream().map(e -> {
+
+            logger.debug("evalute: {}", e);
+
+            return Expression.evaluate(e, session);
+
+        }).collect(Collectors.toList());
+        return new ListValue(collect);
     }
 
     public int size() {
@@ -26,5 +37,15 @@ public class ListExpressions implements Expression {
 
     public Expression get(int i) {
         return list.get(i);
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(list);
+    }
+
+    @Override
+    public String getName() {
+        return toString();
     }
 }

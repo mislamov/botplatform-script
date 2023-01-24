@@ -17,6 +17,11 @@ public class TermValue implements Value {
     }
 
     @Override
+    public String getName() {
+        return toString();
+    }
+
+    @Override
     public Double toNumber() {
         throw new ClassCastException("Term to Number: \"" + word + "\".toNumber()");
     }

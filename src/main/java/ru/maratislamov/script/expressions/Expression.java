@@ -1,5 +1,6 @@
 package ru.maratislamov.script.expressions;
 
+import org.slf4j.Logger;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.Value;
 
@@ -27,4 +28,9 @@ public interface Expression {
     @Deprecated
     Value evaluate(ScriptSession session);
 
+    /**
+     * code name
+     * @return
+     */
+    String getName();
 }

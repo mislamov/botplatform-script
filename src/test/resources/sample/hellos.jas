@@ -2,7 +2,7 @@
       count = 10
       
       ' stop looping if we're done
-top:  if count = 0 then end
+top:  if count = 0 then goto end
       print "Hello, world! " + count
       
       ' decrement and restart the loop

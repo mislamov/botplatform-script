@@ -19,10 +19,8 @@ import ru.maratislamov.script.values.google.util.ContainerHelpers;
 import ru.maratislamov.script.values.google.util.GrowingArrayUtils;
 import ru.maratislamov.script.values.google.util.ArrayUtils;
 
-import java.util.AbstractList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Objects;
+import java.rmi.UnexpectedException;
+import java.util.*;
 
 /**
  * <code>SparseArray</code> maps integers to Objects and, unlike a normal array of Objects,
@@ -86,6 +84,7 @@ public class SparseArray<E> extends AbstractList<E> implements Cloneable {
             mValues = ArrayUtils.newUnpaddedObjectArray(initialCapacity);
             mKeys = new int[mValues.length];
         }
+        Arrays.fill(mKeys, -1);
         mSize = 0;
     }
 
@@ -247,6 +246,8 @@ public class SparseArray<E> extends AbstractList<E> implements Cloneable {
      * was one.
      */
     public void put(int key, E value) {
+        if (key < 0) throw new RuntimeException("index < 0");
+
         int i = ContainerHelpers.binarySearch(mKeys, mSize, key);
         if (i >= 0) {
             mValues[i] = value;
@@ -268,7 +269,7 @@ public class SparseArray<E> extends AbstractList<E> implements Cloneable {
         }
     }
 
-    public void push(E value){
+    public void push(E value) {
         put(mSize, value);
     }
 
@@ -285,14 +286,23 @@ public class SparseArray<E> extends AbstractList<E> implements Cloneable {
 
     /**
      * max index = size of implemented by sparse array.
+     *
      * @return
      */
-    public int maxIndex(){
+    public int maxIndex() {
         // todo: оптимизировать! хранить максимальный отдельно, отслеживать при удалении, обновлять при сборке мусора
-        return Arrays.stream(mKeys).max().orElse(-1);
+        int best = -1;
+        for (int i = 0; i < mKeys.length; i++) {
+            int mKey = mKeys[i];
+            if (mValues[i] != DELETED && mKey > best) {
+                best = mKey;
+            }
+        }
+        return best;
     }
 
-    public int arraySize(){
+    public int arraySize() {
+
         return maxIndex() + 1;
     }
 
@@ -465,6 +475,15 @@ public class SparseArray<E> extends AbstractList<E> implements Cloneable {
         mKeys = GrowingArrayUtils.append(mKeys, mSize, key);
         mValues = GrowingArrayUtils.append(mValues, mSize, value);
         mSize++;
+    }
+
+    public void add(int index, E element) {
+        append(index, element);
+    }
+
+    public boolean add(E e) {
+        add(maxIndex() + 1, e);
+        return true;
     }
 
     /**

@@ -41,7 +41,7 @@ class TokenizerTest {
         Assertions.assertEquals(TokenType.EQUALS, tokens.get(1).type);
         Assertions.assertEquals(TokenType.STRING, tokens.get(2).type);
         Assertions.assertEquals(TokenType.OPERATOR, tokens.get(3).type);
-        Assertions.assertEquals(TokenType.NUMBER, tokens.get(4).type);
+        Assertions.assertEquals(TokenType.DIGITS, tokens.get(4).type);
 
         Assertions.assertEquals("", tokens.get(2).text);
     }
@@ -68,7 +68,7 @@ class TokenizerTest {
         Assertions.assertEquals(3, tokens.size());
         Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
         Assertions.assertEquals(TokenType.EQUALS, tokens.get(1).type);
-        Assertions.assertEquals(TokenType.NUMBER, tokens.get(2).type);
+        Assertions.assertEquals(TokenType.DIGITS, tokens.get(2).type);
     }
 
     @Test

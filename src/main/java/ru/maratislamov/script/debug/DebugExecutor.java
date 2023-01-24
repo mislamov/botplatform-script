@@ -35,6 +35,7 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
      */
     @Override
     public Value onExec(String fname, List<Value> args, ScriptSession session) throws Exception {
+        logger.debug("onExec: {} {}", fname, args);
         String function = fname.toLowerCase();
 
         switch (function) {
@@ -43,6 +44,10 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
             case "keyboard":
             case "getcontact":
                 System.out.println(args.stream().map(Value::toString).collect(Collectors.joining(" ")));
+                return args.isEmpty() ? Value.NULL : args.get(0);
+
+            case "debug":
+                System.out.println("$" + args.stream().map(Value::getClass).map(Class::getSimpleName).collect(Collectors.joining(" $")));
                 return args.isEmpty() ? Value.NULL : args.get(0);
 
             case "input":
@@ -55,12 +60,8 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
                         double value = Double.parseDouble(input);
                         result = new NumberValue(value);
 
-                        if (args.size() != 1) throw new Error("1 arg expected for input");
-                        session.getSessionScope().put(args.get(0).toString(), result);
-
                     } catch (NumberFormatException e) {
                         result = new StringValue(input);
-                        session.getSessionScope().put(args.get(0).toString(), result);
                     }
                     return result;
                 }

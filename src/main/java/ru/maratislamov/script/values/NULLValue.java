@@ -30,4 +30,9 @@ public class NULLValue implements Value {
     public String toString() {
         return "$NULL";
     }
+
+    @Override
+    public String getName() {
+        return toString();
+    }
 }

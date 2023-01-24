@@ -57,12 +57,18 @@ public interface Value extends Expression, Serializable {
 
         @Override
         public Value evaluate(ScriptSession session) {
-            return null;
+            return this;
+        }
+
+        @Override
+        public String getName() {
+            return toString();
         }
 
         @Override
         public String toString() {
             return "$SUSPEND";
+
         }
     };
 
@@ -101,7 +107,7 @@ public interface Value extends Expression, Serializable {
 
     static ArrayList<Serializable> asList(ListValue val) {
         ArrayList<Serializable> result = new ArrayList<>();
-        val.getList().forEachRemaining(v -> result.add(asObject(Expression.evaluate(v, null))));
+        val.getIterator().forEachRemaining(v -> result.add(asObject(Expression.evaluate(v, null))));
         return result;
 
     }

@@ -36,7 +36,8 @@ public class VarMapUtils {
 
             prevValue = (MapOrListValueInterface) value;
             scope = (MapOrListValueInterface) value;
-            value = Expression.evaluate(scope.get(name), session);
+            //value = Expression.evaluate(scope.get(name), session);
+            value = scope.get(name);
 
             // путь не закончен - значит value должен быть составным
             if (nextVar != null) {
