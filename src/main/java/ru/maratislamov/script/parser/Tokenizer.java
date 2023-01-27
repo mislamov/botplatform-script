@@ -1,5 +1,6 @@
 package ru.maratislamov.script.parser;
 
+import org.apache.commons.lang3.compare.ComparableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,12 +18,12 @@ public class Tokenizer {
     // Tokenizing (lexing) -----------------------------------------------------
 
     // Many tokens are a single character, like operators and ().
-    private static final String charTokens = "\n=!+-*/<>()[],.";
+    private static final String charTokens = "\n=!+-*/<>()[],.;";
     private static final TokenType[] tokenTypes = {TokenType.LINE, TokenType.EQUALS, TokenType.NOEQUALS,
             TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
             TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
             TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN, TokenType.BEGIN_LIST, TokenType.END_LIST,
-            TokenType.COMMA, TokenType.DOT
+            TokenType.COMMA, TokenType.DOT, TokenType.SEP
     };
 
 
@@ -140,7 +141,7 @@ public class Tokenizer {
                             token = "";
                             state = TokenizeState.DEFAULT;
                         } else {
-                            tokens.add(new Token(token, TokenType.WORD));
+                            tokens.add(new Token(token, TokenType.WORD, Character.isWhitespace(c)));
                             token = "";
                             state = TokenizeState.DEFAULT;
                             ////i--; // Reprocess this character in the default state.

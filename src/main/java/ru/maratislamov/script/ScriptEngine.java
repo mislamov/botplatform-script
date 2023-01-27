@@ -2,13 +2,17 @@ package ru.maratislamov.script;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.maratislamov.script.parser.*;
+import ru.maratislamov.script.parser.Parser;
+import ru.maratislamov.script.parser.Token;
+import ru.maratislamov.script.parser.Tokenizer;
 import ru.maratislamov.script.statements.Statement;
 import ru.maratislamov.script.values.MapValue;
 import ru.maratislamov.script.values.Value;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static ru.maratislamov.script.values.Value.SUSPEND;
 
@@ -188,9 +192,11 @@ public class ScriptEngine {
                 session.decCurrentStatement();
                 return session;
             }
+
         }
         return doFinish(session);
     }
+
 
     public <TSession extends ScriptSession> TSession interpret() {
         return (TSession) interpret(new ScriptSession().activate());

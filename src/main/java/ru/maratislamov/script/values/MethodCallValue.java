@@ -53,7 +53,7 @@ public class MethodCallValue implements Statement, Value {
 
         } catch (Exception | Error e) {
             logger.error("CallMethodError[" + name + "]");
-            throw new Error("ERROR when call function " + name + ": " + e.getMessage(), e);
+            throw new Error("ERROR when call function '" + name + "': " + e.getMessage(), e);
         }
     }
 

@@ -1,15 +1,25 @@
 package ru.maratislamov.script.values;
 
+import org.apache.commons.lang3.ObjectUtils;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.google.SparseArray;
 
 import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 public class ListValue extends AbstractList<Value> implements Value, MapOrListValueInterface {
 
     SparseArray<Value> data;
+
+    public static ListValue of(Value val) {
+        if (val instanceof ListValue) return (ListValue) val;
+
+        final ListValue lv = new ListValue();
+        lv.push(val);
+        return lv;
+    }
 
     public ListValue() {
         data = new SparseArray<>(10);
@@ -39,7 +49,7 @@ public class ListValue extends AbstractList<Value> implements Value, MapOrListVa
     @Override
     public Value get(String name) {
         Integer idx = Integer.parseInt(name);
-        return data.get(idx);
+        return ObjectUtils.firstNonNull(data.get(idx), NULL);
     }
 
     @Override
@@ -86,7 +96,7 @@ public class ListValue extends AbstractList<Value> implements Value, MapOrListVa
 
     @Override
     public Value get(int index) {
-        return data.get(index);
+        return ObjectUtils.firstNonNull(data.get(index), NULL);
     }
 
     @Override

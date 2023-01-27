@@ -8,10 +8,23 @@ public class Token {
 
     public final String text;
     public final TokenType type;
+    public final boolean isSeparatedWord;
 
     public Token(String text, TokenType type) {
         this.text = text;
         this.type = type;
+        this.isSeparatedWord = false;
+    }
+
+    public Token(String text, TokenType type, boolean isSeparatedWord) {
+        assert type == TokenType.WORD;
+        this.text = text;
+        this.type = type;
+        this.isSeparatedWord = isSeparatedWord;
+    }
+
+    public boolean isSeparatedWord() {
+        return isSeparatedWord;
     }
 
     @Override

@@ -8,6 +8,7 @@ import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.Value;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -49,7 +50,6 @@ public class BinaryOperatorExpression implements Expression {
         Value leftVal = left.evaluate(session);
         Value rightVal = right.evaluate(session);
 
-
         // операции с NULL
         if (leftVal == Value.NULL || rightVal == Value.NULL) {
             if (Objects.equals(operator, "=") || operator.equals("=="))
@@ -62,7 +62,6 @@ public class BinaryOperatorExpression implements Expression {
 
 
         final Double rightNumber = rightVal.toNumber();
-        final String rightString = rightVal.toString();
 
         switch (operator) {
             case "=":
@@ -85,10 +84,10 @@ public class BinaryOperatorExpression implements Expression {
                 // string concatenation.
                 if (rightNumber != null && leftVal instanceof NumberValue) {
                     return new NumberValue(leftVal.toNumber() + rightNumber);
-                } else if (leftVal instanceof ListValue list) {
-                    ListValue lv = new ListValue(list);
-                    if (rightVal instanceof ListValue rList) {
-                        lv.addAll(rList);
+                } else if (leftVal instanceof ListValue) {
+                    ListValue lv = new ListValue((List<Value>) leftVal);
+                    if (rightVal instanceof ListValue) {
+                        lv.addAll((ListValue) rightVal);
                     } else {
                         lv.push(rightVal);
                     }

@@ -10,6 +10,7 @@ import java.util.Objects;
 
 
 class TokenizerTest {
+
     @Test
     public void testQu(){
         // двойное экранирование кавычек
