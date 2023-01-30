@@ -10,6 +10,7 @@ package ru.maratislamov.script.parser;
  * at the names, but Jasic is a little more crude.
  */
 public enum TokenType {
-    WORD, DIGITS, STRING, STRING_FRAME, LABEL, LINE, SEP, /* SEP - разделитель команд в одной строке */
-    EQUALS, NOEQUALS, OPERATOR, LEFT_PAREN, RIGHT_PAREN, BEGIN_LIST, END_LIST, EOF, COMMA, DOT;
+    WORD, DIGITS, STRING, STRING_FRAME, LABEL, LINE, COMMAND_SEP, /* SEP - разделитель команд в одной строке */
+    EQUALS, NOEQUALS, OPERATOR, LEFT_PAREN, RIGHT_PAREN, BEGIN_LIST, END_LIST, BEGIN_MAP, END_MAP, EOF, COMMA, DOT,
+    MAP_SEP;
 }

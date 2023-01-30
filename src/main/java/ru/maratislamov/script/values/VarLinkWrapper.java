@@ -3,15 +3,15 @@ package ru.maratislamov.script.values;
 import ru.maratislamov.script.ScriptSession;
 
 // обертка для хранения и обновления ссылок на значения при работе с полем переменных
-public class VarWrapper extends NULLValue {
+public class VarLinkWrapper extends NULLValue {
 
     private MapValue parent = null;
     private Value value = null;
 
-    protected VarWrapper() {
+    protected VarLinkWrapper() {
     }
 
-    public VarWrapper(MapValue parent, Value value) {
+    public VarLinkWrapper(MapValue parent, Value value) {
         this.parent = parent;
         this.value = value;
     }

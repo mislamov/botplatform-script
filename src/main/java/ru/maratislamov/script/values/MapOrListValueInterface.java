@@ -1,6 +1,8 @@
 package ru.maratislamov.script.values;
 
-public interface MapOrListValueInterface {
+import java.util.Comparator;
+
+public interface MapOrListValueInterface extends Comparable {
 
     boolean containsKey(String name);
 

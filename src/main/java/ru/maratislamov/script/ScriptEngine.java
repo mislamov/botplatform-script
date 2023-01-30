@@ -9,7 +9,9 @@ import ru.maratislamov.script.statements.Statement;
 import ru.maratislamov.script.values.MapValue;
 import ru.maratislamov.script.values.Value;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,17 +152,28 @@ public class ScriptEngine {
      * @param source A string containing the source code of a .jas script to interpret.
      * @return
      */
+    public List<Statement> scriptToStatements(String source) {
+        return scriptToStatements(source, false);
+    }
+    public List<Statement> scriptToStatements(String source, boolean forceHolder) {
+        return scriptToStatements(new ByteArrayInputStream(source.getBytes(StandardCharsets.UTF_8)), forceHolder);
+    }
+
     public List<Statement> scriptToStatements(InputStream source) {
+        return scriptToStatements(source, false);
+    }
+    public List<Statement> scriptToStatements(InputStream source, boolean forceHolder) {
         // Tokenize.
         List<Token> tokens = Tokenizer.tokenize(source);
 
         // Parse.
         Parser parser = new Parser(this, tokens);
-        return parser.parse(labels);
+        return parser.parseCommands(labels, forceHolder);
 
     }
+
     public void load(InputStream source) {
-        statements = scriptToStatements(source);
+        statements = scriptToStatements(source, false);
     }
 
 

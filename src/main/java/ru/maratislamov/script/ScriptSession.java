@@ -24,9 +24,11 @@ public class ScriptSession implements Serializable {
     private String sessionId;
 
     // переменные уровня сеанса выполнения скрипта
-    private MapValue sessionScope = new MapValue(new HashMap<>());
+    private MapValue sessionScope = new MapValue();
 
     private Integer currentStatement;
+
+    private Character suspendType; // W - wait; I - input
 
     public ScriptSession(){
         this(UUID.randomUUID().toString());
@@ -79,6 +81,14 @@ public class ScriptSession implements Serializable {
     public ScriptSession activate(){
         currentStatement = 0;
         return this;
+    }
+
+    public Character getSuspendType() {
+        return suspendType;
+    }
+
+    public void setSuspendType(Character suspendType) {
+        this.suspendType = suspendType;
     }
 
     public ScriptSession getParentSession() {

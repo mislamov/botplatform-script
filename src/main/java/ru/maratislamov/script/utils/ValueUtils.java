@@ -18,38 +18,43 @@ public class ValueUtils {
      * @param mapValue
      * @return
      */
-    public static String mapToString(MapValue mapValue) {
+    public static String mapToDebugString(MapValue mapValue) {
         if (mapValue.getBody().size() == 0) return "{}";
 
         Set<Object> markers = threadMarkers.get();
 
-        String body = mapValue.getAll().stream().map(entry -> {
+        final String[] body = {""};
+
+        mapValue.getAll().forEach(entry -> {
             final Value value = entry.getValue();
             final String key = entry.getKey();
-
-            if (value != null && value != Value.NULL && markers.contains(value)) {
-                // loop
-                return key + ".$$loop$$";
-            }
-
-            if (value instanceof MapOrListValueInterface) {
-                markers.add(value);
-                threadMarkers.set(markers);
-
-                final String text = key + "." + value;
-
-                markers.remove(value);
-                threadMarkers.set(markers);
-                return text;
-            }
-
-
-            return key + ":" + value;
-        }).collect(Collectors.joining(", "));
+            body[0] += ("".equals(body[0])?"":",") + mapKeyValueToText(key, value, markers);
+        });
 
         if (mapValue.getBody().size() > 1)
-            return "{" + body + "}";
-        return body;
+            return "{" + body[0] + "}";
+        return body[0];
+    }
+
+    private static String mapKeyValueToText(String key, Value value, Set<Object> markers) {
+        if (value != null && value != Value.NULL && markers.contains(value)) {
+            // loop
+            return key + ".$$loop$$";
+        }
+
+        if (value instanceof MapOrListValueInterface) {
+            markers.add(value);
+            threadMarkers.set(markers);
+
+            final String text = key + "." + value;
+
+            markers.remove(value);
+            threadMarkers.set(markers);
+            return text;
+        }
+
+
+        return key + ":" + value;
     }
 
 

@@ -4,10 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptFunctionsExecutor;
 import ru.maratislamov.script.ScriptSession;
-import ru.maratislamov.script.values.NotFoundValue;
-import ru.maratislamov.script.values.NumberValue;
-import ru.maratislamov.script.values.StringValue;
-import ru.maratislamov.script.values.Value;
+import ru.maratislamov.script.values.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -65,6 +62,29 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
                     }
                     return result;
                 }
+
+            case "sort_maps_by":
+                assert args.size() == 2;
+
+                assert args.get(0) instanceof StringValue;
+                assert args.get(1) instanceof ListValue;
+
+                String path = ((StringValue) args.get(0)).getValue();
+                ListValue maps = (ListValue) args.get(1);
+
+                maps.sort((v1, v2) -> {
+                    if (v1 instanceof MapOrListValueInterface && v2 instanceof MapOrListValueInterface) {
+                        Value w1 = ((MapOrListValueInterface) v1).get(path);
+                        Value w2 = ((MapOrListValueInterface) v2).get(path);
+
+                        if (w1 instanceof NumberValue) return Double.compare(w1.toNumber(), w2.toNumber());
+                        return w1.toString().compareTo(w2.toString());
+                    } else {
+                        throw new RuntimeException("Unexpected items type on map_or_list: " + v1.getClass().getSimpleName() + " and " + v2.getClass().getSimpleName());
+                    }
+                });
+
+                return maps;
 
             default:
                 //throw new Error("Unknown function: " + fname);

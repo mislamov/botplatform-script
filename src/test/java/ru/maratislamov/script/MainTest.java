@@ -31,6 +31,11 @@ public class MainTest {
         runScript("sample\\demomaps.jas");
     }
 
+    @Test
+    public void runMaps() throws IOException {
+        runScript("sample\\maps.bas");
+    }
+
 
     @Test
     public void runPlusEq() throws IOException {

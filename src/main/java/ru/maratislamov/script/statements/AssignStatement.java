@@ -5,7 +5,6 @@ import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.utils.VarMapUtils;
 import ru.maratislamov.script.values.Value;
-import ru.maratislamov.script.values.VarWrapper;
 
 import java.util.function.Consumer;
 

@@ -9,6 +9,7 @@ import ru.maratislamov.script.statements.Statement;
 
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -67,4 +68,16 @@ public class MethodCallValue implements Statement, Value {
         return "{CALL " + name + " " + args + "}";
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MethodCallValue that = (MethodCallValue) o;
+        return Objects.equals(name, that.name) && Objects.equals(args, that.args);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, args);
+    }
 }

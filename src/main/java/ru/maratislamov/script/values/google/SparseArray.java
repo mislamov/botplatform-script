@@ -281,7 +281,8 @@ public class SparseArray<E> extends AbstractList<E> implements Cloneable {
         if (mGarbage) {
             gc();
         }
-        return mSize;
+        //return mSize;
+        return maxIndex() + 1;
     }
 
     /**

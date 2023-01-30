@@ -20,7 +20,7 @@ public class ParserVarTest {
     public void test0() {
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x = 1".getBytes(StandardCharsets.UTF_8)));
         Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parse(new HashMap<>());
+        final List<Statement> statements = parser.parseCommands(new HashMap<>());
 
         assert statements.get(0) instanceof AssignStatement;
         Assertions.assertEquals("x", ((AssignStatement) statements.get(0)).getVarExpression().getName());
@@ -45,7 +45,7 @@ public class ParserVarTest {
         Assertions.assertEquals(TokenType.DIGITS, tokens.get(i++).type);
 
         Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parse(new HashMap<>());
+        final List<Statement> statements = parser.parseCommands(new HashMap<>());
 
         assert statements.get(0) instanceof AssignStatement;
         assert ((AssignStatement) statements.get(0)).getValue() instanceof VariableExpression;
@@ -64,7 +64,7 @@ public class ParserVarTest {
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x.1[2].3 = y.1".getBytes(StandardCharsets.UTF_8)));
 
         Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parse(new HashMap<>());
+        final List<Statement> statements = parser.parseCommands(new HashMap<>());
 
         assert statements.get(0) instanceof AssignStatement;
         assert ((AssignStatement) statements.get(0)).getValue() instanceof VariableExpression;
@@ -94,7 +94,7 @@ public class ParserVarTest {
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
 
         Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parse(new HashMap<>());
+        final List<Statement> statements = parser.parseCommands(new HashMap<>());
 
         final MethodCallValue methodCallValue = (MethodCallValue) statements.get(0);
         Assertions.assertEquals("print", methodCallValue.getName());
@@ -113,7 +113,7 @@ public class ParserVarTest {
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
         Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parse(new HashMap<>());
+        final List<Statement> statements = parser.parseCommands(new HashMap<>());
 
         assert statements.size() == 3;
         Assertions.assertTrue( statements.get(0) instanceof AssignStatement);
@@ -138,7 +138,7 @@ public class ParserVarTest {
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
         Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parse(new HashMap<>());
+        final List<Statement> statements = parser.parseCommands(new HashMap<>());
 
         assert statements.size() == 1;
         Assertions.assertTrue( statements.get(0) instanceof AssignStatement);
@@ -158,7 +158,7 @@ public class ParserVarTest {
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
         Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parse(new HashMap<>());
+        final List<Statement> statements = parser.parseCommands(new HashMap<>());
 
         assert statements.size() == 1;
         Assertions.assertTrue( statements.get(0) instanceof MethodCallValue);
@@ -176,7 +176,7 @@ public class ParserVarTest {
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
         Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parse(new HashMap<>());
+        final List<Statement> statements = parser.parseCommands(new HashMap<>());
 
         assert statements.size() == 3;
         Assertions.assertTrue( statements.get(0) instanceof AssignStatement);

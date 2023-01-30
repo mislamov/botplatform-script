@@ -4,10 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptEngine;
-import ru.maratislamov.script.expressions.Expression;
-import ru.maratislamov.script.expressions.BinaryOperatorExpression;
-import ru.maratislamov.script.expressions.ListExpressions;
-import ru.maratislamov.script.expressions.VariableExpression;
+import ru.maratislamov.script.expressions.*;
 import ru.maratislamov.script.statements.*;
 import ru.maratislamov.script.values.*;
 
@@ -73,14 +70,20 @@ public class Parser {
      *               parser will fill this in as it scans the code.
      * @return The list of parsed statements.
      */
-    public List<Statement> parse(Map<String, Integer> labels) {
+    public List<Statement> parseCommands(Map<String, Integer> labels) {
+        return parseCommands(labels, false);
+    }
+
+    /**
+     *
+     * @param labels
+     * @param parseHolder - если true - принудительно парсим переменную или холдер: ${ _from_here_ }
+     * @return
+     */
+    public List<Statement> parseCommands(Map<String, Integer> labels, boolean parseHolder) {
         List<Statement> statements = new ArrayList<Statement>();
 
         while (true) {
-            // Counting empty lines.
-            /*while (match(TokenType.LINE)) {
-                positionLine++; // todo: не учитывает переносы строки внутри текста!!!
-            }*/
 
             skipSpacesAndSeps();
 
@@ -105,6 +108,7 @@ public class Parser {
                     // var ==  //  var =
                     if (match(TokenType.EQUALS, TokenType.EQUALS) || match(TokenType.EQUALS)) {
                         // равенство
+                        skipSpaces();
                         Expression value = expression();
                         statements.add(new AssignStatement(var, value));
 
@@ -117,7 +121,12 @@ public class Parser {
                         statements.add(new AssignStatement(var, new BinaryOperatorExpression(var, modify, value)));
 
 
+                    } else if (((VariableExpression) atom).getNextInPath() != null) {
+                        // simple var
+                        statements.add(new WrapStatement(atom));
+
                     } else {
+                        // WORD
                         final String atomName = atom.getName();
 
                         if (atomName.equals("goto")) {
@@ -155,21 +164,27 @@ public class Parser {
                             positionLine++;
 
 
-                            // commandkey  arg arg arg \n
+                            // command  arg arg arg \n
+                            // or
+                            // wait \n
                         } else {
                             List<Expression> argList = new ArrayList<>();
                             while (true) {
                                 final TokenType type = get(0).type;
-                                if (type == TokenType.LINE || type == TokenType.EOF || type == TokenType.SEP) break;
+                                if (type == TokenType.LINE || type == TokenType.EOF || type == TokenType.COMMAND_SEP)
+                                    break;
 
                                 Expression expression = expression();
                                 argList.add(expression);
                             }
                             positionLine++;
-                            if (atomName.equals("print")) {
-                                statements.add(new MethodCallValue("print", argList));
+
+                            if (parseHolder && argList.isEmpty()){
+                                // одно слово в холдере - это переменная
+                                statements.add(new WrapStatement(atom));
                             } else {
-                                statements.add(new MethodCallValue("print", List.of(new MethodCallValue(atomName, argList))));
+                                // если есть аргументы или одинокое слово в потоке команд - это команда
+                                statements.add(new MethodCallValue(atomName, argList));
                             }
                         }
                     }
@@ -186,6 +201,8 @@ public class Parser {
 
         return statements;
     }
+
+    private ScriptEngine engine4frame = new ScriptEngine();
 
     protected List<Expression> frameTextToArgList(String text) {
         List<Expression> result = new ArrayList<>();
@@ -205,6 +222,7 @@ public class Parser {
                     i += 1;
                 }
                 continue;
+
             } else {
                 int idx = endOfVarName(ln);
 
@@ -213,8 +231,12 @@ public class Parser {
                     continue;
                 }
 
-                result.add(new VariableExpression(ln.substring(0, idx)));
-                if (idx < ln.length() - 1) {
+                final String varCode = ln.substring(0, idx);
+                final Statement varStatement = engine4frame.scriptToStatements(varCode, true).get(0);
+                assert varStatement instanceof WrapStatement;
+                result.add(((WrapStatement) varStatement).getExpression());
+
+                if (idx < ln.length()) {
                     result.add(new StringValue(ln.substring(idx)));
                 }
             }
@@ -236,9 +258,17 @@ public class Parser {
         return code.length();
     }
 
-    // пропуск разделителей
+    // пропуск разделителей строк команд
     private void skipSpacesAndSeps() {
-        while (peek(TokenType.LINE) || peek(TokenType.SEP)) {
+        while (peek(TokenType.LINE) || peek(TokenType.COMMAND_SEP)) {
+            ++positionLine;
+            ++position;
+        }
+    }
+
+    // пропуск разделителей строк
+    private void skipSpaces() {
+        while (peek(TokenType.LINE)) {
             ++positionLine;
             ++position;
         }
@@ -257,23 +287,48 @@ public class Parser {
      */
     private Expression expression() {
 
-        skipSpacesAndSeps();
-
         // список
         if (match(TokenType.BEGIN_LIST)) {
             List<Expression> expressionList = new ArrayList<>();
 
             while (!match(TokenType.END_LIST)) {
+                skipSpaces(); // [\n  ,\n
 
                 expressionList.add(expression());
 
-                skipSpacesAndSeps();
+                skipSpaces(); // xxx\n]
 
                 if (!match(TokenType.COMMA) && !peek(TokenType.END_LIST)) {
                     throw new Error("List parse error here: " + debugCurrentPosition());
                 }
             }
             return new ListExpressions(expressionList);
+        }
+
+        // мапа
+        if (match(TokenType.BEGIN_MAP)) {
+            Map<String, Expression> map = new LinkedHashMap<>();
+
+            while (!match(TokenType.END_MAP)) {
+                skipSpaces(); // {\n  ,\n
+
+                consume(TokenType.STRING, TokenType.LABEL);
+                String key = get(-1).text;
+
+                if (get(-1).type != TokenType.LABEL) {
+                    consume(TokenType.MAP_SEP); // :
+                }
+                Expression val = expression();
+
+                map.put(key, val);
+                skipSpaces(); // xxx\n}
+
+                if (!match(TokenType.COMMA) && !peek(TokenType.END_MAP)) {
+                    throw new Error("List parse error here: " + debugCurrentPosition());
+                }
+            }
+            return new MapExpressions(map);
+
         }
 
         // оператор
@@ -306,13 +361,19 @@ public class Parser {
      * @return The parsed expression.
      */
     private Expression operator() {
+
         Expression expression = atomic();
 
         // Keep building operator expressions as long as we have operators.
-        while (match(TokenType.OPERATOR) || match(TokenType.EQUALS) || (match(TokenType.NOEQUALS))) {
+        while (
+                match(TokenType.LINE, TokenType.OPERATOR) || match(TokenType.OPERATOR) ||
+                        match(TokenType.LINE, TokenType.EQUALS) || match(TokenType.EQUALS) ||
+                        match(TokenType.LINE, TokenType.NOEQUALS) || match(TokenType.NOEQUALS)
+        ) {
             String operator = last(1).text;
-//            if (operator == '=' && last(2).text.charAt(0) == '!')
-//                operator = '!';
+
+            skipSpaces();
+
             Expression right = atomic();
             //Expression right = expression();
             expression = new BinaryOperatorExpression(expression, operator, right);
@@ -348,7 +409,7 @@ public class Parser {
                 return Value.NULL;
             }
 
-            if (word.isSeparatedWord()){
+            if (word.isSeparatedWord()) {
                 return new VariableExpression(word.text);
             }
 
@@ -421,7 +482,7 @@ public class Parser {
 
             assert theVariable.getLastInPath() == lastSubVariable;
 
-            // fn[].
+            // fn.
             while (match(TokenType.DOT)) {
                 // subvar
                 Expression atomic = atomic(true);

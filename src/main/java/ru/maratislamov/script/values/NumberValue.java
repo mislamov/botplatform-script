@@ -3,12 +3,13 @@ package ru.maratislamov.script.values;
 import ru.maratislamov.script.ScriptSession;
 
 import java.text.DecimalFormat;
+import java.util.Objects;
 
 
 /**
  * A numeric value. Jasic uses doubles internally for all numbers.
  */
-public class NumberValue implements Value {
+public class NumberValue implements Value, Comparable<Value> {
 
     public static DecimalFormat decimalFormat = new DecimalFormat();
 
@@ -62,5 +63,23 @@ public class NumberValue implements Value {
 
     public Value evaluate(ScriptSession session) {
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NumberValue that = (NumberValue) o;
+        return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public int compareTo(Value o) {
+        return Double.compare(value, o.toNumber());
     }
 }

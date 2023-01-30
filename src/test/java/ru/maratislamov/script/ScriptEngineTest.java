@@ -5,15 +5,17 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.ListExpressions;
-import ru.maratislamov.script.parser.Parser;
 import ru.maratislamov.script.statements.AssignStatement;
 import ru.maratislamov.script.statements.Statement;
 import ru.maratislamov.script.values.ListValue;
 import ru.maratislamov.script.values.MethodCallValue;
+import ru.maratislamov.script.values.NumberValue;
+import ru.maratislamov.script.values.Value;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class ScriptEngineTest {
 
@@ -30,19 +32,11 @@ class ScriptEngineTest {
         assert statement0 instanceof MethodCallValue;
         assert statement1 instanceof MethodCallValue;
 
-        assert ((MethodCallValue) statement0).getName().equals("print");
-        assert ((MethodCallValue) statement1).getName().equals("print");
+        assert ((MethodCallValue) statement0).getName().equals("file");
+        assert ((MethodCallValue) statement1).getName().equals("file");
 
-        assert ((MethodCallValue) statement0).getArgs().size() == 1;
-        assert ((MethodCallValue) statement0).getArgs().get(0) instanceof MethodCallValue;
-        assert ((MethodCallValue) statement0).getArgs().get(0).getName().equals("file");
-        assert ((MethodCallValue) ((MethodCallValue) statement0).getArgs().get(0)).getArgs().size() == 3;
-
+        assert ((MethodCallValue) statement0).getArgs().size() == 3;
         assert ((MethodCallValue) statement1).getArgs().size() == 1;
-        assert ((MethodCallValue) statement1).getArgs().get(0) instanceof MethodCallValue;
-        assert ((MethodCallValue) statement1).getArgs().get(0).getName().equals("file");
-        assert ((MethodCallValue) ((MethodCallValue) statement1).getArgs().get(0)).getArgs().size() == 1;
-
     }
 
     @Test
@@ -86,11 +80,8 @@ class ScriptEngineTest {
         assert statements.get(0) instanceof MethodCallValue;
         List<Expression> args = ((MethodCallValue) statements.get(0)).getArgs();
 
-        assert ((MethodCallValue) statements.get(0)).getName().equals("print");
+        assert ((MethodCallValue) statements.get(0)).getName().equals("keyboard");
         assert args.size() == 1;
-        assert args.get(0) instanceof MethodCallValue;
-
-        args = ((MethodCallValue) args.get(0)).getArgs();
         assert ((ListExpressions) args.get(0)).get(0).toString().equals("a");
         assert ((ListExpressions) args.get(0)).get(1).toString().equals("b");
     }
@@ -98,7 +89,7 @@ class ScriptEngineTest {
 
 
     @Test
-    public void testExec(){
+    public void testConcatArrays(){
         String code= "base_menu = [1,2]\n tail_menu=[3,4]\n current_menu = base_menu + [tail_menu]";
 
         ScriptEngine scriptEngine = new ScriptEngine();
@@ -108,6 +99,15 @@ class ScriptEngineTest {
         }});
 
         System.out.println(sess.getSessionScope());
+    }
+
+
+    @Test
+    public void testLn(){
+        assertEval("\"head\" + \"tail\"", "headtail");
+        assertEval("\"head\"\n + \"tail\"", "headtail");
+        assertEval("\"head\" + \n\"tail\"", "headtail");
+        assertEval("\n[\n\t1,\n\t2\n]", ListValue.of(new NumberValue(1), new NumberValue(2)));
     }
 
 
@@ -121,6 +121,16 @@ class ScriptEngineTest {
         Assertions.assertEquals(result, String.valueOf(sess.getSessionScope().get("E")), "Ошибка арифметического вычисления: " + exp);
     }
 
+    public void assertEval(String exp, Value result){
+        ScriptEngine scriptEngine = new ScriptEngine();
+        scriptEngine.load(new ByteArrayInputStream(("E=" + exp).getBytes(StandardCharsets.UTF_8)));
+        final ScriptSession sess = scriptEngine.interpret(new ScriptSession() {{
+            setCurrentStatement(0);
+        }});
+
+        Assertions.assertEquals(result, sess.getSessionScope().get("E"), "Ошибка арифметического вычисления: " + exp);
+    }
+
     @Test
     public void testEval(){
         assertEval("6 - (5 + 5)", "-4");
@@ -130,6 +140,34 @@ class ScriptEngineTest {
         assertEval("-55", "-55");
         assertEval("-55.1", "-55,1");
     }
+
+    @Test
+    public void testCollection(){
+        ScriptEngine scriptEngine = new ScriptEngine();
+        scriptEngine.load(new ByteArrayInputStream(("E=[];E.1=1; E.2=2; E.3=3").getBytes(StandardCharsets.UTF_8)));
+        final ScriptSession sess = scriptEngine.interpret(new ScriptSession() {{
+            setCurrentStatement(0);
+        }});
+
+        ListValue listValue = (ListValue) sess.getSessionScope().get("E");
+
+        System.out.println(listValue);
+
+        AtomicInteger i = new AtomicInteger();
+        listValue.forEach(l -> {
+            System.out.println(l);
+            i.incrementAndGet();
+        });
+        assert i.get() == 4;  // [null, 1, 2, 3]
+
+        AtomicInteger ii = new AtomicInteger();
+        listValue.getIterator().forEachRemaining(l -> {
+            System.out.println(l);
+            ii.incrementAndGet();
+        });
+        assert ii.get() == 4;  // [null, 1, 2, 3]
+    }
+
 
 
 }

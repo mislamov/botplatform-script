@@ -1,7 +1,6 @@
 package ru.maratislamov.script.expressions;
 
 import ru.maratislamov.script.ScriptSession;
-import ru.maratislamov.script.values.MapValue;
 import ru.maratislamov.script.values.MapOrListValueInterface;
 import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.Value;
@@ -39,7 +38,7 @@ public class VariableExpression implements Expression {
 
         final String evaluatedName = Expression.evaluate(nameExpression , session).toString();
 
-        final Value value = findByName(scope, evaluatedName, session);
+        final Value value = findByPathName(scope, evaluatedName, session);
 
         // ныряем в переменную
         if (nextInPath != null) {
@@ -58,15 +57,19 @@ public class VariableExpression implements Expression {
         return value;
     }
 
-    private Value findByName(MapOrListValueInterface variables, String nameSearch, ScriptSession session) {
+    private Value findByPathName(MapOrListValueInterface variables, String nameSearch, ScriptSession session) {
         // переменная присутствует точь-в-точь по имени
         if (variables.containsKey(nameSearch)) {
             return variables.get(nameSearch)/*.evaluate(session)*/;
         }
 
-        assert !nameSearch.contains("."); // выявить кейсы возникновения и принять решение нужна ли такая обработка
+        // задан путь до переменной (например, внутри TextFrame)
 
-        // задан путь до переменной
+        if (nameSearch.contains("[") && nameSearch.contains("]")){
+
+        }
+
+
         if (nameSearch.contains(".")) {
             String[] path = nameSearch.split("\\.");
             Value value = null;

@@ -78,6 +78,7 @@ public interface Value extends Expression, Serializable {
     @SuppressWarnings("unchecked")
     static Value from(Object val) {
         if (val == null) return NULL;
+        if (val instanceof Value) return (Value) val;
         if (val instanceof Number) return new NumberValue(((Number) val).doubleValue());
         if (val instanceof Map) {
             MapValue mapValue = new MapValue();

@@ -5,6 +5,7 @@ import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.statements.Statement;
 
 import java.util.List;
+import java.util.Objects;
 
 public class StringFrameValue extends StringValue implements Statement {
 
@@ -52,4 +53,5 @@ public class StringFrameValue extends StringValue implements Statement {
     public Value execute(ScriptSession session) {
         return this;
     }
+
 }

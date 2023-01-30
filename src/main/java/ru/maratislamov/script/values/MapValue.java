@@ -16,9 +16,14 @@ public class MapValue implements Value, MapOrListValueInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(MapValue.class);
 
-    public static final String PROPERTY_SIZE = "size";
+    public static final int MAP_EQUAL_CALC_DEEP = 10; // максимальная глубина сравнения двух ValueMap
 
-    private Map<String, Value> body = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private Map<String, Value> body = new LinkedHashMap<>();  //new TreeMap<>(/*String.CASE_INSENSITIVE_ORDER*/);
+
+    public static Map<String, Function<MapValue, Value>> methods = Map.of(
+            "size", v -> Value.from(v.getBody().size()),
+            "length", v -> Value.from(v.getBody().size())
+    );
 
     public Map<String, Value> getBody() {
         return body;
@@ -69,7 +74,7 @@ public class MapValue implements Value, MapOrListValueInterface {
     @JsonIgnore
     @Override
     public Value copy() {
-        Map<String, Value> map = new HashMap<>(body);
+        Map<String, Value> map = new LinkedHashMap<>(body);
         return new MapValue(map);
     }
 
@@ -77,7 +82,7 @@ public class MapValue implements Value, MapOrListValueInterface {
     @Override
     public String toString() {
         //return "{" + StringUtils.join(body.entrySet(), ",") + "}";
-        return ValueUtils.mapToString(this);
+        return ValueUtils.mapToDebugString(this);
     }
 
     @JsonIgnore
@@ -104,9 +109,8 @@ public class MapValue implements Value, MapOrListValueInterface {
             throw new RuntimeException("Don't use DOTs in keys for MapValues: use VarMapUtils.getValueSetterByPath for deep");
         }
 
-        if (!body.containsKey(name)) {
-            if (name.equals(PROPERTY_SIZE)) return new NumberValue(body.size());
-        }
+        if (methods.containsKey(name)) return methods.get(name).apply(this);
+
         return body.get(name);
     }
 
@@ -145,11 +149,59 @@ public class MapValue implements Value, MapOrListValueInterface {
 
     @JsonIgnore
     public boolean containsKey(String name) {
-        return body.containsKey(name);
+        return methods.containsKey(name) || body.containsKey(name);
     }
 
     @JsonIgnore
     public Value computeIfAbsent(String name, Function<String, Value> mappingFunction) {
         return body.computeIfAbsent(name, mappingFunction);
+    }
+
+    public static final <K, V> boolean equals(Map<K, V> m1, Map<K, V> m2, int deep) {
+        if (m1 == m2) return true;
+        if (m1 == null || m1.getClass() != m2.getClass()) return false;
+        if (m1.hashCode() != m2.hashCode()) return false;
+        if (m1.size() != m2.size()) return false;
+
+        for (Iterator<Map.Entry<K, V>> iterator = m1.entrySet().iterator(); iterator.hasNext(); ) {
+            Map.Entry<K, V> en = iterator.next();
+            K key = en.getKey();
+            V val1 = en.getValue();
+            V val2 = m2.get(key);
+            if (val1 == val2) continue;
+            if (val1 == null || val1.getClass() != val2.getClass()) return false;
+            if (val1 instanceof MapValue && val2 instanceof MapValue) {
+                if (deep == 0)
+                    continue;
+                if (!equals((Map) ((MapValue) val1).body, (Map) ((MapValue) val2).body, deep - 1)) {
+                    return false;
+                }
+                continue;
+            }
+            if (!val1.equals(val2)) return false;
+        }
+        return true;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MapValue mapValue = (MapValue) o;
+        return equals(body, mapValue.body, MAP_EQUAL_CALC_DEEP);
+    }
+
+    @Override
+    public int hashCode() {
+        return body == null ? 0 : body.size(); // иначе может быть зацикленность
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if (o instanceof MapValue) {
+            return Integer.compare(getBody().size(), ((MapValue) o).getBody().size());
+        }
+        throw new RuntimeException("Unexpected comparation ListValue with " + o.getClass().getSimpleName());
     }
 }

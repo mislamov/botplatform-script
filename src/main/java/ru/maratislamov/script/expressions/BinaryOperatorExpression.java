@@ -75,8 +75,7 @@ public class BinaryOperatorExpression implements Expression {
                     return new NumberValue(rightVal == Value.NULL && !Objects.equals(operator, "!=") ? 1 : 0);
 
                 } else {
-                    return new NumberValue(leftVal.toString().equals(
-                            rightVal.toString()) == (!Objects.equals(operator, "!=")) ? 1 : 0);
+                    return new NumberValue(leftVal.equals(rightVal) ? 1 : 0);
                 }
 
             case "+":

@@ -1,3 +1,14 @@
+mm = {x:"1", y:"2"}
+nn = {x:"1", y:"2"}
+mm.l = nn
+nn.l = mm
+
+if mm == nn then print "equals ok"; goto endif
+'else
+print "equas failed"
+endif:
+
+
 arr = []
 arr[1] = 1
 arr[2] = arr[1]
@@ -28,6 +39,8 @@ varmap.arr[2*2].var = arr.0
 varmap.arr.1.var = arr[1]
 varmap.arr[1].var0 = varmap.arr
 varmap.arr[2].var1 = varmap.arr
+
+if varmap == varmap then print "equals ok"
 
 print "arr = " + arr
 print "varmap = " + varmap

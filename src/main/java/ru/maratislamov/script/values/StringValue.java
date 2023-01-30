@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.text.StringEscapeUtils;
 import ru.maratislamov.script.ScriptSession;
 
+import java.util.Objects;
+
 
 /**
  * A string value.
@@ -58,4 +60,16 @@ public class StringValue implements Value {
         return this;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StringValue that = (StringValue) o;
+        return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
 }

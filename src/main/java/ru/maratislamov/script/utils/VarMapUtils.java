@@ -6,7 +6,7 @@ import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.values.MapOrListValueInterface;
 import ru.maratislamov.script.values.MapValue;
 import ru.maratislamov.script.values.Value;
-import ru.maratislamov.script.values.VarWrapper;
+import ru.maratislamov.script.values.VarLinkWrapper;
 
 import java.util.function.Consumer;
 
@@ -16,7 +16,7 @@ public class VarMapUtils {
 
     /**
      * поиск и при необходимости создание ссылки на значение переменной в скоупе. Точка может быть заменена на новое значение
-     * в скоупе через метод {@link VarWrapper#replaceByValue(Value)}
+     * в скоупе через метод {@link VarLinkWrapper#replaceByValue(Value)}
      *
      * @param session           -
      * @param pathVarExpression - переменная (возможно, составная) по которой ищется значение в скоупе
