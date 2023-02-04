@@ -51,7 +51,8 @@ public class Tokenizer {
                 switch (state) {
 
                     case DEFAULT:
-                        if (iC == -1) return tokens;
+                        if (iC == -1)
+                            return tokens;
 
                         if (c == '=') {
                             tokens.add(new Token("=", TokenType.EQUALS));
@@ -226,7 +227,7 @@ public class Tokenizer {
                         throw new Error("Unexpected token here: " + debugString(iC, source));
                 }
 
-                if (iC == -1) return tokens;
+                if (iC == -1) break;
                 iC = source.read();
             }
 
@@ -234,10 +235,7 @@ public class Tokenizer {
             e.printStackTrace();
         }
 
-        // HACK: Silently ignore any in-progress token when we run out of
-        // characters. This means that, for example, if a script has a string
-        // that's missing the closing ", it will just ditch it.
-
+        if (state != TokenizeState.DEFAULT) throw new Error("Unexpected end of script. Closing " + state + " expected");
 
         return tokens;
     }

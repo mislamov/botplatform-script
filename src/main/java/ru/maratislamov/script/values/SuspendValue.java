@@ -1,22 +1,16 @@
 package ru.maratislamov.script.values;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 
 /**
- * пустое значение в скрипте (синглтон)
+ * синглтон для команды SUSPEND, возвращаемой при остановке выполнения скрипта
  */
-public final class NULLValue implements Value {
+public final class SuspendValue implements Value {
 
-    public static final NULLValue NULL = new NULLValue();
+    public static final SuspendValue SUSPEND = new SuspendValue();
 
-    public NULLValue() {
-    }
-
-    @JsonCreator
-    public static NULLValue getInstance() {
-        return NULL;
+    public SuspendValue() {
     }
 
     @Override
@@ -34,14 +28,15 @@ public final class NULLValue implements Value {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "$NULL";
-    }
-
 
     @Override
     public String getName() {
         return toString();
+    }
+
+    @Override
+    public String toString() {
+        return "$SUSPEND";
+
     }
 }

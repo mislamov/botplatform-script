@@ -85,7 +85,7 @@ public class MapValue implements Value, MapOrListValueInterface {
         return ValueUtils.mapToDebugString(this);
     }
 
-    @JsonIgnore
+
     @Override
     public String getName() {
         return toString();

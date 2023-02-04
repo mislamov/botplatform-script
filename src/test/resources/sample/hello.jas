@@ -1,2 +1,15 @@
 ' It doesn't get much simpler than this!
 print "Hello, world!"
+
+m = print("Чтобы продолжить, оцени насколько точно результаты теста попадают в твоё представление о себе: 0-мимо, 9-всё в точку",
+       [["0::{result.score=0}",
+        "1::{result.score=1}",
+        "2::{result.score=2}",
+        "3::{result.score=3}",
+        "4::{result.score=4}"],
+        ["5::{result.score=5}",
+        "6::{result.score=6}",
+        "7::{result.score=7}",
+        "8::{result.score=8}",
+        "9::{result.score=9}"]])
+print m

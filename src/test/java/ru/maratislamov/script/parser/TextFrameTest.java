@@ -1,5 +1,6 @@
 package ru.maratislamov.script.parser;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.expressions.Expression;
@@ -10,6 +11,7 @@ import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class TextFrameTest {
@@ -221,6 +223,16 @@ public class TextFrameTest {
         assert ((VariableExpression) expressions.get(3)).getNextInPath().getNextInPath().getNameExpression().equals(new NumberValue(2));
 
         assert expressions.get(4).toString().equals("!");
+
+    }
+
+    @Test
+    public void test(){
+        Assertions.assertThrows(Error.class, () -> {
+            final List<Statement> statements = new ScriptEngine().scriptToStatements("print \"\"\"hello,\nmy\nfriend\"\n y=1");
+            System.out.println(statements);
+        });
+
 
     }
 

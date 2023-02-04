@@ -395,6 +395,8 @@ public class Parser {
 
     private Expression atomic(boolean readVariableForce) {
 
+        skipSpaces();
+
         if (match(TokenType.WORD) || (readVariableForce && match(TokenType.DIGITS))) {
             // A word is a reference to a variable.
             Token word = last(1);

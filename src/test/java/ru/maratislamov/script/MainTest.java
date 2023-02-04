@@ -1,6 +1,7 @@
 package ru.maratislamov.script;
 
 import org.junit.jupiter.api.Test;
+import ru.maratislamov.script.context.ScriptRunnerContext;
 import ru.maratislamov.script.debug.DebugExecutor;
 
 import java.io.ByteArrayInputStream;
@@ -13,71 +14,89 @@ public class MainTest {
 
     @Test
     public void runHello() throws IOException {
-        runScript("sample\\hello.jas");
+        runScript("sample\\hello.jas", null);
     }
 
     @Test
     public void runHellos() throws IOException {
-        runScript("sample\\hellos.jas");
+        runScript("sample\\hellos.jas", null);
     }
 
     @Test
     public void runMandel() throws IOException {
-        runScript("sample\\mandel.jas");
+        runScript("sample\\mandel.jas", null);
     }
 
     @Test
     public void runDemoMaps() throws IOException {
-        runScript("sample\\demomaps.jas");
+        runScript("sample\\demomaps.jas", null);
     }
 
     @Test
     public void runMaps() throws IOException {
-        runScript("sample\\maps.bas");
+        runScript("sample\\maps.bas", null);
     }
 
 
     @Test
     public void runPlusEq() throws IOException {
-        runScript("x = 1; x += 10; print x".getBytes(StandardCharsets.UTF_8));
+        runScript("x = 1; x += 10; print x".getBytes(StandardCharsets.UTF_8), null);
     }
 
     ////@Test
     public void runDummy() throws IOException {
-        runScript("x = NULL\ninput x.y[1+1].x".getBytes(StandardCharsets.UTF_8));
-    }
-    //@Test
-    public void runDemo() throws IOException {
-        runScript("demo.bas");
+        runScript("x = NULL\ninput x.y[1+1].x".getBytes(StandardCharsets.UTF_8), null);
     }
 
-    public void runScript(String fname) throws IOException {
+    //@Test
+    public void runDemo() throws IOException {
+        runScript("demo.bas", null);
+    }
+
+//    /**
+//     * запуск скрипта без внешнего контекста
+//     * @param path - путь до скрипта
+//     * @throws IOException
+//     */
+//    public void runScript(String path) throws IOException {
+//        runScript(path, null);
+//    }
+
+    /**
+     * запуск скрипта во внешнем контексте
+     * @param path - путь до скрипта
+     * @param runnerContext - контекст запуска скрипта
+     * @throws IOException
+     */
+    public void runScript(String path, ScriptRunnerContext runnerContext) throws IOException {
 
         ScriptFunctionsService.register(new DebugExecutor());
 
-        //try (InputStream inputStream = new ClassPathResource("demo.bas").getInputStream()) {
-        try (InputStream inputStream = MainTest.class.getClassLoader().getResourceAsStream(fname)) {
+        try (InputStream inputStream = MainTest.class.getClassLoader().getResourceAsStream(path)) {
 
             ScriptEngine botScript = new ScriptEngine();
 
             botScript.load(inputStream);
 
-            botScript.interpret();
+            botScript.interpret(runnerContext);
         }
     }
 
-    public void runScript(byte[] code) throws IOException {
+//    public void runScript(byte[] code) throws IOException {
+//        runScript(code, null);
+//    }
+
+    public void runScript(byte[] code, ScriptRunnerContext runnerContext) throws IOException {
 
         ScriptFunctionsService.register(new DebugExecutor());
 
-        //try (InputStream inputStream = new ClassPathResource("demo.bas").getInputStream()) {
         try (InputStream inputStream = new ByteArrayInputStream(code)) {
 
             ScriptEngine botScript = new ScriptEngine();
 
             botScript.load(inputStream);
 
-            botScript.interpret();
+            botScript.interpret(runnerContext);
         }
 
     }

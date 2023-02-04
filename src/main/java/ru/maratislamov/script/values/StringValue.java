@@ -36,6 +36,7 @@ public class StringValue implements Value {
         return getValue();
     }
 
+
     @Override
     public String getName() {
         return toString();

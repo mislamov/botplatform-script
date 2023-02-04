@@ -1,5 +1,7 @@
 package ru.maratislamov.script.expressions;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.slf4j.Logger;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.Value;
@@ -11,6 +13,7 @@ import ru.maratislamov.script.values.Value;
  * statements. For example, the value printed by a "print" statement is an
  * expression. Unlike statements, expressions can nest.
  */
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public interface Expression {
 
     static Value evaluate(Expression value, ScriptSession session) {
@@ -29,8 +32,9 @@ public interface Expression {
     Value evaluate(ScriptSession session);
 
     /**
-     * code name
+     * Возвращает имя без оформлений. Применяется, например, для label, var, call
      * @return
      */
+    @JsonIgnore
     String getName();
 }

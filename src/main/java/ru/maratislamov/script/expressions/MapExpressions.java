@@ -1,5 +1,6 @@
 package ru.maratislamov.script.expressions;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptSession;
@@ -18,6 +19,17 @@ public class MapExpressions implements Expression {
     public static final Logger logger = LoggerFactory.getLogger(MapExpressions.class);
 
     private Map<String, Expression> map;
+
+    public Map<String, Expression> getMap() {
+        return map;
+    }
+
+    public void setMap(Map<String, Expression> map) {
+        this.map = map;
+    }
+
+    public MapExpressions() {
+    }
 
     public MapExpressions(Map<String, Expression> expressionMap) {
         this.map = expressionMap;
@@ -43,6 +55,7 @@ public class MapExpressions implements Expression {
     public String toString() {
         return String.valueOf(map);
     }
+
 
     @Override
     public String getName() {

@@ -1,5 +1,6 @@
 package ru.maratislamov.script.values;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 
 import java.text.DecimalFormat;
@@ -44,8 +45,10 @@ public class NumberValue implements Value, Comparable<Value> {
 
     @Override
     public String toString() {
+        if (value == null) return null;
         return value.longValue() - value == 0 ? String.valueOf(value.longValue()) : decimalFormat.format(value);
     }
+
 
     @Override
     public String getName() {

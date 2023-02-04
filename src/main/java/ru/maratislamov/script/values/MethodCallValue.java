@@ -1,5 +1,6 @@
 package ru.maratislamov.script.values;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptFunctionsService;
@@ -20,23 +21,37 @@ public class MethodCallValue implements Statement, Value {
     private static final Logger logger = LoggerFactory.getLogger(MethodCallValue.class);
 
     //
-    private final String name;
+    private String name;
 
     //
-    private final List<Expression> args;
+    private List<Expression> args;
+
+    public MethodCallValue() {
+    }
 
     public MethodCallValue(String call, List<Expression> args) {
         this.name = call;
         this.args = args;
     }
 
+    @JsonIgnore(value = false)
+    @Override
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<Expression> getArgs() {
         return args;
     }
+
+    public void setArgs(List<Expression> args) {
+        this.args = args;
+    }
+
 
     public Double toNumber() {
         throw new ClassCastException("MethodCallValue can't be cast to Number");

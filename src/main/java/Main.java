@@ -1,6 +1,7 @@
 import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.ScriptFunctionsService;
 import ru.maratislamov.script.ScriptSession;
+import ru.maratislamov.script.context.ScriptRunnerContext;
 import ru.maratislamov.script.debug.DebugExecutor;
 
 import java.io.FileInputStream;
@@ -19,7 +20,7 @@ public class Main {
             ScriptEngine botScript = new ScriptEngine();
 
             botScript.load(inputStream);
-            botScript.interpret(new ScriptSession(){{ setCurrentStatement(0);}});
+            botScript.interpret(new ScriptSession(ScriptRunnerContext.empty){{ setCurrentStatement(0);}});
         } catch (IOException e) {
             e.printStackTrace();
         }

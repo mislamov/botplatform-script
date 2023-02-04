@@ -1,5 +1,6 @@
 package ru.maratislamov.script.values;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.statements.Statement;
@@ -11,16 +12,22 @@ public class StringFrameValue extends StringValue implements Statement {
 
     private List<Expression> content;
 
-    public StringFrameValue(List<Expression> content) {
+    public StringFrameValue() {
         super();
+    }
+
+    public StringFrameValue(List<Expression> content) {
+        this();
         this.content = content;
     }
 
+    @JsonIgnore
     @Override
     public String getValue() {
         throw new RuntimeException("NYR");
     }
 
+    @JsonIgnore
     @Override
     public void setValue(String value) {
         throw new RuntimeException("NYR");
@@ -35,6 +42,7 @@ public class StringFrameValue extends StringValue implements Statement {
     @Override
     public String toString() {
         final String[] result = {""};
+        if (content == null) return "";
         content.forEach(ln -> {
             result[0] += ln;
         });

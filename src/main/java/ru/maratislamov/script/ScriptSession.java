@@ -2,6 +2,7 @@ package ru.maratislamov.script;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import ru.maratislamov.script.context.ScriptRunnerContext;
 import ru.maratislamov.script.values.MapValue;
 
 import java.io.Serializable;
@@ -21,6 +22,12 @@ public class ScriptSession implements Serializable {
      */
     private ScriptSession parentSession = null;
 
+    /**
+     * контекст не должен сохраняться. При чтении сессии важно устанавливать актуальный (читающий) контекст
+     */
+    @JsonIgnore
+    private ScriptRunnerContext runnerContext;
+
     private String sessionId;
 
     // переменные уровня сеанса выполнения скрипта
@@ -30,11 +37,18 @@ public class ScriptSession implements Serializable {
 
     private Character suspendType; // W - wait; I - input
 
-    public ScriptSession(){
+
+    private ScriptSession(){
         this(UUID.randomUUID().toString());
     }
 
+    public ScriptSession(ScriptRunnerContext runnerContext) {
+        this(UUID.randomUUID().toString());
+        this.runnerContext = runnerContext;
+    }
+
     public ScriptSession(MapValue sessionScope) {
+        this(UUID.randomUUID().toString());
         this.sessionScope = sessionScope;
     }
 
@@ -81,6 +95,15 @@ public class ScriptSession implements Serializable {
     public ScriptSession activate(){
         currentStatement = 0;
         return this;
+    }
+
+
+    public ScriptRunnerContext getRunnerContext() {
+        return runnerContext;
+    }
+
+    public void setRunnerContext(ScriptRunnerContext runnerContext) {
+        this.runnerContext = runnerContext;
     }
 
     public Character getSuspendType() {

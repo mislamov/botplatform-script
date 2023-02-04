@@ -1,5 +1,6 @@
 package ru.maratislamov.script.expressions;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.values.MapOrListValueInterface;
 import ru.maratislamov.script.values.StringValue;
@@ -14,10 +15,13 @@ public class VariableExpression implements Expression {
     private Expression nameExpression = null; // вычислимое выражение для получения имени переменной
     VariableExpression nextInPath = null; // вложенная переменная (доступ по полю)
 
+    public VariableExpression() {
+    }
+
     public VariableExpression(String name) {
         String[] split = name.split("\\.", 2);
         this.nameExpression = new StringValue(split[0]);
-        if (split.length > 1){
+        if (split.length > 1) {
             this.nextInPath = new VariableExpression(split[1]);
         }
     }
@@ -29,6 +33,10 @@ public class VariableExpression implements Expression {
         parent.setNextInPath(this);
     }
 
+    public void setNameExpression(Expression nameExpression) {
+        this.nameExpression = nameExpression;
+    }
+
     public Value evaluate(ScriptSession session) {
         return evaluate(session, session.getSessionScope());
     }
@@ -36,7 +44,7 @@ public class VariableExpression implements Expression {
     public Value evaluate(ScriptSession session, MapOrListValueInterface scope) {
         assert nameExpression != null;
 
-        final String evaluatedName = Expression.evaluate(nameExpression , session).toString();
+        final String evaluatedName = Expression.evaluate(nameExpression, session).toString();
 
         final Value value = findByPathName(scope, evaluatedName, session);
 
@@ -44,7 +52,7 @@ public class VariableExpression implements Expression {
         if (nextInPath != null) {
 
             // не проинициализированные переменные и их параметры равны NULL
-            if (value == null || value == Value.NULL){
+            if (value == null || value == Value.NULL) {
                 return Value.NULL;
             }
 
@@ -65,7 +73,7 @@ public class VariableExpression implements Expression {
 
         // задан путь до переменной (например, внутри TextFrame)
 
-        if (nameSearch.contains("[") && nameSearch.contains("]")){
+        if (nameSearch.contains("[") && nameSearch.contains("]")) {
 
         }
 
@@ -100,13 +108,10 @@ public class VariableExpression implements Expression {
         this.nextInPath = nextInPath;
     }
 
-    /**
-     * Возвращает имя без оформлений. Применяется, например, для label
-     * @return
-     */
+
     @Override
-    public String getName(){
-        return nameExpression.toString();
+    public String getName() {
+        return nameExpression == null ? null : nameExpression.toString();
     }
 
     @Override
@@ -116,6 +121,7 @@ public class VariableExpression implements Expression {
     }
 
     // возвращает самую глубокую вложенную переменную
+    @JsonIgnore
     public VariableExpression getLastInPath() {
         if (nextInPath == null) return this;
         return getNextInPath().getLastInPath(); // tail recursion

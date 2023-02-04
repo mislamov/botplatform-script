@@ -1,14 +1,15 @@
 package ru.maratislamov.script.values;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 
 // обертка для хранения и обновления ссылок на значения при работе с полем переменных
-public class VarLinkWrapper extends NULLValue {
+public class VarLinkWrapper implements Value {
 
     private MapValue parent = null;
     private Value value = null;
 
-    protected VarLinkWrapper() {
+    public VarLinkWrapper() {
     }
 
     public VarLinkWrapper(MapValue parent, Value value) {
@@ -45,6 +46,12 @@ public class VarLinkWrapper extends NULLValue {
     @Override
     public Value evaluate(ScriptSession session) {
         throw new RuntimeException("NYR");
+    }
+
+
+    @Override
+    public String getName() {
+        return toString();
     }
 
     @Override

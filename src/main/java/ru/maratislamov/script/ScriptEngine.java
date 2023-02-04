@@ -2,11 +2,13 @@ package ru.maratislamov.script;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.maratislamov.script.context.ScriptRunnerContext;
 import ru.maratislamov.script.parser.Parser;
 import ru.maratislamov.script.parser.Token;
 import ru.maratislamov.script.parser.Tokenizer;
 import ru.maratislamov.script.statements.Statement;
 import ru.maratislamov.script.values.MapValue;
+import ru.maratislamov.script.values.SuspendValue;
 import ru.maratislamov.script.values.Value;
 
 import java.io.ByteArrayInputStream;
@@ -15,8 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static ru.maratislamov.script.values.Value.SUSPEND;
 
 /**
  * This defines a single class that contains an entire interpreter for a
@@ -149,14 +149,14 @@ public class ScriptEngine {
     }
 
     /**
-     * @param source A string containing the source code of a .jas script to interpret.
+     * @param script A string containing the script code of a .jas script to interpret.
      * @return
      */
-    public List<Statement> scriptToStatements(String source) {
-        return scriptToStatements(source, false);
+    public List<Statement> scriptToStatements(String script) {
+        return scriptToStatements(script, false);
     }
-    public List<Statement> scriptToStatements(String source, boolean forceHolder) {
-        return scriptToStatements(new ByteArrayInputStream(source.getBytes(StandardCharsets.UTF_8)), forceHolder);
+    public List<Statement> scriptToStatements(String script, boolean forceHolder) {
+        return scriptToStatements(new ByteArrayInputStream(script.getBytes(StandardCharsets.UTF_8)), forceHolder);
     }
 
     public List<Statement> scriptToStatements(InputStream source) {
@@ -201,7 +201,7 @@ public class ScriptEngine {
 
             Value value = statementEntity.execute(session);
 
-            if (value == SUSPEND) {
+            if (value == SuspendValue.SUSPEND) {
                 session.decCurrentStatement();
                 return session;
             }
@@ -211,8 +211,8 @@ public class ScriptEngine {
     }
 
 
-    public <TSession extends ScriptSession> TSession interpret() {
-        return (TSession) interpret(new ScriptSession().activate());
+    public <TSession extends ScriptSession> TSession interpret(ScriptRunnerContext runnerContext) {
+        return (TSession) interpret(new ScriptSession(runnerContext).activate());
     }
 
     public <TSession extends ScriptSession> TSession interpret(TSession session) {

@@ -3,6 +3,7 @@ package ru.maratislamov.script;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import ru.maratislamov.script.context.ScriptRunnerContext;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.ListExpressions;
 import ru.maratislamov.script.statements.AssignStatement;
@@ -94,7 +95,7 @@ class ScriptEngineTest {
 
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream((code).getBytes(StandardCharsets.UTF_8)));
-        final ScriptSession sess = scriptEngine.interpret(new ScriptSession() {{
+        final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
             setCurrentStatement(0);
         }});
 
@@ -114,7 +115,7 @@ class ScriptEngineTest {
     public void assertEval(String exp, String result){
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream(("E=" + exp).getBytes(StandardCharsets.UTF_8)));
-        final ScriptSession sess = scriptEngine.interpret(new ScriptSession() {{
+        final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
             setCurrentStatement(0);
         }});
 
@@ -124,7 +125,7 @@ class ScriptEngineTest {
     public void assertEval(String exp, Value result){
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream(("E=" + exp).getBytes(StandardCharsets.UTF_8)));
-        final ScriptSession sess = scriptEngine.interpret(new ScriptSession() {{
+        final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
             setCurrentStatement(0);
         }});
 
@@ -145,7 +146,7 @@ class ScriptEngineTest {
     public void testCollection(){
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream(("E=[];E.1=1; E.2=2; E.3=3").getBytes(StandardCharsets.UTF_8)));
-        final ScriptSession sess = scriptEngine.interpret(new ScriptSession() {{
+        final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
             setCurrentStatement(0);
         }});
 

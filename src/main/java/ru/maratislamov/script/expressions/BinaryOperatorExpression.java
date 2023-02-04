@@ -1,5 +1,7 @@
 package ru.maratislamov.script.expressions;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptSession;
@@ -17,11 +19,14 @@ import java.util.Objects;
  */
 public class BinaryOperatorExpression implements Expression {
 
-    Logger logger = LoggerFactory.getLogger(BinaryOperatorExpression.class);
+    private static final Logger logger = LoggerFactory.getLogger(BinaryOperatorExpression.class);
 
-    private final Expression left;
-    private final String operator;
-    private final Expression right;
+    private Expression left;
+    private String operator;
+    private Expression right;
+
+    public BinaryOperatorExpression() {
+    }
 
     public BinaryOperatorExpression(Expression left, String operator,
                                     Expression right) {
@@ -35,9 +40,36 @@ public class BinaryOperatorExpression implements Expression {
         return left + " " + operator + " " + right;
     }
 
+
     @Override
     public String getName() {
         return toString();
+    }
+
+
+
+    public Expression getLeft() {
+        return left;
+    }
+
+    public void setLeft(Expression left) {
+        this.left = left;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public void setOperator(String operator) {
+        this.operator = operator;
+    }
+
+    public Expression getRight() {
+        return right;
+    }
+
+    public void setRight(Expression right) {
+        this.right = right;
     }
 
     int compareTo(String a, String b) {

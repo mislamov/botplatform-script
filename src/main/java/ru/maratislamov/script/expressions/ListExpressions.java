@@ -1,5 +1,7 @@
 package ru.maratislamov.script.expressions;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptSession;
@@ -14,6 +16,17 @@ public class ListExpressions implements Expression {
     public static final Logger logger = LoggerFactory.getLogger(ListExpressions.class);
 
     private List<Expression> list;
+
+    public List<Expression> getList() {
+        return list;
+    }
+
+    public void setList(List<Expression> list) {
+        this.list = list;
+    }
+
+    public ListExpressions() {
+    }
 
     public ListExpressions(List<Expression> expressionList) {
         this.list = expressionList;
@@ -43,6 +56,7 @@ public class ListExpressions implements Expression {
     public String toString() {
         return String.valueOf(list);
     }
+
 
     @Override
     public String getName() {

@@ -1,5 +1,6 @@
 package ru.maratislamov.script.values;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 
@@ -25,6 +26,7 @@ import java.util.Map;
  * not the parser) as both runtime values, and as object representing
  * literals in code.
  */
+//@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
 public interface Value extends Expression, Serializable {
 
     /**
@@ -40,37 +42,6 @@ public interface Value extends Expression, Serializable {
     Double toNumber();
 
     Value copy();
-
-    /**
-     * service internal message value for suspend when acynch call
-     */
-    Value SUSPEND = new Value() {
-        @Override
-        public Double toNumber() {
-            return null;
-        }
-
-        @Override
-        public Value copy() {
-            return this;
-        }
-
-        @Override
-        public Value evaluate(ScriptSession session) {
-            return this;
-        }
-
-        @Override
-        public String getName() {
-            return toString();
-        }
-
-        @Override
-        public String toString() {
-            return "$SUSPEND";
-
-        }
-    };
 
     Value NULL = NULLValue.NULL;
     Value NotFound = NotFoundValue.NOT_FOUND_VALUE;
