@@ -185,6 +185,9 @@ public class Parser {
                             } else {
                                 // если есть аргументы или одинокое слово в потоке команд - это команда
                                 statements.add(new MethodCallValue(atomName, argList));
+                                if (atomName.equals("wait")){
+                                    statements.add(new MethodCallValue("interrupt wait", List.of())); // удаление таймера
+                                }
                             }
                         }
                     }

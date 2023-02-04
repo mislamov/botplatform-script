@@ -99,7 +99,7 @@ public class ScriptSession implements Serializable {
 
 
     public ScriptRunnerContext getRunnerContext() {
-        return runnerContext;
+        return runnerContext == null ? getParentSession().getRunnerContext() : runnerContext;
     }
 
     public void setRunnerContext(ScriptRunnerContext runnerContext) {
