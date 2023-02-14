@@ -16,6 +16,15 @@ class ExpressionsTest {
     public static final String PACKAGE = "ru.maratislamov.script";
     public static final Class<Expression> CLASS = Expression.class;
 
+    /**
+     * Проверяем корректность сериализации (в json) выражений и значений
+     *
+     * @throws NoSuchMethodException
+     * @throws InvocationTargetException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws JsonProcessingException
+     */
     @Test
     public void test() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, JsonProcessingException {
 

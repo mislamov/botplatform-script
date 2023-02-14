@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class EvalTests {
 
     @Test
-    public void testConcatArrays(){
-        String code= "base_menu = [1,2]\n tail_menu=[3,4]\n current_menu = base_menu + [tail_menu]";
+    public void testConcatArrays() {
+        String code = "base_menu = [1,2]\n tail_menu=[3,4]\n current_menu = base_menu + [tail_menu]";
 
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream((code).getBytes(StandardCharsets.UTF_8)));
@@ -35,7 +35,7 @@ public class EvalTests {
 //    }
 
     @Test
-    public void testLn(){
+    public void testLn() {
         assertEval("\"head\"\n + \"tail\"", "headtail");
         assertEval("\"head\" + \"tail\"", "headtail");
         assertEval("\"head\" + \n\"tail\"", "headtail");
@@ -43,7 +43,7 @@ public class EvalTests {
     }
 
 
-    public void assertEval(String exp, String result){
+    public void assertEval(String exp, String result) {
         ScriptEngine scriptEngine = new ScriptEngine();
         System.out.printf("E=" + exp);
         scriptEngine.load(new ByteArrayInputStream(("E=" + exp).getBytes(StandardCharsets.UTF_8)));
@@ -54,7 +54,7 @@ public class EvalTests {
         Assertions.assertEquals(result, String.valueOf(sess.getSessionScope().get("E")), "Ошибка арифметического вычисления: " + exp);
     }
 
-    public void assertEval(String exp, Value result){
+    public void assertEval(String exp, Value result) {
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream(("E=" + exp).getBytes(StandardCharsets.UTF_8)));
         final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
@@ -65,7 +65,7 @@ public class EvalTests {
     }
 
     @Test
-    public void testEval(){
+    public void testEval() {
         assertEval("-55", "-55");
         assertEval("6 - (5 + 5)", "-4");
         assertEval("6 * 5 - 5", "25");
@@ -88,12 +88,10 @@ public class EvalTests {
     public void assertIfThen() {
         assertIfThen("if 1 then result = \"yes\"");
         assertIfThen("if (1 + 2 * 3) == 7 then result = \"yes\"");
-
         assertIfThen("E = (7 + (1+1 == 2+0) * 3) == 10 ");
     }
 
-
-    public void assertIfThen(String code){
+    public void assertIfThen(String code) {
 
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
@@ -103,9 +101,41 @@ public class EvalTests {
     }
 
 
+    @Test
+    public void testLoop1() {
+        String code = "gap = 5\nwhile (gap > 2)\ngap -= 1\nend\n";
+
+        ScriptEngine scriptEngine = new ScriptEngine();
+        scriptEngine.load(new ByteArrayInputStream((code).getBytes(StandardCharsets.UTF_8)));
+        final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
+            setCurrentStatement(0);
+        }});
+
+        System.out.println(sess.getSessionScope());
+        assert sess.getSessionScope().get("gap").toNumber() == 2.0;
+    }
 
     @Test
-    public void testCollection(){
+    public void testLoop2() {
+        String code =
+                "result = \"r:\"\n" +
+                        "for i in [5,4,3,2,1]\n" +
+                        "  result += i\n" +
+                        "end\n";
+
+        ScriptEngine scriptEngine = new ScriptEngine();
+        scriptEngine.load(new ByteArrayInputStream((code).getBytes(StandardCharsets.UTF_8)));
+        final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
+            setCurrentStatement(0);
+        }});
+
+        System.out.println(sess.getSessionScope());
+        Assertions.assertEquals("r:54321", sess.getSessionScope().get("result").toString());
+    }
+
+
+    @Test
+    public void testCollection() {
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream(("E=[];E.1=1; E.2=2; E.3=3").getBytes(StandardCharsets.UTF_8)));
         final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{

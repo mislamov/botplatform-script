@@ -48,11 +48,6 @@ public class MainTest {
         runScript("print 4>=4".getBytes(StandardCharsets.UTF_8), null);
     }
 
-@Test
-    public void runDummy2() throws IOException {
-        runScript("if (j >= gap && compare(arr[j - gap], temp) > 0) then goto end_if_3".getBytes(StandardCharsets.UTF_8), null);
-    }
-
     //@Test
     public void runDemo() throws IOException {
         runScript("demo.bas", null);

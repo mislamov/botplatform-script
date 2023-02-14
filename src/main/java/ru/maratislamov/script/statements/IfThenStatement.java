@@ -3,13 +3,19 @@ package ru.maratislamov.script.statements;
 import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.values.NULLValue;
+import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.Value;
+
+import static ru.maratislamov.script.values.NULLValue.NULL;
+import static ru.maratislamov.script.values.NumberValue.ZERO_VALUE;
 
 /**
  * An if then statement jumps execution to another place in the program, but
  * only if an expression evaluates to something other than 0.
  */
 public class IfThenStatement implements Statement {
+
     private final ScriptEngine botScript;
 
     private final Expression condition;
@@ -39,10 +45,12 @@ public class IfThenStatement implements Statement {
             throw new RuntimeException("Unexpected label: '" + labelIfNot + "'");
         }
 
-        Double value = Expression.evaluate(condition, session).toNumber();
+        final Value conditionValue = Expression.evaluate(condition, session);
+
+        boolean success = !NULL.equals(conditionValue) && !(ZERO_VALUE.equals(conditionValue));
 
         // true
-        if (value != 0) {
+        if (success) {
             if (label != null) {
                 session.setCurrentStatement(botScript.labels.get(label));
             }
@@ -58,6 +66,6 @@ public class IfThenStatement implements Statement {
 
     @Override
     public String toString() {
-        return "IfThenStatement{" + condition + "->" + label + " $else$ " + labelIfNot + '}';
+        return "$if$ " + condition + " $then$ " + label + " $else$ " + labelIfNot + "$end_if$";
     }
 }

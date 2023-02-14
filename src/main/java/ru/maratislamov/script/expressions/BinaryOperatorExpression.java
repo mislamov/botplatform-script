@@ -97,10 +97,18 @@ public class BinaryOperatorExpression implements Expression {
 
             Value secondValue = leftVal.equals(Value.NULL) ? rightVal : leftVal;
             if (secondValue instanceof NumberValue)
-                throw new Error("Unsupported operation " + operator + " for NULL and Number: " + left.toString() + " vs " + right.toString());
+                throw new Error(new StringBuilder().append("Unsupported operation ").append(operator).append(" for NULL and Number: ")
+                        .append(left.toString())
+                        .append(" (").append(leftVal).append(")")
+                        .append(" vs ")
+                        .append(right.toString())
+                        .append(" (").append(rightVal).append(")")
+                        .append("\nexpression: ")
+                        .append(this).toString());
         }
 
 
+        final Double leftNumber = leftVal.toNumber();
         final Double rightNumber = rightVal.toNumber();
 
         switch (operator) {
@@ -111,7 +119,7 @@ public class BinaryOperatorExpression implements Expression {
                 boolean isEqual;
 
                 if (leftVal instanceof NumberValue && rightVal instanceof NumberValue) {
-                    isEqual = Objects.equals(leftVal.toNumber(), rightNumber);
+                    isEqual = Objects.equals(leftNumber, rightNumber);
 
                 } else if (Value.NULL.equals(leftVal)) {
                     isEqual = Value.NULL.equals(rightVal);
@@ -119,13 +127,13 @@ public class BinaryOperatorExpression implements Expression {
                 } else {
                     isEqual = Objects.equals(leftVal, rightVal);
                 }
-                return Value.from(isEqual  == !Objects.equals(operator, "!="));
+                return Value.from(isEqual == !Objects.equals(operator, "!="));
 
             case "+":
                 // Addition if the left argument is a number, otherwise do
                 // string concatenation.
                 if (rightNumber != null && leftVal instanceof NumberValue) {
-                    return new NumberValue(leftVal.toNumber() + rightNumber);
+                    return new NumberValue(leftNumber + rightNumber);
                 } else if (leftVal instanceof ListValue) {
                     ListValue lv = new ListValue((List<Value>) leftVal);
                     if (rightVal instanceof ListValue) {
@@ -138,15 +146,15 @@ public class BinaryOperatorExpression implements Expression {
                     return new StringValue(leftVal.toString() + rightVal);
                 }
             case "-":
-                return new NumberValue(leftVal.toNumber() - rightNumber);
+                return new NumberValue(leftNumber - rightNumber);
             case "*":
-                return new NumberValue(leftVal.toNumber() * rightNumber);
+                return new NumberValue(leftNumber * rightNumber);
             case "/":
-                return new NumberValue(leftVal.toNumber() / rightNumber);
+                return new NumberValue(leftNumber / rightNumber);
             case "<":
                 // Coerce to the left argument's type, then compare.
                 if (leftVal instanceof NumberValue) {
-                    return new NumberValue((leftVal.toNumber() < rightNumber) ? 1 : 0);
+                    return new NumberValue((leftNumber < rightNumber) ? 1 : 0);
                 } else {
                     String left = leftVal.toString();
                     String rigth = rightVal.toString();
@@ -155,7 +163,7 @@ public class BinaryOperatorExpression implements Expression {
             case "<=":
                 // Coerce to the left argument's type, then compare.
                 if (leftVal instanceof NumberValue) {
-                    return new NumberValue((leftVal.toNumber() <= rightNumber) ? 1 : 0);
+                    return new NumberValue((leftNumber <= rightNumber) ? 1 : 0);
                 } else {
                     String left = leftVal.toString();
                     String rigth = rightVal.toString();
@@ -164,7 +172,7 @@ public class BinaryOperatorExpression implements Expression {
             case ">":
                 // Coerce to the left argument's type, then compare.
                 if (leftVal instanceof NumberValue) {
-                    return new NumberValue((leftVal.toNumber() > rightNumber) ? 1 : 0);
+                    return new NumberValue((leftNumber > rightNumber) ? 1 : 0);
                 } else {
                     String left = leftVal.toString();
                     String rigth = rightVal.toString();
@@ -173,7 +181,7 @@ public class BinaryOperatorExpression implements Expression {
             case ">=":
                 // Coerce to the left argument's type, then compare.
                 if (leftVal instanceof NumberValue) {
-                    return new NumberValue((leftVal.toNumber() >= rightNumber) ? 1 : 0);
+                    return new NumberValue((leftNumber >= rightNumber) ? 1 : 0);
                 } else {
                     String left = leftVal.toString();
                     String rigth = rightVal.toString();
@@ -181,9 +189,11 @@ public class BinaryOperatorExpression implements Expression {
                 }
 
             case "&&":
-                return new NumberValue(rightVal.toNumber() != 0 && leftVal.toNumber() != 0 ? 1 : 0);
+                if (leftNumber == null || rightNumber == null) return Value.from(false);
+                return new NumberValue(rightNumber != 0 && leftNumber != 0 ? 1 : 0);
             case "||":
-                return new NumberValue(rightVal.toNumber() != 0 || leftVal.toNumber() != 0 ? 1 : 0);
+                if (leftNumber == null && rightNumber == null) return Value.from(false);
+                return new NumberValue(rightNumber != 0 || leftNumber != 0 ? 1 : 0);
 
         }
         throw new Error("Unknown operator: " + operator);

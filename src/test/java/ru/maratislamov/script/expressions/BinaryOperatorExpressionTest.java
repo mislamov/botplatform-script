@@ -9,6 +9,28 @@ class BinaryOperatorExpressionTest {
 
 
     @Test
+    public void test0() {
+        testOper(null, "!=", 2, true);
+        testOper(2, "!=", null, true);
+        testOper(null, "==", null, true);
+        testOper(null, "<=", null, true);
+        testOper(null, ">=", null, true);
+
+        Assertions.assertThrows(Error.class, () -> {
+            testOper(null, "<", 1, true);
+        });
+        Assertions.assertThrows(Error.class, () -> {
+            testOper(null, "<=", 1, true);
+        });
+        Assertions.assertThrows(Error.class, () -> {
+            testOper(1, ">", null, true);
+        });
+        Assertions.assertThrows(Error.class, () -> {
+            testOper(1, ">=", null, true);
+        });
+    }
+
+    @Test
     public void test1() {
         testOper(2, "!=", 2.1, true);
         testOper(2.1, "!=", 2, true);

@@ -12,6 +12,8 @@ import java.util.Objects;
  */
 public class NumberValue implements Value, Comparable<Value> {
 
+    public static final NumberValue ZERO_VALUE = new NumberValue(0);
+
     public static DecimalFormat decimalFormat = new DecimalFormat();
 
     private Double value;

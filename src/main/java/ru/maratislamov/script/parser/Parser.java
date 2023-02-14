@@ -26,6 +26,8 @@ public class Parser {
 
     private final ScriptEngine botScript;
 
+    private Stack<String[]> loopLabels = new Stack<>(); // пары меток: начала итераций и точки выхода из циклов
+
     private final List<Token> tokens;
     private int position;
     private int positionLine;
@@ -140,6 +142,60 @@ public class Parser {
                             if (atomWord.equals("goto")) {
                                 final Expression label = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP);
                                 statements.add(new GotoStatement(botScript, label));
+
+
+                                // for var in list  ....... end
+                            } else if (atomWord.equals("for")) {
+                                String forBeginLabel = "____for_in_begin_" + statements.size();
+                                String forEndLabel = "____for_in_end_" + statements.size();
+                                String forCollectionVarName = "____for_collection_" + statements.size();
+
+                                loopLabels.add(new String[]{forBeginLabel, forEndLabel});
+
+                                consume(TokenType.WORD);
+                                assert get(-1).type == TokenType.WORD;
+                                String varIteratorName = get(-1).text;
+
+                                consume("in");
+                                Expression collection = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP, TokenType.EOF);
+                                if (!(collection instanceof ListExpressions))
+                                    throw new RuntimeException("Unexpected collection for in: " + collection + "\nhere: " + debugCurrentPosition());
+
+                                statements.add(new AssignStatement(new VariableExpression(forCollectionVarName), collection)); // for_collection = []
+                                final IteratorValue iteratorValue = new IteratorValue(new VariableExpression(forCollectionVarName)); // инициализируем итератор
+
+                                labels.put(forBeginLabel, statements.size()); // метка начала итерации
+                                statements.add(new MoveIteratorStatement(iteratorValue)); // двигаем итератор
+                                statements.add(new AssignStatement(new VariableExpression(varIteratorName), iteratorValue));  // $i = итератор
+                                statements.add(new IfThenStatement(botScript, // если итерация невозможна - выход из цикла
+                                        iteratorValue, null, forEndLabel
+                                ));
+
+
+                                // while (cond)  .......
+                            } else if (atomWord.equals("while")) {
+                                String whileBeginLabel = "____while_begin_" + statements.size();
+                                String whileEndLabel = "____while_end_" + statements.size();
+                                loopLabels.add(new String[]{whileBeginLabel, whileEndLabel});
+
+                                Expression condition = expression();
+
+                                labels.put(whileBeginLabel, statements.size()); // метка следующей итерации
+                                statements.add(new IfThenStatement(botScript, condition, null, whileEndLabel)); // условие итерации
+
+                            } else if (atomWord.equals("break")) {
+                                statements.add(new GotoStatement(botScript, new StringValue(loopLabels.peek()[1])));
+
+                            } else if (atomWord.equals("continue")) {
+                                statements.add(new GotoStatement(botScript, new StringValue(loopLabels.peek()[0])));
+
+                                // ..... end
+                            } else if (atomWord.equals("end")) {
+
+                                String[] currentBlockLabels = loopLabels.pop();
+
+                                statements.add(new GotoStatement(botScript, new StringValue(currentBlockLabels[0]))); // отсылка н итерацию
+                                labels.put(currentBlockLabels[1], statements.size()); // метка выхода из цикла
 
                                 // if
                             } else if (atomWord.equals("if")) {
@@ -361,7 +417,7 @@ public class Parser {
             final String ch = last(1).text;
             operator += ch;
 
-            if (operators.contains(operator)){
+            if (operators.contains(operator)) {
                 lastOperator = operator;
                 lastOperatorPosition = position;
             }
