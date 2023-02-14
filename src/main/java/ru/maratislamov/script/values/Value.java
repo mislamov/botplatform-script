@@ -1,5 +1,6 @@
 package ru.maratislamov.script.values;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
@@ -49,6 +50,7 @@ public interface Value extends Expression, Serializable {
     @SuppressWarnings("unchecked")
     static Value from(Object val) {
         if (val == null) return NULL;
+        if (val instanceof Boolean) return new NumberValue((Boolean) val ? 1 : 0);
         if (val instanceof Value) return (Value) val;
         if (val instanceof Number) return new NumberValue(((Number) val).doubleValue());
         if (val instanceof Map) {
@@ -90,5 +92,14 @@ public interface Value extends Expression, Serializable {
             result.put(e.getKey(), asObject(e.getValue()));
         });
         return result;
+    }
+
+    /**
+     * техническое представление значения
+     *
+     * @return
+     */
+    public static String debug(Value val) {
+        return val.getClass().getSimpleName() + "(" + val.toString() + ")";
     }
 }

@@ -44,4 +44,9 @@ public final class NULLValue implements Value {
     public String getName() {
         return toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj == null || obj instanceof NULLValue;
+    }
 }

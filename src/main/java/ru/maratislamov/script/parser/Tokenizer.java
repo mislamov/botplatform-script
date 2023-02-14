@@ -17,12 +17,13 @@ public class Tokenizer {
     // Tokenizing (lexing) -----------------------------------------------------
 
     // Many tokens are a single character, like operators and ().
-    private static final String charTokens = "\n=!+-*/<>()[],.;{}:";
-    private static final TokenType[] tokenTypes = {TokenType.LINE, TokenType.EQUALS, TokenType.NOEQUALS,
+    private static final String charTokens = "\n=!+-*/<>()[],.;{}:&|";
+    private static final TokenType[] tokenTypes = {TokenType.LINE, TokenType.OPERATOR, TokenType.OPERATOR,
             TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
             TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
             TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN, TokenType.BEGIN_LIST, TokenType.END_LIST,
-            TokenType.COMMA, TokenType.DOT, TokenType.COMMAND_SEP, TokenType.BEGIN_MAP, TokenType.END_MAP, TokenType.MAP_SEP
+            TokenType.COMMA, TokenType.DOT, TokenType.COMMAND_SEP, TokenType.BEGIN_MAP, TokenType.END_MAP, TokenType.MAP_SEP,
+            TokenType.OPERATOR, TokenType.OPERATOR
     };
 
 
@@ -54,30 +55,18 @@ public class Tokenizer {
                         if (iC == -1)
                             return tokens;
 
-                        if (c == '=') {
-                            tokens.add(new Token("=", TokenType.EQUALS));
+  /*                      if (c == '=') {
+                            tokens.add(new Token("=", TokenType.OPERATOR));
                             token = "";
 
                             iC = source.read();
                             c = (char) iC;
-                            if (c == '=') {
+                            *//*if (c == '=') {
                                 break;
-                            }
+                            }*//*
                             continue;
-
-
-                        } else if (c == '!') {
-                            token += c;
-                            iC = source.read();
-                            c = (char) iC;
-                            if (c == '=') {
-                                tokens.add(new Token("!=", TokenType.NOEQUALS));
-                                token = "";
-                            } else {
-                                throw new Error("Unexpected token here: !" + debugString(iC, source));
-                            }
-
-                        } else if ((c == '+' || c == '-' || c == '*' || c == '\\')) {
+  */
+/*                        } else if ((c == '+' || c == '-' || c == '*' || c == '\\')) {
                             token += c;
                             iC = source.read();
                             token = "";
@@ -91,10 +80,12 @@ public class Tokenizer {
                                 continue;
                             }
 
-                        } else if (c == '\n') {
+                        } else*/
+
+                        if (c == '\n') {
                             tokens.add(new Token("\n", TokenType.LINE));
                             // схлопываем все смежные отступы и переносы в этот один токен
-                            while(Character.isWhitespace(iC = source.read()));
+                            while (Character.isWhitespace(iC = source.read())) ;
                             continue;
 
                         } else if (charTokens.indexOf(c) != -1) {
@@ -179,7 +170,8 @@ public class Tokenizer {
                             break;
 
                         } else if (c == '"') {
-                            iC = source.read(); c = (char) iC;
+                            iC = source.read();
+                            c = (char) iC;
                             if (c == '"') {  //   двойные кавычки внутри текста = экранирование
                                 token += '"';
                                 break;
@@ -195,11 +187,13 @@ public class Tokenizer {
                         break;
 
                     case STRING_FRAME:
-                        if (c == '"'){
-                            iC = source.read(); c = (char) iC;
-                            if (c == '"'){
-                                iC = source.read(); c = (char) iC;
-                                if (c == '"'){
+                        if (c == '"') {
+                            iC = source.read();
+                            c = (char) iC;
+                            if (c == '"') {
+                                iC = source.read();
+                                c = (char) iC;
+                                if (c == '"') {
                                     tokens.add(new Token(token.trim(), TokenType.STRING_FRAME));
                                     token = "";
                                     state = TokenizeState.DEFAULT;

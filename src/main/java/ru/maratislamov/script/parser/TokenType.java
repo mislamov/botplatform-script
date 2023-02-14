@@ -11,6 +11,6 @@ package ru.maratislamov.script.parser;
  */
 public enum TokenType {
     WORD, DIGITS, STRING, STRING_FRAME, LABEL, LINE, COMMAND_SEP, /* SEP - разделитель команд в одной строке */
-    EQUALS, NOEQUALS, OPERATOR, LEFT_PAREN, RIGHT_PAREN, BEGIN_LIST, END_LIST, BEGIN_MAP, END_MAP, EOF, COMMA, DOT,
+    OPERATOR, LEFT_PAREN, RIGHT_PAREN, BEGIN_LIST, END_LIST, BEGIN_MAP, END_MAP, EOF, COMMA, DOT,
     MAP_SEP;
 }
