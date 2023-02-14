@@ -18,7 +18,6 @@ class ExpressionsTest {
 
     @Test
     public void test() throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, JsonProcessingException {
-        System.out.println("ok");
 
         final Predicate<Class<?>> classPredicate = c -> CLASS.isAssignableFrom(c) && !Modifier.isAbstract(c.getModifiers());
 
