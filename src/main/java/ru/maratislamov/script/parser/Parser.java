@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.expressions.*;
 import ru.maratislamov.script.statements.*;
+import ru.maratislamov.script.statements.loops.CreateIteratorStatement;
+import ru.maratislamov.script.statements.loops.MoveIteratorStatement;
 import ru.maratislamov.script.values.*;
 
 import java.util.*;
@@ -154,21 +156,21 @@ public class Parser {
 
                                 consume(TokenType.WORD);
                                 assert get(-1).type == TokenType.WORD;
-                                String varIteratorName = get(-1).text;
+                                String varIteratorUserName = get(-1).text;
 
                                 consume("in");
                                 Expression collection = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP, TokenType.EOF);
-                                if (!(collection instanceof ListExpressions))
-                                    throw new RuntimeException("Unexpected collection for in: " + collection + "\nhere: " + debugCurrentPosition());
 
+
+                                String varIteratorInternal = "____iterator_impl_" + statements.size();
                                 statements.add(new AssignStatement(new VariableExpression(forCollectionVarName), collection)); // for_collection = []
-                                final IteratorValue iteratorValue = new IteratorValue(new VariableExpression(forCollectionVarName)); // инициализируем итератор
+                                statements.add(new CreateIteratorStatement(varIteratorInternal, new VariableExpression(forCollectionVarName)));  // инициализируем итератор
 
                                 labels.put(forBeginLabel, statements.size()); // метка начала итерации
-                                statements.add(new MoveIteratorStatement(iteratorValue)); // двигаем итератор
-                                statements.add(new AssignStatement(new VariableExpression(varIteratorName), iteratorValue));  // $i = итератор
+
+                                statements.add(new MoveIteratorStatement(varIteratorInternal, varIteratorUserName)); // двигаем итератор
                                 statements.add(new IfThenStatement(botScript, // если итерация невозможна - выход из цикла
-                                        iteratorValue, null, forEndLabel
+                                        new VariableExpression(varIteratorUserName), null, forEndLabel
                                 ));
 
 

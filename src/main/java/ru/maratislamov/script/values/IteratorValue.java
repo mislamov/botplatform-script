@@ -45,7 +45,9 @@ public class IteratorValue implements Value {
 
     public Value next(ScriptSession session) {
         if (iterator == null) {
-            ListValue listValue = (ListValue) collectionVar.evaluate(session);
+            final Value evaluatedCollection = collectionVar.evaluate(session);
+            if (!(evaluatedCollection instanceof ListValue listValue))
+                throw new RuntimeException("ListValue expected for loop, but: " + evaluatedCollection);
             iterator = listValue.getIterator();
         }
         currentValue = iterator.hasNext() ? iterator.next() : NULL;

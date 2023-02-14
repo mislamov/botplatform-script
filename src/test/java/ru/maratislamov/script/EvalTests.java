@@ -107,12 +107,16 @@ public class EvalTests {
 
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream((code).getBytes(StandardCharsets.UTF_8)));
-        final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
-            setCurrentStatement(0);
-        }});
 
-        System.out.println(sess.getSessionScope());
-        assert sess.getSessionScope().get("gap").toNumber() == 2.0;
+        for (int i = 0; i < 3; ++i) {
+            System.out.println("user session try " + (i + 1));
+            final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
+                setCurrentStatement(0);
+            }});
+
+            System.out.println(sess.getSessionScope());
+            assert sess.getSessionScope().get("gap").toNumber() == 2.0;
+        }
     }
 
     @Test
@@ -125,12 +129,16 @@ public class EvalTests {
 
         ScriptEngine scriptEngine = new ScriptEngine();
         scriptEngine.load(new ByteArrayInputStream((code).getBytes(StandardCharsets.UTF_8)));
-        final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
-            setCurrentStatement(0);
-        }});
 
-        System.out.println(sess.getSessionScope());
-        Assertions.assertEquals("r:54321", sess.getSessionScope().get("result").toString());
+        for (int i = 0; i < 3; ++i) {
+            System.out.println("user session try " + (i+1));
+            final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
+                setCurrentStatement(0);
+            }});
+
+            System.out.println(sess.getSessionScope());
+            Assertions.assertEquals("r:54321", sess.getSessionScope().get("result").toString());
+        }
     }
 
 
