@@ -43,9 +43,14 @@ public class MainTest {
         runScript("x = 1; x += 10; print x".getBytes(StandardCharsets.UTF_8), null);
     }
 
-    ////@Test
+    @Test
     public void runDummy() throws IOException {
-        runScript("x = NULL\ninput x.y[1+1].x".getBytes(StandardCharsets.UTF_8), null);
+        runScript("print 4>=4".getBytes(StandardCharsets.UTF_8), null);
+    }
+
+@Test
+    public void runDummy2() throws IOException {
+        runScript("if (j >= gap && compare(arr[j - gap], temp) > 0) then goto end_if_3".getBytes(StandardCharsets.UTF_8), null);
     }
 
     //@Test

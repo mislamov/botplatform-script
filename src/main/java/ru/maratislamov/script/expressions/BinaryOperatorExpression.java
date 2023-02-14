@@ -10,8 +10,14 @@ import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
 import ru.maratislamov.script.values.Value;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
+
+import static javax.swing.UIManager.put;
 
 /**
  * An operator expression evaluates two expressions and then performs some
@@ -45,7 +51,6 @@ public class BinaryOperatorExpression implements Expression {
     public String getName() {
         return toString();
     }
-
 
 
     public Expression getLeft() {
@@ -83,11 +88,14 @@ public class BinaryOperatorExpression implements Expression {
         Value rightVal = right.evaluate(session);
 
         // операции с NULL
-        if (leftVal == Value.NULL || rightVal == Value.NULL) {
+        if (Value.NULL.equals(leftVal) || Value.NULL.equals(rightVal)) {
+
             if (Objects.equals(operator, "=") || operator.equals("=="))
-                return new NumberValue(leftVal == rightVal ? 1 : 0);
-            if (Objects.equals(operator, "!=")) return new NumberValue(leftVal == rightVal ? 0 : 1);
-            Value secondValue = leftVal == Value.NULL ? rightVal : leftVal;
+                return new NumberValue(leftVal.equals(rightVal) ? 1 : 0);
+
+            if (Objects.equals(operator, "!=")) return new NumberValue(leftVal.equals(rightVal) ? 0 : 1);
+
+            Value secondValue = leftVal.equals(Value.NULL) ? rightVal : leftVal;
             if (secondValue instanceof NumberValue)
                 throw new Error("Unsupported operation " + operator + " for NULL and Number: " + left.toString() + " vs " + right.toString());
         }
@@ -100,15 +108,18 @@ public class BinaryOperatorExpression implements Expression {
             case "==":
             case "!=":
                 // Coerce to the left argument's type, then compare.
-                if (leftVal instanceof NumberValue && rightVal instanceof NumberValue) {
-                    return new NumberValue((Objects.equals(leftVal.toNumber(), rightNumber)) == (!Objects.equals(operator, "!=")) ? 1 : 0);
+                boolean isEqual;
 
-                } else if (leftVal == Value.NULL) {
-                    return new NumberValue(rightVal == Value.NULL && !Objects.equals(operator, "!=") ? 1 : 0);
+                if (leftVal instanceof NumberValue && rightVal instanceof NumberValue) {
+                    isEqual = Objects.equals(leftVal.toNumber(), rightNumber);
+
+                } else if (Value.NULL.equals(leftVal)) {
+                    isEqual = Value.NULL.equals(rightVal);
 
                 } else {
-                    return new NumberValue(leftVal.equals(rightVal) ? 1 : 0);
+                    isEqual = Objects.equals(leftVal, rightVal);
                 }
+                return Value.from(isEqual  == !Objects.equals(operator, "!="));
 
             case "+":
                 // Addition if the left argument is a number, otherwise do
@@ -141,6 +152,15 @@ public class BinaryOperatorExpression implements Expression {
                     String rigth = rightVal.toString();
                     return new NumberValue((compareTo(left, rigth) < 0) ? 1 : 0);
                 }
+            case "<=":
+                // Coerce to the left argument's type, then compare.
+                if (leftVal instanceof NumberValue) {
+                    return new NumberValue((leftVal.toNumber() <= rightNumber) ? 1 : 0);
+                } else {
+                    String left = leftVal.toString();
+                    String rigth = rightVal.toString();
+                    return new NumberValue((compareTo(left, rigth) <= 0) ? 1 : 0);
+                }
             case ">":
                 // Coerce to the left argument's type, then compare.
                 if (leftVal instanceof NumberValue) {
@@ -150,6 +170,21 @@ public class BinaryOperatorExpression implements Expression {
                     String rigth = rightVal.toString();
                     return new NumberValue((compareTo(left, rigth) > 0) ? 1 : 0);
                 }
+            case ">=":
+                // Coerce to the left argument's type, then compare.
+                if (leftVal instanceof NumberValue) {
+                    return new NumberValue((leftVal.toNumber() >= rightNumber) ? 1 : 0);
+                } else {
+                    String left = leftVal.toString();
+                    String rigth = rightVal.toString();
+                    return new NumberValue((compareTo(left, rigth) >= 0) ? 1 : 0);
+                }
+
+            case "&&":
+                return new NumberValue(rightVal.toNumber() != 0 && leftVal.toNumber() != 0 ? 1 : 0);
+            case "||":
+                return new NumberValue(rightVal.toNumber() != 0 || leftVal.toNumber() != 0 ? 1 : 0);
+
         }
         throw new Error("Unknown operator: " + operator);
 

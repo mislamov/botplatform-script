@@ -39,7 +39,7 @@ class TokenizerTest {
 
         Assertions.assertEquals(5, tokens.size());
         Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
-        Assertions.assertEquals(TokenType.EQUALS, tokens.get(1).type);
+        Assertions.assertEquals(TokenType.OPERATOR, tokens.get(1).type);
         Assertions.assertEquals(TokenType.STRING, tokens.get(2).type);
         Assertions.assertEquals(TokenType.OPERATOR, tokens.get(3).type);
         Assertions.assertEquals(TokenType.DIGITS, tokens.get(4).type);
@@ -68,7 +68,7 @@ class TokenizerTest {
 
         Assertions.assertEquals(3, tokens.size());
         Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
-        Assertions.assertEquals(TokenType.EQUALS, tokens.get(1).type);
+        Assertions.assertEquals(TokenType.OPERATOR, tokens.get(1).type);
         Assertions.assertEquals(TokenType.DIGITS, tokens.get(2).type);
     }
 
@@ -77,11 +77,14 @@ class TokenizerTest {
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x += (10 + 1)".getBytes(StandardCharsets.UTF_8)));
         System.out.println(tokens);
 
-        Assertions.assertEquals(7, tokens.size());
+        Assertions.assertEquals(8, tokens.size());
         Assertions.assertEquals(TokenType.WORD, tokens.get(0).type);
         Assertions.assertEquals(TokenType.OPERATOR, tokens.get(1).type);
-        Assertions.assertEquals(TokenType.LEFT_PAREN, tokens.get(2).type);
+        Assertions.assertEquals(TokenType.OPERATOR, tokens.get(2).type);
+        Assertions.assertEquals(TokenType.LEFT_PAREN, tokens.get(3).type);
     }
+
+
 
 
     @Test

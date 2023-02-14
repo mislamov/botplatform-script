@@ -39,7 +39,7 @@ public class ParserVarTest {
         Assertions.assertEquals(TokenType.DIGITS, tokens.get(i++).type);
         Assertions.assertEquals(TokenType.DOT, tokens.get(i++).type);
         Assertions.assertEquals(TokenType.DIGITS, tokens.get(i++).type);
-        Assertions.assertEquals(TokenType.EQUALS, tokens.get(i++).type);
+        Assertions.assertEquals(TokenType.OPERATOR, tokens.get(i++).type);
         Assertions.assertEquals(TokenType.WORD, tokens.get(i++).type);
         Assertions.assertEquals(TokenType.DOT, tokens.get(i++).type);
         Assertions.assertEquals(TokenType.DIGITS, tokens.get(i++).type);

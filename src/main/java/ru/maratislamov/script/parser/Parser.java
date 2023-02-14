@@ -75,13 +75,12 @@ public class Parser {
     }
 
     /**
-     *
      * @param labels
      * @param parseHolder - если true - принудительно парсим переменную или холдер: ${ _from_here_ }
      * @return
      */
     public List<Statement> parseCommands(Map<String, Integer> labels, boolean parseHolder) {
-        List<Statement> statements = new ArrayList<Statement>();
+        List<Statement> statements = new ArrayList<>();
 
         while (true) {
 
@@ -94,111 +93,115 @@ public class Parser {
 
                 // fn ...
             } else if (peek(TokenType.WORD)) {
-                Expression atom = atomic();
+                Expression atomStartsByWord = atomic();
 
                 // FN()
-                if (atom instanceof MethodCallValue) {
-                    statements.add((MethodCallValue) atom);
+                if (atomStartsByWord instanceof MethodCallValue) {
+                    statements.add((MethodCallValue) atomStartsByWord);
 
                 } else {
                     /////// fn | a.b[].c | d[]
-                    assert atom instanceof VariableExpression;
-                    VariableExpression var = (VariableExpression) atom;
+                    assert atomStartsByWord instanceof VariableExpression;
+                    VariableExpression var = (VariableExpression) atomStartsByWord;
+                    final VariableExpression nextInPath = ((VariableExpression) atomStartsByWord).getNextInPath();
 
-                    // var ==  //  var =
-                    if (match(TokenType.EQUALS, TokenType.EQUALS) || match(TokenType.EQUALS)) {
-                        // равенство
-                        skipSpaces();
-                        Expression value = expression();
-                        statements.add(new AssignStatement(var, value));
+                    String operator = operator();
 
-                        // var *=  // var +=  // var -=  // var /=
-                    } else if (match(TokenType.OPERATOR) && last(1).text.endsWith("=")) {
-                        // присваивание
-                        String modify = String.valueOf(last(1).text.charAt(0));
-                        Expression value = expression();
-                        //statements.add(new AssignStatement(var, modify, value));
-                        statements.add(new AssignStatement(var, new BinaryOperatorExpression(var, modify, value)));
+                    if (operator != null) {
 
+                        // var =
+                        if (operator.equals("=")) {
+                            // присваивание
+                            skipSpaces();
+                            Expression value = expression();
+                            statements.add(new AssignStatement(var, value));
 
-                    } else if (((VariableExpression) atom).getNextInPath() != null) {
-                        // simple var
-                        statements.add(new WrapStatement(atom));
+                            // var *=  // var +=  // var -=  // var /=
+                        } else if (operator.length() == 2 && operator.charAt(1) == '=') {
+                            // присваивание
+                            String modify = String.valueOf(operator.charAt(0));
+                            Expression value = expression();
+                            statements.add(new AssignStatement(var, new BinaryOperatorExpression(var, modify, value)));
 
-                    } else {
-                        // WORD
-                        final String atomName = atom.getName();
-
-                        if (atomName.equals("goto")) {
-                            final Expression label = expression();
-                            statements.add(new GotoStatement(botScript, label));
-
-                            // if
-                        } else if (atomName.equals("if")) {
-                            Expression condition = expression();
-                            consume("then");
-
-                            int gotoIndex = findIndexOfNext(TokenType.LINE, TokenType.EOF);
-                            if (gotoIndex < 0) {
-                                gotoIndex = tokens.size(); // end of script
-                            } else {
-                                ++gotoIndex;
-                            }
-                            String label = "____if" + gotoIndex;
-                            tokens.add(gotoIndex, new Token(label, TokenType.LABEL));
-
-                            statements.add(new IfThenStatement(botScript, condition, null, label));
-
-
-                            // input
-                        } else if (atomName.equals("input")) { // аргументы (TermValue) у input не должны вычисляться перед вызовом
-                            Expression arg = atomic();
-                            assert arg instanceof VariableExpression;
-
-                            /*List<Expression> args = Collections.singletonList(new TermValue(((VariableExpression) arg).getPathName())); // todo: bug - тут позднее переменная будет вычеслена перед вызовом input. Это ошибка. Сделать так, чтобы не вчислялась, при этом могла быть составной
-                            statements.add(new MethodCallValue("input", args));*/
-
-                            statements.add(new AssignStatement((VariableExpression) arg, new MethodCallValue("input", List.of())));
-
-                            consume(TokenType.LINE, TokenType.EOF);
-                            positionLine++;
-
-
-                            // command  arg arg arg \n
-                            // or
-                            // wait \n
                         } else {
-                            List<Expression> argList = new ArrayList<>();
-                            while (true) {
-                                final TokenType type = get(0).type;
-                                if (type == TokenType.LINE || type == TokenType.EOF || type == TokenType.COMMAND_SEP)
-                                    break;
+                            throw new RuntimeException("ERROR [line " + (positionLine + 1) + "]: unknown operator for command: " + operator);
+                        }
+                    } else {
+                        // нет оператора после атомарного выражения
 
-                                Expression expression = expression();
-                                argList.add(expression);
-                            }
-                            positionLine++;
+                        if (nextInPath != null) {
+                            // просто сложная переменная (path)
+                            statements.add(new WrapStatement(atomStartsByWord));
 
-                            if (parseHolder && argList.isEmpty()){
-                                // одно слово в холдере - это переменная
-                                statements.add(new WrapStatement(atom));
+                        } else {
+                            // WORD - просто слово (не составная переменная, ни присваивание, ни вызов функции итп
+                            final String atomWord = atomStartsByWord.getName();
+
+                            if (atomWord.equals("goto")) {
+                                final Expression label = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP);
+                                statements.add(new GotoStatement(botScript, label));
+
+                                // if
+                            } else if (atomWord.equals("if")) {
+                                Expression condition = expression();
+                                consume("then");
+
+                                int gotoIndex = findIndexOfNext(TokenType.LINE, TokenType.EOF); // todo: искать полноценный блок
+                                if (gotoIndex < 0) {
+                                    gotoIndex = tokens.size(); // end of script
+                                } else {
+                                    ++gotoIndex;
+                                }
+                                String label = "____if" + gotoIndex;
+                                tokens.add(gotoIndex, new Token(label, TokenType.LABEL));
+
+                                statements.add(new IfThenStatement(botScript, condition, null, label));
+
+
+                                // input
+                            } else if (atomWord.equals("input")) { // аргументы (TermValue) у input не должны вычисляться перед вызовом
+                                Expression arg = atomic();
+                                assert arg instanceof VariableExpression;
+
+                                statements.add(new AssignStatement((VariableExpression) arg, new MethodCallValue("input", List.of())));
+
+                                consume(TokenType.LINE, TokenType.EOF, TokenType.COMMAND_SEP);
+
+                                // command  arg arg arg \n
+                                // or
+                                // wait \n
                             } else {
-                                // если есть аргументы или одинокое слово в потоке команд - это команда
-                                statements.add(new MethodCallValue(atomName, argList));
-                                if (atomName.equals("wait")){
-                                    statements.add(new MethodCallValue("interrupt wait", List.of())); // удаление таймера
+                                List<Expression> argList = new ArrayList<>();
+                                while (true) {
+                                    final TokenType type = get(0).type;
+                                    if (type == TokenType.LINE || type == TokenType.EOF || type == TokenType.COMMAND_SEP)
+                                        break;
+
+                                    Expression expression = expression(TokenType.LINE, TokenType.COMMAND_SEP);
+                                    argList.add(expression);
+                                }
+                                position++;
+
+                                if (parseHolder && argList.isEmpty()) {
+                                    // одно слово в холдере - это переменная
+                                    statements.add(new WrapStatement(atomStartsByWord));
+                                } else {
+                                    // если есть аргументы или одинокое слово в потоке команд - это команда
+                                    statements.add(new MethodCallValue(atomWord, argList));
+                                    if (atomWord.equals("wait")) {
+                                        statements.add(new MethodCallValue("interrupt wait", List.of())); // удаление таймера
+                                    }
                                 }
                             }
                         }
                     }
-
                 }
 
             } else if (match(TokenType.EOF)) {
                 break;
 
             } else {
-                throw new RuntimeException("ERROR [line " + (positionLine + 1) + "]: near '" + get(0).text + "'");
+                throw new RuntimeException("ERROR [line " + (positionLine + 1) + "]: near '" + debugCurrentPosition() + "'");
             }
         }
 
@@ -264,8 +267,11 @@ public class Parser {
     // пропуск разделителей строк команд
     private void skipSpacesAndSeps() {
         while (peek(TokenType.LINE) || peek(TokenType.COMMAND_SEP)) {
-            ++positionLine;
             ++position;
+
+            if (peek(TokenType.LINE)) {
+                ++positionLine;
+            }
         }
     }
 
@@ -288,7 +294,7 @@ public class Parser {
      *
      * @return The parsed expression.
      */
-    private Expression expression() {
+    private Expression expression(TokenType... stoppers) {
 
         // список
         if (match(TokenType.BEGIN_LIST)) {
@@ -335,54 +341,192 @@ public class Parser {
         }
 
         // оператор
-        return operator();
+        return mathExpression(stoppers);
     }
+
+
+    protected String operator() {
+        if (!peek(TokenType.OPERATOR)) return null;
+
+        Set<String> operators = new HashSet<>(Arrays.asList(
+                "+", "-", "*", "/", "%", "=",
+                "===", "==", "!=", "+=", "-=", "/=", "*=", "%=", "->",
+                "<", ">", "<=", ">=", "&&", "||"));
+
+        String operator = "";
+        String lastOperator = null;
+        int lastOperatorPosition = position; // todo: считать positionLine
+
+        while (match(TokenType.OPERATOR)) {
+            final String ch = last(1).text;
+            operator += ch;
+
+            if (operators.contains(operator)){
+                lastOperator = operator;
+                lastOperatorPosition = position;
+            }
+        }
+
+        position = lastOperatorPosition;
+        return lastOperator;
+    }
+
+
+    private String stackEvaluteCurrentBracketLevel(Stack<Expression> stack, Stack<String> operators) {
+        while (!operators.isEmpty() && !operators.peek().equals("(")) {
+            String operator = operators.pop();
+
+            switch (operator) {
+
+                case "+", "-" -> {
+                    final Expression right = stack.pop();
+                    final String br = stackEvaluteCurrentBracketLevel(stack, operators);
+                    if (br != null) {
+                        operators.push("(");
+                    }
+
+                    stack.push(new BinaryOperatorExpression(stack.isEmpty() ? new NumberValue(0) : stack.pop(), operator, right));
+                }
+
+                case "===", "==", "!=", "=", "/", "*", ">", "<", ">=", "<=", "&&", "||" -> {
+                    final Expression right = stack.pop();
+                    stack.push(new BinaryOperatorExpression(stack.pop(), operator, right));
+                }
+
+                default -> {
+                    throw new RuntimeException("NYR for operator: " + operator);
+                }
+            }
+        }
+        return operators.isEmpty() ? null : operators.pop();
+    }
+
 
     /**
      * Parses a series of binary operator expressions into a single
-     * expression. In Jasic, all operators have the same predecence and
-     * associate left-to-right. That means it will interpret:
-     * 1 + 2 * 3 - 4 / 5
-     * like:
-     * ((((1 + 2) * 3) - 4) / 5)
-     * <p>
-     * TODO: REFACTOR!
+     * expression.
      *
-     * <p>
-     * It works by building the expression tree one at a time. So, given
-     * this code: 1 + 2 * 3, this will:
-     * <p>
-     * 1. Parse (1) as an atomic expression.
-     * 2. See the (+) and start a new operator expression.
-     * 3. Parse (2) as an atomic expression.
-     * 4. Build a (1 + 2) expression and replace (1) with it.
-     * 5. See the (*) and start a new operator expression.
-     * 6. Parse (3) as an atomic expression.
-     * 7. Build a ((1 + 2) * 3) expression and replace (1 + 2) with it.
-     * 8. Return the last expression built.
-     *
+     * @param stoppers
      * @return The parsed expression.
      */
-    private Expression operator() {
+    private Expression mathExpression(TokenType... stoppers) {
+        Stack<Expression> stack = new Stack<>();
+        Stack<String> operators = new Stack<>();
 
-        Expression expression = atomic();
+        parsingMath:
+        while (true) {
 
-        // Keep building operator expressions as long as we have operators.
-        while (
-                match(TokenType.LINE, TokenType.OPERATOR) || match(TokenType.OPERATOR) ||
-                        match(TokenType.LINE, TokenType.EQUALS) || match(TokenType.EQUALS) ||
-                        match(TokenType.LINE, TokenType.NOEQUALS) || match(TokenType.NOEQUALS)
-        ) {
-            String operator = last(1).text;
+            if (stoppers != null && Arrays.asList(stoppers).contains(get(0).type)) break;
 
             skipSpaces();
 
-            Expression right = atomic();
-            //Expression right = expression();
-            expression = new BinaryOperatorExpression(expression, operator, right);
+            Token token = get(0);
+
+            switch (token.type) {
+                case LEFT_PAREN ->  // "("
+                        operators.push(token.text);
+
+                case OPERATOR -> {
+                    String currentOperatorCode = operator();
+                    switch (currentOperatorCode) {
+                        case "+", "-" -> {
+                            while (!operators.isEmpty() && (operators.peek().equals("+") || operators.peek().equals("-"))) {
+                                final Expression right = stack.pop();
+                                stack.push(new BinaryOperatorExpression(stack.pop(), operators.pop(), right));
+                            }
+                            operators.push(currentOperatorCode);
+                        }
+
+                        case "*", "/" -> {
+                            while (!operators.isEmpty() && (operators.peek().equals("*") || operators.peek().equals("/"))) {
+                                Expression right = stack.pop();
+                                stack.push(new BinaryOperatorExpression(stack.pop(), operators.pop(), right));
+                            }
+                            operators.push(currentOperatorCode);
+                        }
+
+                        case "===", "==", "=", "<", ">", "<=", ">=", "!=", "&&", "||" -> {
+                            String bracket = stackEvaluteCurrentBracketLevel(stack, operators);
+                            if (bracket != null) { // EOF
+                                operators.push(bracket); // возвращаем скобку обратно
+                            }
+                            operators.push(currentOperatorCode);
+                        }
+
+                        default -> throw new RuntimeException("NYR operator: " + currentOperatorCode + "  here: " + debugCurrentPosition());
+                    }
+                    continue;
+                }
+
+                case RIGHT_PAREN -> {
+                    String bracket = stackEvaluteCurrentBracketLevel(stack, operators);
+
+                    if (!Objects.equals(bracket, "(")) {
+                        //throw new RuntimeException("Unexpected closed bracket");
+                        //завершен парсинг замыкающего выражения в списке:  (... ,..., <math>) <-
+                        assert stack.size() == 1;
+                        assert operators.isEmpty();
+                        break parsingMath;
+                    }
+
+                    ++position;
+                    skipSpaces();
+
+                    // если дальше после АТОМА арифметическое выражение продолжается
+                    if (!peek_one_of(0, TokenType.OPERATOR, TokenType.RIGHT_PAREN)) {
+                        break parsingMath;
+                    }
+
+                    continue parsingMath;
+                }
+
+                case EOF -> {
+                    break parsingMath;
+                }
+
+                default -> {
+                    final Expression atomic = atomic();
+                    stack.push(atomic);
+
+                    if (stoppers != null && Arrays.asList(stoppers).contains(get(0).type)) break parsingMath;
+                    skipSpaces();
+
+                    if (!peek_one_of(0, TokenType.OPERATOR, TokenType.RIGHT_PAREN)) {
+                        // арифм выражение завершено
+                        break parsingMath;
+                    }
+                    // если дальше после АТОМА арифметическое выражение продолжается
+                    continue parsingMath;
+
+                }
+            }
+
+            position++;
         }
 
-        return expression;
+        /*while (!operators.isEmpty()) {
+            String operator = operators.pop();
+
+            switch (operator) {
+                case "+", "*" -> stack.push(new BinaryOperatorExpression(stack.pop(), operator, stack.pop()));
+
+                case "-", "/" -> {
+                    final Expression right = stack.pop();
+                    stack.push(new BinaryOperatorExpression(stack.pop(), operator, right));
+                }
+                default -> {
+                    throw new RuntimeException("NYR for operator: " + operator);
+                }
+            }
+        }*/
+        final String br = stackEvaluteCurrentBracketLevel(stack, operators);
+        if (br != null) {
+            throw new RuntimeException("Unbalanced brackets here: " + debugCurrentPosition());
+        }
+
+        assert stack.size() == 1;
+        return stack.pop();
+
     }
 
     /**
@@ -417,26 +561,6 @@ public class Parser {
             if (word.isSeparatedWord()) {
                 return new VariableExpression(word.text);
             }
-
-            /*if ("IF".equals(prevUpper)) {
-                return new TermValue(prev);
-            }*/
-
-            // EXEC cmd arg1 arg2 ... argN \n
-            /*if ("EXEC".equals(prevUpper) || "CALL".equals(prevUpper)) {
-                // вызов внешней функции
-                String call = get(0).text;
-                assert get(0).type == TokenType.STRING || get(0).type == TokenType.WORD;
-                ++position;
-
-                List<Expression> argList = new ArrayList<>();
-
-                while (get(0).type != TokenType.LINE) {
-                    Expression expression = expression();
-                    argList.add(expression);
-                }
-                return new MethodCallValue(call, argList);
-            }*/
 
             // fn(a,b,c)
             if (peek(TokenType.LEFT_PAREN)) {
@@ -525,6 +649,7 @@ public class Parser {
             }
             return readVariableForce ? new VariableExpression(textNumber + suffix) : new NumberValue(textNumber + suffix);
 
+            // положительное или отрицательное число
         } else if (peek(TokenType.OPERATOR) && (get(0).text.equals("-") || get(0).text.equals("+")) && get(1).type == TokenType.DIGITS) {
             String sign = get(0).text;
             ++position;
@@ -610,6 +735,11 @@ public class Parser {
         return true;
     }
 
+    private boolean peek_one_of(int position, TokenType... types) {
+        final Token token = get(position);
+        return Arrays.stream(types).anyMatch(token.type::equals);
+    }
+
     /**
      * Consumes the next token if it's a word token with the given name.
      *
@@ -635,7 +765,7 @@ public class Parser {
     private Token consume(TokenType type) {
         final Token token = get(0);
         if (token.type != type)
-            throw new Error("Expected " + type + " on line " + (positionLine + 1));
+            throw new Error("Expected " + type + " on line " + (positionLine + 1) + ": " + debugCurrentPosition());
         position++;
         return token;
     }
@@ -645,6 +775,7 @@ public class Parser {
         if (Arrays.stream(types).noneMatch(token.type::equals))
             throw new Error("Expected one of type " + Arrays.toString(types) + "' in line " + (positionLine + 1) + "+");
         ++position;
+        if (token.type == TokenType.LINE) ++positionLine;
         return token;
     }
 
