@@ -12,6 +12,8 @@ import java.util.Objects;
  */
 public class StringValue implements Value {
 
+    public static Integer MAX_LENGTH = null;
+
     private String value;
 
     public StringValue() {
@@ -28,6 +30,8 @@ public class StringValue implements Value {
 
     public void setValue(String value) {
         this.value = value;
+        if (value != null && MAX_LENGTH != null && value.length() > MAX_LENGTH)
+            throw new RuntimeException("content to big: > " + MAX_LENGTH + " for StringValue: " + value.substring(0, Math.min(30, MAX_LENGTH)) + "...");
     }
 
     @JsonIgnore
@@ -41,11 +45,12 @@ public class StringValue implements Value {
     public String getName() {
         return toString();
     }
+
     @JsonIgnore
     public Double toNumber() {
         try {
             return Double.parseDouble(getValue());
-        } catch (NumberFormatException ex){
+        } catch (NumberFormatException ex) {
             return null; // NYR. Должна ли строка всегда преобразовываться в null если не число?
         }
     }

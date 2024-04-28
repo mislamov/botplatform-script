@@ -202,7 +202,7 @@ public class Tokenizer {
                                     token += "\"\"";
                                 }
                             } else {
-                                token += "\"";
+                                token += "\"" + c;
                             }
                         } else {
                             token += c;

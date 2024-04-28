@@ -11,7 +11,7 @@ import java.io.InputStream;
 public class Main {
     public static void main(String[] args) {
         //String fname = "experiments.bas";
-        String fname = "D:\\WORK\\botplatform-script\\src\\test\\resources\\demo.bas";
+        String fname = "script1.bas";
 
         ScriptFunctionsService.register(new DebugExecutor());
 

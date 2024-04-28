@@ -246,7 +246,7 @@ public class SparseArray<E> extends AbstractList<E> implements Cloneable {
      * was one.
      */
     public void put(int key, E value) {
-        if (key < 0) throw new RuntimeException("index < 0");
+        if (key < 0) throw new RuntimeException("index < 0: " + key);
 
         int i = ContainerHelpers.binarySearch(mKeys, mSize, key);
         if (i >= 0) {
