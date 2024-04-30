@@ -3,6 +3,8 @@ package ru.maratislamov.script;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import ru.maratislamov.script.context.ScriptRunnerContext;
+import ru.maratislamov.script.utils.VarLocalMemoryManager;
+import ru.maratislamov.script.utils.VarManager;
 import ru.maratislamov.script.values.MapValue;
 
 import java.io.Serializable;
@@ -33,12 +35,21 @@ public class ScriptSession implements Serializable {
     // переменные уровня сеанса выполнения скрипта
     private MapValue sessionScope = new MapValue();
 
+    @JsonIgnore
+    // вечные переменные (глобального уровня)
+    public MapValue activationSessionScope = new MapValue();
+
     private Integer currentStatement;
 
     private Character suspendType; // W - wait; I - input
 
+    /**
+     * менеджер переменных
+     */
+    private static VarManager _varManager = null;
 
-    private ScriptSession(){
+
+    private ScriptSession() {
         this(UUID.randomUUID().toString());
     }
 
@@ -65,10 +76,11 @@ public class ScriptSession implements Serializable {
 
     /**
      * создаем дочернюю сессию для выполнения вложенных скриптов и подпрограмм
+     *
      * @return новая сессия
      */
     @JsonIgnore
-    public ScriptSession createSubSession(){
+    public ScriptSession createSubSession() {
         ScriptSession session = new ScriptSession(getSessionScope());
         session.setParentSession(this);
         return session;
@@ -82,18 +94,35 @@ public class ScriptSession implements Serializable {
         this.currentStatement = currentStatement;
     }
 
-    public void clear(){
+    // проинициализируйте менеджер переменных для использования кастомного хранения значений
+
+    @JsonIgnore
+    public VarManager getVarManager() {
+        if (_varManager == null) {
+            _varManager = VarLocalMemoryManager.getInstance();
+        }
+        return _varManager;
+    }
+
+    public static void setVarManager(VarManager varManager) {
+        _varManager = varManager;
+    }
+
+    public void clear() {
         this.sessionScope.getBody().clear();
         currentStatement = null;
     }
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    public boolean isActive(){
+    public boolean isActive() {
         return currentStatement != null;
     }
 
-    public ScriptSession activate(){
+    public ScriptSession activate() {
         currentStatement = 0;
+        activationSessionScope.getBody().forEach((k, v) -> {
+            this.sessionScope.getBody().put(k, v);
+        });
         return this;
     }
 
@@ -145,7 +174,6 @@ public class ScriptSession implements Serializable {
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
     }
-
 
 
     @Override

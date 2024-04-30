@@ -42,6 +42,11 @@ public interface Value extends Expression, Serializable {
      */
     Double toNumber();
 
+    /**
+     * @return java-версия значения
+     */
+    Object nativeObject();
+
     Value copy();
 
     Value NULL = NULLValue.NULL;

@@ -25,6 +25,10 @@ public class VarLinkWrapper implements Value {
         this.parent = parent;
     }
 
+    @Override
+    public Object nativeObject() {
+        throw new RuntimeException("NYR");
+    }
     public Value getValue() {
         return value;
     }

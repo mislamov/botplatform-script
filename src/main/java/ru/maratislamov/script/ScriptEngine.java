@@ -7,6 +7,7 @@ import ru.maratislamov.script.parser.Parser;
 import ru.maratislamov.script.parser.Token;
 import ru.maratislamov.script.parser.Tokenizer;
 import ru.maratislamov.script.statements.Statement;
+import ru.maratislamov.script.values.MapOrListValueInterface;
 import ru.maratislamov.script.values.MapValue;
 import ru.maratislamov.script.values.SuspendValue;
 import ru.maratislamov.script.values.Value;
@@ -141,6 +142,7 @@ public class ScriptEngine {
      */
     public ScriptEngine() {
         this.labels = new HashMap<>();
+        constants = new MapValue();
     }
 
     public ScriptEngine(MapValue constants) {

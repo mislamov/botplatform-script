@@ -4,14 +4,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.VariableExpression;
-import ru.maratislamov.script.utils.VarMapUtils;
+import ru.maratislamov.script.statements.AssignStatement;
+import ru.maratislamov.script.utils.VarLocalMemoryManager;
 
 import java.util.function.Consumer;
 
 public class MapValueTest {
 
     public void setVarToScope(String path, Value value, ScriptSession session) {
-        final Consumer<Value> setter = VarMapUtils.getValueSetterByPath(session, new VariableExpression(path));
+        final Consumer<Value> setter = session.getVarManager().getValueSetterByPath(session, new VariableExpression(path));
         setter.accept(value);
     }
 

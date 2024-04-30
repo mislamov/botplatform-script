@@ -33,6 +33,11 @@ public class NotFoundValue implements Value {
         return this;
     }
 
+
+    public Object nativeObject() {
+        throw new RuntimeException("NYR");
+    }
+
     @Override
     public String toString() {
         return "$NotFound";

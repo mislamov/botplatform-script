@@ -2,8 +2,9 @@ package ru.maratislamov.script.statements.loops;
 
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.VariableExpression;
+import ru.maratislamov.script.statements.AssignStatement;
 import ru.maratislamov.script.statements.Statement;
-import ru.maratislamov.script.utils.VarMapUtils;
+import ru.maratislamov.script.utils.VarLocalMemoryManager;
 import ru.maratislamov.script.values.IteratorValue;
 import ru.maratislamov.script.values.Value;
 
@@ -27,7 +28,7 @@ public class CreateIteratorStatement implements Statement {
     @Override
     public Value execute(ScriptSession session) {
         final IteratorValue iteratorValue = new IteratorValue(collectionVarExpression);
-        VarMapUtils.getValueSetterByPath(session, new VariableExpression(iteratorName)).accept(iteratorValue);
+        session.getVarManager().getValueSetterByPath(session, new VariableExpression(iteratorName)).accept(iteratorValue);
         return iteratorValue;
     }
 

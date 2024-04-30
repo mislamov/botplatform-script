@@ -26,6 +26,12 @@ public class NumberValue implements Value, Comparable<Value> {
         this.value = value;
     }
 
+
+    @Override
+    public Object nativeObject() {
+        return value;
+    }
+
     public NumberValue() {
     }
 

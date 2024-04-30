@@ -46,6 +46,10 @@ public final class NULLValue implements Value {
     }
 
     @Override
+    public Object nativeObject() {
+        return null;
+    }
+    @Override
     public boolean equals(Object obj) {
         return obj == null || obj instanceof NULLValue;
     }

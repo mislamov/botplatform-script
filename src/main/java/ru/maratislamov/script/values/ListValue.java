@@ -6,6 +6,7 @@ import ru.maratislamov.script.values.google.SparseArray;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ListValue extends AbstractList<Value> implements Value, MapOrListValueInterface {
 
@@ -72,6 +73,11 @@ public class ListValue extends AbstractList<Value> implements Value, MapOrListVa
     @Override
     public Double toNumber() {
         return null;
+    }
+
+    @Override
+    public Object nativeObject() {
+        return data.stream().map(Value::nativeObject).collect(Collectors.toList());
     }
 
     @Override

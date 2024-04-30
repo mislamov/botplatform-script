@@ -5,9 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.utils.ValueUtils;
+import ru.maratislamov.script.utils.VarLocalMemoryManager;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Хеш-таблица для оперирования со сложными структурными объектами (включая json)
@@ -31,6 +33,15 @@ public class MapValue implements Value, MapOrListValueInterface {
 
     public void setBody(Map<String, Value> body) {
         this.body = body;
+    }
+
+    @Override
+    public Object nativeObject() {
+        return body.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().nativeObject())
+                );
     }
 
     public MapValue() {
@@ -105,6 +116,8 @@ public class MapValue implements Value, MapOrListValueInterface {
     @JsonIgnore
     public Value get(String name) {
 
+        if (name == null) throw new RuntimeException("parameter name is NULL");
+
         if (name.contains(".")) {
             throw new RuntimeException("Don't use DOTs in keys for MapValues: use VarMapUtils.getValueSetterByPath for deep");
         }
@@ -125,11 +138,12 @@ public class MapValue implements Value, MapOrListValueInterface {
      * @param key
      * @param value
      * @return @value
-     * @deprecated присваивать в логике только через {@link ru.maratislamov.script.utils.VarMapUtils#getValueSetterByPath}
+     * @deprecated присваивать в логике только через {@link VarLocalMemoryManager#getValueSetterByPath}
      */
     @Deprecated
     @JsonIgnore
     public Value put(String key, Value value) {
+        if (key == null) throw new RuntimeException("NULL key");
         assert !key.contains(".");
         if (key.contains(".")) throw new RuntimeException("Unexpected key");
 

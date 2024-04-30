@@ -1,3 +1,5 @@
+no = {}
+
 mm = {x:"1", y:"2"}
 nn = {x:"1", y:"2"}
 mm.l = nn
@@ -44,3 +46,14 @@ if varmap == varmap then print "equals ok"
 
 print "arr = " + arr
 print "varmap = " + varmap
+
+print "---"
+print GLOBAL.varmap
+print "---"
+GLOBAL.varmap["" + "z"].x = "xxx"
+print GLOBAL.varmap
+print GLOBAL.varmap["z"]
+print GLOBAL.varmap["" + "z"].x
+print GLOBAL.varmap.z
+print GLOBAL["varmap"]
+print GLOBAL.varmap

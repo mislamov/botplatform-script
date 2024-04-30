@@ -24,6 +24,11 @@ public final class SuspendValue implements Value {
     }
 
     @Override
+    public Object nativeObject() {
+        throw new RuntimeException("NYR");
+    }
+
+    @Override
     public Value evaluate(ScriptSession session) {
         return this;
     }

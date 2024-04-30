@@ -3,7 +3,8 @@ package ru.maratislamov.script.statements;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.VariableExpression;
-import ru.maratislamov.script.utils.VarMapUtils;
+import ru.maratislamov.script.utils.VarLocalMemoryManager;
+import ru.maratislamov.script.utils.VarManager;
 import ru.maratislamov.script.values.Value;
 
 import java.util.function.Consumer;
@@ -14,6 +15,8 @@ import java.util.function.Consumer;
  */
 public class AssignStatement implements Statement {
 
+
+
     private final VariableExpression varExpression;
     private final Expression value;
 
@@ -23,7 +26,7 @@ public class AssignStatement implements Statement {
     }
 
     public Value execute(ScriptSession session) {
-        final Consumer<Value> setter = VarMapUtils.getValueSetterByPath(session, varExpression);
+        final Consumer<Value> setter = session.getVarManager().getValueSetterByPath(session, varExpression);
         final Value result = Expression.evaluate(this.value, session);
         setter.accept(result);
 

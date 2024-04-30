@@ -34,6 +34,11 @@ public class StringValue implements Value {
             throw new RuntimeException("content to big: > " + MAX_LENGTH + " for StringValue: " + value.substring(0, Math.min(30, MAX_LENGTH)) + "...");
     }
 
+    @Override
+    public Object nativeObject() {
+        return value;
+    }
+
     @JsonIgnore
     @Override
     public String toString() {

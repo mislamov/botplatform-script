@@ -14,4 +14,9 @@ public interface Statement {
      * statements will change the current statement, etc.
      */
     Value execute(ScriptSession session);
+
+
+    default Object nativeObject() {
+        throw new RuntimeException("NYR");
+    }
 }

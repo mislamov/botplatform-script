@@ -95,4 +95,9 @@ public class MethodCallValue implements Statement, Value {
     public int hashCode() {
         return Objects.hash(name, args);
     }
+
+    @Override
+    public Object nativeObject() {
+        return Statement.super.nativeObject();
+    }
 }

@@ -12,7 +12,17 @@ import java.util.function.Consumer;
 
 import static ru.maratislamov.script.values.Value.NULL;
 
-public class VarMapUtils {
+public class VarLocalMemoryManager implements VarManager {
+
+    static VarLocalMemoryManager singleton = null;
+
+    public static VarLocalMemoryManager getInstance() {
+        if (singleton == null) {
+            singleton = new VarLocalMemoryManager();
+        }
+        return singleton;
+    }
+
 
     /**
      * поиск и при необходимости создание ссылки на значение переменной в скоупе. Точка может быть заменена на новое значение
@@ -22,22 +32,41 @@ public class VarMapUtils {
      * @param pathVarExpression - переменная (возможно, составная) по которой ищется значение в скоупе
      * @return присвоитель значения в скоупе @sessionScope
      */
-    public static Consumer<Value> getValueSetterByPath(final ScriptSession session, final VariableExpression pathVarExpression) {
+    public Consumer<Value> getValueSetterByPath(final ScriptSession session, final VariableExpression pathVarExpression) {
+        MapValue value = session.getSessionScope();
+
+        return getValueSetterByPath(session, pathVarExpression, value);
+
+    }
+
+    /**
+     * получение сеттера для переменно
+     *
+     * @param session           - сеанс
+     * @param pathVarExpression - код переменной (имя со всеми путями)
+     * @param scope             - хранилище переменных
+     * @return сеттер значения для переменно
+     */
+    public Consumer<Value> getValueSetterByPath(ScriptSession session, VariableExpression pathVarExpression, MapValue scope) {
+        Value value = scope;
+
         String name;
-        Value value = session.getSessionScope();
         MapOrListValueInterface prevValue;
 
         VariableExpression var = pathVarExpression;
         VariableExpression nextVar = var.getNextInPath();
-        MapOrListValueInterface scope;
+        MapOrListValueInterface _scope;
 
         while (true) {
-            name = Expression.evaluate(var.getNameExpression(), session).toString();
+            Value evaluated = Expression.evaluate(var.getNameExpression(), session);
+            if (evaluated == null || evaluated == NULL) throw new RuntimeException("NULL as variable name");
+
+            name = evaluated.toString();
 
             prevValue = (MapOrListValueInterface) value;
-            scope = (MapOrListValueInterface) value;
-            //value = Expression.evaluate(scope.get(name), session);
-            value = scope.get(name);
+            _scope = (MapOrListValueInterface) value;
+            //value = Expression.evaluate(_scope.get(name), session);
+            value = _scope.get(name);
 
             // путь не закончен - значит value должен быть составным
             if (nextVar != null) {
@@ -61,10 +90,9 @@ public class VarMapUtils {
                 // обход завершен
                 MapOrListValueInterface finalPrevValue = prevValue;
                 String finalName = name;
-                return newValue -> finalPrevValue.put(finalName, newValue); // todo убедиться, что работает )
+                return newValue -> finalPrevValue.put(finalName, newValue);
             }
 
         }
-
     }
 }

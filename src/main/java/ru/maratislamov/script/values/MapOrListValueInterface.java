@@ -15,4 +15,8 @@ public interface MapOrListValueInterface extends Comparable {
      * @return @value
      */
     Value put(String key, Value value);
+
+    default void remove(String key){
+        throw new RuntimeException("unexpected");
+    }
 }
