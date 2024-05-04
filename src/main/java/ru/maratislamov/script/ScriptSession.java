@@ -120,11 +120,19 @@ public class ScriptSession implements Serializable {
 
     public ScriptSession activate() {
         currentStatement = 0;
+        init();
+        return this;
+    }
+
+    /**
+     * инициализация переменных
+     */
+    public void init(){
         activationSessionScope.getBody().forEach((k, v) -> {
             this.sessionScope.getBody().put(k, v);
         });
-        return this;
     }
+
 
 
     public ScriptRunnerContext getRunnerContext() {

@@ -1,5 +1,6 @@
 package ru.maratislamov.script.values;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.expressions.VariableExpression;
@@ -12,8 +13,7 @@ import java.util.Iterator;
 public class IteratorValue implements Value {
 
     VariableExpression collectionVar;
-    Iterator<Value> iterator = null;
-    Value currentValue = NotFound;
+    int index = -1; // индекс для обхода коллекции
 
 
     public IteratorValue() {
@@ -30,12 +30,37 @@ public class IteratorValue implements Value {
 
     @Override
     public Value evaluate(ScriptSession session) {
-        return currentValue;
+        return getCurrentValue(session);
     }
 
     @Override
     public String getName() {
         throw new RuntimeException("NYR");
+    }
+
+    public void setCollectionVar(VariableExpression collectionVar) {
+        this.collectionVar = collectionVar;
+    }
+
+    public VariableExpression getCollectionVar() {
+        return collectionVar;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    @JsonIgnore
+    public Value getCurrentValue(ScriptSession session) {
+        ListValue listValue = getListValue(session);
+        if (index < 0 || index >= listValue.size()) {
+            return NULL;
+        }
+        return listValue.get(index);
     }
 
     @Override
@@ -49,13 +74,20 @@ public class IteratorValue implements Value {
     }
 
     public Value next(ScriptSession session) {
-        if (iterator == null) {
-            final Value evaluatedCollection = collectionVar.evaluate(session);
-            if (!(evaluatedCollection instanceof ListValue listValue))
-                throw new RuntimeException("ListValue expected for loop, but: " + evaluatedCollection);
-            iterator = listValue.getIterator();
+
+        ListValue listValue = getListValue(session);
+        if (listValue.size() <= index + 1) {
+            return NULL; // EOC
         }
-        currentValue = iterator.hasNext() ? iterator.next() : NULL;
-        return currentValue;
+
+        return listValue.get(++index);
     }
+
+    private ListValue getListValue(ScriptSession session) {
+        final Value evaluatedCollection = collectionVar.evaluate(session);
+        if (!(evaluatedCollection instanceof ListValue listValue))
+            throw new RuntimeException("ListValue expected for loop, but: " + evaluatedCollection);
+        return listValue;
+    }
+
 }
