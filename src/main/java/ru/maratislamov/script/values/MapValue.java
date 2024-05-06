@@ -38,9 +38,16 @@ public class MapValue implements Value, MapOrListValueInterface {
     @Override
     public Object nativeObject() {
         return body.entrySet().stream()
-                .collect(Collectors.toMap(
+                .collect(
+                        /*Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> entry.getValue().nativeObject())
+                        entry -> entry.getValue().nativeObject())*/
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> entry.getValue().nativeObject(),
+                                (oldValue, newValue) -> newValue,
+                                LinkedHashMap::new
+                        )
                 );
     }
 
@@ -118,9 +125,10 @@ public class MapValue implements Value, MapOrListValueInterface {
 
         if (name == null) throw new RuntimeException("parameter name is NULL");
 
+        /* с тех пор как ключём может быть любая строка (например дата), эта проверка некорректна
         if (name.contains(".")) {
-            throw new RuntimeException("Don't use DOTs in keys for MapValues: use VarMapUtils.getValueSetterByPath for deep");
-        }
+            throw new RuntimeException("Don't use DOTs in keys for MapValues. Use VarMapUtils.getValueSetterByPath for deep. Found: " + name);
+        }*/
 
         if (methods.containsKey(name)) return methods.get(name).apply(this);
 
@@ -144,8 +152,12 @@ public class MapValue implements Value, MapOrListValueInterface {
     @JsonIgnore
     public Value put(String key, Value value) {
         if (key == null) throw new RuntimeException("NULL key");
+
+        /*
+        с тех пор как ключём может быть любая строка (например дата), эта проверка некорректна
         assert !key.contains(".");
-        if (key.contains(".")) throw new RuntimeException("Unexpected key");
+        if (key.contains(".")) throw new RuntimeException("Unexpected key: " + key);
+        */
 
         body.put(key, value);
         return value;
@@ -159,6 +171,11 @@ public class MapValue implements Value, MapOrListValueInterface {
     @JsonIgnore
     public void remove(String key) {
         body.remove(key);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return body.isEmpty();
     }
 
     @JsonIgnore

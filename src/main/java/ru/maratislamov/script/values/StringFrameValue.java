@@ -1,6 +1,7 @@
 package ru.maratislamov.script.values;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
 import ru.maratislamov.script.statements.Statement;
@@ -35,8 +36,18 @@ public class StringFrameValue extends StringValue implements Statement {
 
     @Override
     public Value evaluate(ScriptSession session) {
-        String text = content.stream().map(s -> Expression.evaluate(s , session).toString()).reduce((value, value2) -> value + value2).orElse("");
+        String text = content.stream().map(s -> Expression.evaluate(s, session).toString()).reduce((value, value2) -> value + value2).orElse("");
         return new StringValue(text);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        if (content == null || content.isEmpty()) return true;
+        if (content.size() > 1) return false;
+        Expression ex = content.get(0);
+        if (ex == NULL) return true;
+        if (ex instanceof StringValue sv) return StringUtils.isEmpty(sv.getValue());
+        return false;
     }
 
     @Override

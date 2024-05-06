@@ -1,6 +1,7 @@
 package ru.maratislamov.script.values;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import ru.maratislamov.script.ScriptSession;
 
@@ -45,6 +46,10 @@ public class StringValue implements Value {
         return getValue();
     }
 
+    @JsonIgnore
+    public boolean isEmpty(){
+        return StringUtils.isEmpty(value);
+    }
 
     @Override
     public String getName() {

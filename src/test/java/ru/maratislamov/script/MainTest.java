@@ -37,6 +37,16 @@ public class MainTest {
         runScript("sample\\maps.bas", null);
     }
 
+    @Test
+    public void runFor() throws IOException {
+        runScript("sample\\for.jas", null);
+    }
+
+    @Test
+    public void runSubMaps() throws IOException {
+        runScript("sample\\submaps.jas", null);
+    }
+
 
     @Test
     public void runPlusEq() throws IOException {

@@ -24,11 +24,14 @@ import java.util.stream.Collectors;
  * label in the program. It's a bit gross, but it works.
  */
 public class Parser {
+    public static final String BLOCK_BEGIN_LABEL_PREFIX = "____block_begin_";
+    public static final String BLOCK_END_LABEL_PREFIX = "____block_end_";
+    public static final String ELSE_LABEL_PREFIX = "____else";
     Logger logger = LoggerFactory.getLogger(Parser.class);
 
     private final ScriptEngine botScript;
 
-    private Stack<String[]> loopLabels = new Stack<>(); // пары меток: начала итераций и точки выхода из циклов
+    private Stack<String[]> blocksAndLoopsLabels = new Stack<>(); // пары меток: начала итераций и точки выхода из циклов
 
     private final List<Token> tokens;
     private int position;
@@ -90,180 +93,196 @@ public class Parser {
 
             skipSpacesAndSeps();
 
-            // label:
-            if (match(TokenType.LABEL)) {
+             if (match(TokenType.EOF)) {
+                break;
+
+            } else if (match(TokenType.LABEL)) {
+                // label:
                 // Mark the index of the statement after the label.
                 labels.put(last(1).text, statements.size());
 
                 // fn ...
             } else if (peek(TokenType.WORD)) {
-                Expression atomStartsByWord = atomic();
+                 parseInstructionCommand(labels, parseHolder, statements);
 
-                // FN()
-                if (atomStartsByWord instanceof MethodCallValue) {
-                    statements.add((MethodCallValue) atomStartsByWord);
-
-                } else {
-                    /////// fn | a.b[].c | d[]
-                    assert atomStartsByWord instanceof VariableExpression;
-                    VariableExpression var = (VariableExpression) atomStartsByWord;
-                    final VariableExpression nextInPath = ((VariableExpression) atomStartsByWord).getNextInPath();
-
-                    String operator = operator();
-
-                    if (operator != null) {
-
-                        // var =
-                        if (operator.equals("=")) {
-                            // присваивание
-                            skipSpaces();
-                            Expression value = expression();
-                            statements.add(new AssignStatement(var, value));
-
-                            // var *=  // var +=  // var -=  // var /=
-                        } else if (operator.length() == 2 && operator.charAt(1) == '=') {
-                            // присваивание
-                            String modify = String.valueOf(operator.charAt(0));
-                            Expression value = expression();
-                            statements.add(new AssignStatement(var, new BinaryOperatorExpression(var, modify, value)));
-
-                        } else {
-                            throw new RuntimeException("ERROR [line " + (positionLine + 1) + "]: unknown operator for command: " + operator);
-                        }
-                    } else {
-                        // нет оператора после атомарного выражения
-
-                        if (nextInPath != null) {
-                            // просто сложная переменная (path)
-                            statements.add(new WrapStatement(atomStartsByWord));
-
-                        } else {
-                            // WORD - просто слово (не составная переменная, ни присваивание, ни вызов функции итп
-                            final String atomWord = atomStartsByWord.getName();
-
-                            if (atomWord.equals("goto")) {
-                                final Expression label = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP);
-                                statements.add(new GotoStatement(botScript, label));
-
-
-                                // for var in list  ....... end
-                            } else if (atomWord.equals("for")) {
-                                String forBeginLabel = "____for_in_begin_" + statements.size();
-                                String forEndLabel = "____for_in_end_" + statements.size();
-                                String forCollectionVarName = "____for_collection_" + statements.size();
-
-                                loopLabels.add(new String[]{forBeginLabel, forEndLabel});
-
-                                consume(TokenType.WORD);
-                                assert get(-1).type == TokenType.WORD;
-                                String varIteratorUserName = get(-1).text;
-
-                                consume("in");
-                                Expression collection = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP, TokenType.EOF);
-
-
-                                String varIteratorInternal = "____iterator_impl_" + statements.size();
-                                statements.add(new AssignStatement(new VariableExpression(forCollectionVarName), collection)); // for_collection = []
-                                statements.add(new CreateIteratorStatement(varIteratorInternal, new VariableExpression(forCollectionVarName)));  // инициализируем итератор
-
-                                labels.put(forBeginLabel, statements.size()); // метка начала итерации
-
-                                statements.add(new MoveIteratorStatement(varIteratorInternal, varIteratorUserName)); // двигаем итератор
-                                statements.add(new IfThenStatement(botScript, // если итерация невозможна - выход из цикла
-                                        new VariableExpression(varIteratorUserName), null, forEndLabel
-                                ));
-
-
-                                // while (cond)  .......
-                            } else if (atomWord.equals("while")) {
-                                String whileBeginLabel = "____while_begin_" + statements.size();
-                                String whileEndLabel = "____while_end_" + statements.size();
-                                loopLabels.add(new String[]{whileBeginLabel, whileEndLabel});
-
-                                Expression condition = expression();
-
-                                labels.put(whileBeginLabel, statements.size()); // метка следующей итерации
-                                statements.add(new IfThenStatement(botScript, condition, null, whileEndLabel)); // условие итерации
-
-                            } else if (atomWord.equals("break")) {
-                                statements.add(new GotoStatement(botScript, new StringValue(loopLabels.peek()[1])));
-
-                            } else if (atomWord.equals("continue")) {
-                                statements.add(new GotoStatement(botScript, new StringValue(loopLabels.peek()[0])));
-
-                                // ..... end
-                            } else if (atomWord.equals("end")) {
-
-                                String[] currentBlockLabels = loopLabels.pop();
-
-                                statements.add(new GotoStatement(botScript, new StringValue(currentBlockLabels[0]))); // отсылка н итерацию
-                                labels.put(currentBlockLabels[1], statements.size()); // метка выхода из цикла
-
-                                // if
-                            } else if (atomWord.equals("if")) {
-                                Expression condition = expression();
-                                consume("then");
-
-                                int gotoIndex = findIndexOfNext(TokenType.LINE, TokenType.EOF); // todo: искать полноценный блок
-                                if (gotoIndex < 0) {
-                                    gotoIndex = tokens.size(); // end of script
-                                } else {
-                                    ++gotoIndex;
-                                }
-                                String label = "____if" + gotoIndex;
-                                tokens.add(gotoIndex, new Token(label, TokenType.LABEL));
-
-                                statements.add(new IfThenStatement(botScript, condition, null, label));
-
-
-                                // input
-                            } else if (atomWord.equals("input")) { // аргументы (TermValue) у input не должны вычисляться перед вызовом
-                                Expression arg = atomic();
-                                assert arg instanceof VariableExpression;
-
-                                statements.add(new AssignStatement((VariableExpression) arg, new MethodCallValue("input", List.of())));
-
-                                consume(TokenType.LINE, TokenType.EOF, TokenType.COMMAND_SEP);
-
-                                // command  arg arg arg \n
-                                // or
-                                // wait \n
-                            } else {
-                                List<Expression> argList = new ArrayList<>();
-                                while (true) {
-                                    final TokenType type = get(0).type;
-                                    if (type == TokenType.LINE || type == TokenType.EOF || type == TokenType.COMMAND_SEP)
-                                        break;
-
-                                    Expression expression = expression(TokenType.LINE, TokenType.COMMAND_SEP);
-                                    argList.add(expression);
-                                }
-                                position++;
-
-                                if (parseHolder && argList.isEmpty()) {
-                                    // одно слово в холдере - это переменная
-                                    statements.add(new WrapStatement(atomStartsByWord));
-                                } else {
-                                    // если есть аргументы или одинокое слово в потоке команд - это команда
-                                    statements.add(new MethodCallValue(atomWord, argList));
-                                    if (atomWord.equals("wait")) {
-                                        statements.add(new MethodCallValue("interrupt wait", List.of())); // удаление таймера
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-            } else if (match(TokenType.EOF)) {
-                break;
-
-            } else {
+             } else {
                 throw new RuntimeException("ERROR [line " + (positionLine + 1) + "]: near '" + debugCurrentPosition() + "'");
             }
         }
 
         return statements;
+    }
+
+    private void parseInstructionCommand(Map<String, Integer> labels, boolean parseHolder, List<Statement> statements) {
+        Expression atomStartsByWord = atomic();
+
+        // FN()
+        if (atomStartsByWord instanceof MethodCallValue) {
+            statements.add((MethodCallValue) atomStartsByWord);
+
+        } else {
+            /////// fn | a.b[].c | d[]
+            assert atomStartsByWord instanceof VariableExpression;
+            VariableExpression var = (VariableExpression) atomStartsByWord;
+            final VariableExpression nextInPath = ((VariableExpression) atomStartsByWord).getNextInPath();
+
+            String operator = operator();
+
+            if (operator != null) {
+
+                // var =
+                if (operator.equals("=")) {
+                    // присваивание
+                    skipSpaces();
+                    Expression value = expression();
+                    statements.add(new AssignStatement(var, value));
+
+                    // var *=  // var +=  // var -=  // var /=
+                } else if (operator.length() == 2 && operator.charAt(1) == '=') {
+                    // присваивание
+                    String modify = String.valueOf(operator.charAt(0));
+                    Expression value = expression();
+                    statements.add(new AssignStatement(var, new BinaryOperatorExpression(var, modify, value)));
+
+                } else {
+                    throw new RuntimeException("ERROR [line " + (positionLine + 1) + "]: unknown operator for command: " + operator);
+                }
+            } else {
+                // нет оператора после атомарного выражения
+
+                if (nextInPath != null) {
+                    // просто сложная переменная (path)
+                    statements.add(new WrapStatement(atomStartsByWord));
+
+                } else {
+                    // WORD - просто слово (не составная переменная, ни присваивание, ни вызов функции итп
+                    final String atomWord = atomStartsByWord.getName();
+
+                    if (atomWord.equals("goto")) {
+                        final Expression label = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP);
+                        statements.add(new GotoStatement(botScript, label));
+
+
+                        // for var in list  ....... end
+                    } else if (atomWord.equals("for")) {
+                        String forBeginLabel = "____for_in_begin_" + statements.size();
+                        String forEndLabel = "____for_in_end_" + statements.size();
+                        String forCollectionVarName = "____for_collection_" + statements.size();
+
+                        blocksAndLoopsLabels.add(new String[]{forBeginLabel, forEndLabel});
+
+                        consume(TokenType.WORD);
+                        assert get(-1).type == TokenType.WORD;
+                        String varIteratorUserName = get(-1).text;
+
+                        consume("in");
+                        Expression collection = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP, TokenType.EOF);
+
+
+                        String varIteratorInternal = "____iterator_impl_" + statements.size();
+                        statements.add(new AssignStatement(new VariableExpression(forCollectionVarName), collection)); // for_collection = []
+                        statements.add(new CreateIteratorStatement(varIteratorInternal, new VariableExpression(forCollectionVarName)));  // инициализируем итератор
+
+                        labels.put(forBeginLabel, statements.size()); // метка начала итерации
+
+                        statements.add(new MoveIteratorStatement(varIteratorInternal, varIteratorUserName)); // двигаем итератор
+                        statements.add(new IfThenStatement(botScript, // если итерация невозможна - выход из цикла
+                                new VariableExpression(varIteratorUserName), null, forEndLabel
+                        ));
+
+
+                        // while (cond)  ....... end
+                    } else if (atomWord.equals("while")) {
+                        String whileBeginLabel = "____while_begin_" + statements.size();
+                        String whileEndLabel = "____while_end_" + statements.size();
+                        blocksAndLoopsLabels.add(new String[]{whileBeginLabel, whileEndLabel});
+
+                        Expression condition = expression();
+
+                        labels.put(whileBeginLabel, statements.size()); // метка следующей итерации
+                        statements.add(new IfThenStatement(botScript, condition, null, whileEndLabel)); // условие итерации
+
+                    } else if (atomWord.equals("break")) {
+                        statements.add(new GotoStatement(botScript, new StringValue(blocksAndLoopsLabels.peek()[1])));
+
+                    } else if (atomWord.equals("continue")) {
+                        statements.add(new GotoStatement(botScript, new StringValue(blocksAndLoopsLabels.peek()[0])));
+
+                    } else if (atomWord.equals("begin")) {
+                        // begin ...
+                        String blockBeginLabel = BLOCK_BEGIN_LABEL_PREFIX + statements.size();
+                        String blockEndLabel = BLOCK_END_LABEL_PREFIX + statements.size();
+                        blocksAndLoopsLabels.add(new String[]{blockBeginLabel, blockEndLabel});
+                        labels.put(blockBeginLabel, statements.size()); // метка следующей итерации
+
+                    } else if (atomWord.equals("end")) {
+                        // ..... end
+
+                        String[] currentBlockLabels = blocksAndLoopsLabels.pop();
+
+                        if (!currentBlockLabels[0].startsWith(BLOCK_BEGIN_LABEL_PREFIX)) {
+                            // если не блок (значит цикл) - возвращаем управление в начало итерации к условию цикла
+                            statements.add(new GotoStatement(botScript, new StringValue(currentBlockLabels[0]))); // отсылка н итерацию
+                            labels.put(currentBlockLabels[1], statements.size()); // метка выхода из цикла
+                        }
+
+                        // if
+                    } else if (atomWord.equals("if")) {
+                        Expression condition = expression();
+                        consume("then");
+
+                        // ищем индекс токена, после которого вставим метку для выполнения else-условия
+                        int gotoIndex = findIndexOfNext(TokenType.LINE, TokenType.EOF); // todo: искать полноценный блок
+                        if (gotoIndex < 0) {
+                            gotoIndex = tokens.size(); // end of script
+                        } else {
+                            ++gotoIndex; // выполняем один токен для then, далее вставим else-label
+                        }
+                        String labelForElse = ELSE_LABEL_PREFIX + gotoIndex;
+                        tokens.add(gotoIndex, new Token(labelForElse, TokenType.LABEL));
+
+                        // если condition=true тогда продолжаем (null) иначе прыгаем на labelForElse
+                        statements.add(new IfThenStatement(botScript, condition, null, labelForElse));
+
+
+                        // input
+                    } else if (atomWord.equals("input")) { // аргументы (TermValue) у input не должны вычисляться перед вызовом
+                        Expression arg = atomic();
+                        assert arg instanceof VariableExpression;
+
+                        statements.add(new AssignStatement((VariableExpression) arg, new MethodCallValue("input", List.of())));
+
+                        consume(TokenType.LINE, TokenType.EOF, TokenType.COMMAND_SEP);
+
+                        // command  arg arg arg \n
+                        // or
+                        // wait \n
+                    } else {
+                        List<Expression> argList = new ArrayList<>();
+                        while (true) {
+                            final TokenType type = get(0).type;
+                            if (type == TokenType.LINE || type == TokenType.EOF || type == TokenType.COMMAND_SEP)
+                                break;
+
+                            Expression expression = expression(TokenType.LINE, TokenType.COMMAND_SEP);
+                            argList.add(expression);
+                        }
+                        position++;
+
+                        if (parseHolder && argList.isEmpty()) {
+                            // одно слово в холдере - это переменная
+                            statements.add(new WrapStatement(atomStartsByWord));
+                        } else {
+                            // если есть аргументы или одинокое слово в потоке команд - это команда
+                            statements.add(new MethodCallValue(atomWord, argList));
+                            if (atomWord.equals("wait")) {
+                                statements.add(new MethodCallValue("interrupt wait", List.of())); // удаление таймера
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private ScriptEngine engine4frame = new ScriptEngine();
@@ -647,24 +666,16 @@ public class Parser {
 
 
             // ------------ for VARIABLES ONLY :
-            VariableExpression theVariable = null;
-            VariableExpression lastSubVariable = null;
+            VariableExpression theVariable = new VariableExpression(prev);
+            VariableExpression lastSubVariable = theVariable;
 
-            // fn[index]
-            if (peek(TokenType.BEGIN_LIST)) {
+            // fn[index][][][]
+            while (peek(TokenType.BEGIN_LIST)) {
                 Expression arg = expression();
                 assert get(-1).type == TokenType.END_LIST;
-
                 assert arg instanceof ListExpressions && ((ListExpressions) arg).size() == 1;
 
-                final VariableExpression variableExpression = new VariableExpression(prev);
-                lastSubVariable = new VariableExpression(variableExpression, ((ListExpressions) arg).get(0));
-                theVariable = variableExpression;
-
-            } else {
-                // fn
-                theVariable = new VariableExpression(prev);
-                lastSubVariable = theVariable;
+                lastSubVariable = new VariableExpression(lastSubVariable, ((ListExpressions) arg).get(0));
             }
 
             assert theVariable.getLastInPath() == lastSubVariable;

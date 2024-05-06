@@ -1,5 +1,7 @@
 package ru.maratislamov.script.values;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Comparator;
 
 public interface MapOrListValueInterface extends Comparable {
@@ -19,4 +21,7 @@ public interface MapOrListValueInterface extends Comparable {
     default void remove(String key){
         throw new RuntimeException("unexpected");
     }
+
+    @JsonIgnore
+    boolean isEmpty();
 }

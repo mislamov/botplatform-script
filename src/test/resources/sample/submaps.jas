@@ -1,0 +1,8 @@
+x = {}
+x["c"] = {}
+x["c"]["v"].cv = "cv"
+print x
+
+x["a"]["b"].ab = "ab"
+print x
+
