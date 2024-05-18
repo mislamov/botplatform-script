@@ -2,6 +2,8 @@ package ru.maratislamov.script;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.context.ScriptRunnerContext;
 import ru.maratislamov.script.utils.VarLocalMemoryManager;
 import ru.maratislamov.script.utils.VarManager;
@@ -16,6 +18,8 @@ import java.util.UUID;
  * сеанс выполнения скрипта
  */
 public class ScriptSession implements Serializable {
+
+    Logger LOG  = LoggerFactory.getLogger(ScriptSession.class);
 
     static final long SerialVersionUID = 1122334455L;
 
@@ -40,6 +44,8 @@ public class ScriptSession implements Serializable {
     public MapValue activationSessionScope = new MapValue();
 
     private Integer currentStatement;
+
+    private long step = 0;
 
     private Character suspendType; // W - wait; I - input
 
@@ -72,6 +78,7 @@ public class ScriptSession implements Serializable {
         this.sessionId = sessionId;
         this.sessionScope = sessionScope;
         this.currentStatement = currentStatement;
+        LOG.trace("new ScriptSession(currentStatement = " + currentStatement + ")");
     }
 
     /**
@@ -91,7 +98,16 @@ public class ScriptSession implements Serializable {
     }
 
     public void setCurrentStatement(Integer currentStatement) {
+        LOG.trace("setCurrentStatement( " + currentStatement + " )");
         this.currentStatement = currentStatement;
+    }
+
+    public long getStep() {
+        return step;
+    }
+
+    public void setStep(long step) {
+        this.step = step;
     }
 
     // проинициализируйте менеджер переменных для использования кастомного хранения значений
@@ -119,6 +135,7 @@ public class ScriptSession implements Serializable {
     }
 
     public ScriptSession activate() {
+        LOG.trace("ScriptSession.activate(): currentStatement = 0");
         currentStatement = 0;
         init();
         return this;
@@ -169,10 +186,13 @@ public class ScriptSession implements Serializable {
 
     public void incCurrentStatement() {
         ++currentStatement;
+        ++step;
+        LOG.trace("++currentStatement: " + currentStatement);
     }
 
     public void decCurrentStatement() {
         --currentStatement;
+        LOG.trace("--currentStatement: " + currentStatement);
     }
 
     public String getSessionId() {

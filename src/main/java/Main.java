@@ -10,8 +10,10 @@ import java.io.InputStream;
 
 public class Main {
     public static void main(String[] args) {
-        //String fname = "experiments.bas";
-        String fname = "C:\\WORK\\botplatform-script\\src\\test\\resources\\sample\\for.jas";
+
+        String fname = "C:\\WORK\\botplatform-script\\experiments.bas";
+//        String fname = "C:\\WORK\\botplatform-script\\src\\test\\resources\\sample\\for.jas";
+        //String fname = "C:\\WORK\\botplatform-script\\src\\test\\resources\\sample\\ifthenbeginend.jas";
 
         ScriptFunctionsService.register(new DebugExecutor());
 

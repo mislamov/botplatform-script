@@ -3,11 +3,10 @@ package ru.maratislamov.script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.context.ScriptRunnerContext;
-import ru.maratislamov.script.parser.Parser;
+import ru.maratislamov.script.parser.ParserSession;
 import ru.maratislamov.script.parser.Token;
 import ru.maratislamov.script.parser.Tokenizer;
 import ru.maratislamov.script.statements.Statement;
-import ru.maratislamov.script.values.MapOrListValueInterface;
 import ru.maratislamov.script.values.MapValue;
 import ru.maratislamov.script.values.SuspendValue;
 import ru.maratislamov.script.values.Value;
@@ -18,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.RecursiveTask;
 
 /**
  * This defines a single class that contains an entire interpreter for a
@@ -157,6 +157,7 @@ public class ScriptEngine {
     public List<Statement> scriptToStatements(String script) {
         return scriptToStatements(script, false);
     }
+
     public List<Statement> scriptToStatements(String script, boolean forceHolder) {
         return scriptToStatements(new ByteArrayInputStream(script.getBytes(StandardCharsets.UTF_8)), forceHolder);
     }
@@ -164,13 +165,16 @@ public class ScriptEngine {
     public List<Statement> scriptToStatements(InputStream source) {
         return scriptToStatements(source, false);
     }
+
     public List<Statement> scriptToStatements(InputStream source, boolean forceHolder) {
         // Tokenize.
         List<Token> tokens = Tokenizer.tokenize(source);
 
         // Parse.
-        Parser parser = new Parser(this, tokens);
-        return parser.parseCommands(labels, forceHolder);
+        ParserSession parserSession = new ParserSession(this, tokens);
+        parserSession.parseCommandsUntilEndBlock(labels, forceHolder);
+        return parserSession.getStatements();
+
 
     }
 
@@ -197,11 +201,15 @@ public class ScriptEngine {
         while (session.getCurrentStatement() < statements.size()) {
             int thisStatement = session.getCurrentStatement();
             Statement statementEntity = statements.get(thisStatement);
-            session.incCurrentStatement();
 
             logger.debug("interpret: {}", statementEntity);
 
             Value value = statementEntity.execute(session);
+
+            if (session.getCurrentStatement() == thisStatement) {
+                // если курсор исполняемого кода остался неизменен после execute (например из-за goto)
+                session.incCurrentStatement();
+            }
 
             if (value == SuspendValue.SUSPEND) {
                 session.decCurrentStatement();
@@ -229,8 +237,8 @@ public class ScriptEngine {
     }
 
     /**
-     * @deprecated только для отладки
      * @return
+     * @deprecated только для отладки
      */
     @Deprecated
     public List<Statement> getStatements() {

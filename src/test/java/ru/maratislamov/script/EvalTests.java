@@ -3,6 +3,7 @@ package ru.maratislamov.script;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.maratislamov.script.context.ScriptRunnerContext;
+import ru.maratislamov.script.debug.DebugExecutor;
 import ru.maratislamov.script.values.ListValue;
 import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.Value;
@@ -45,7 +46,7 @@ public class EvalTests {
 
     public void assertEval(String exp, String result) {
         ScriptEngine scriptEngine = new ScriptEngine();
-        System.out.printf("E=" + exp);
+        System.out.print("E=" + exp);
         scriptEngine.load(new ByteArrayInputStream(("E=" + exp).getBytes(StandardCharsets.UTF_8)));
         final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
             setCurrentStatement(0);
@@ -62,6 +63,21 @@ public class EvalTests {
         }});
 
         Assertions.assertEquals(result, sess.getSessionScope().get("E"), "Ошибка арифметического вычисления: " + exp);
+    }
+
+    @Test
+    public void test0() {
+        String code = "print(\"%\")";
+        ScriptEngine scriptEngine = new ScriptEngine();
+        scriptEngine.load(new ByteArrayInputStream((code).getBytes(StandardCharsets.UTF_8)));
+
+        ScriptFunctionsService.register(new DebugExecutor());
+
+        ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
+            setCurrentStatement(0);
+        }});
+
+        System.out.println(sess.getSessionScope());
     }
 
     @Test
@@ -131,7 +147,7 @@ public class EvalTests {
         scriptEngine.load(new ByteArrayInputStream((code).getBytes(StandardCharsets.UTF_8)));
 
         for (int i = 0; i < 3; ++i) {
-            System.out.println("user session try " + (i+1));
+            System.out.println("user session try " + (i + 1));
             final ScriptSession sess = scriptEngine.interpret(new ScriptSession(ScriptRunnerContext.empty) {{
                 setCurrentStatement(0);
             }});

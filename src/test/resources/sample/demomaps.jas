@@ -47,6 +47,7 @@ if varmap == varmap then print "equals ok"
 print "arr = " + arr
 print "varmap = " + varmap
 
+GLOBAL = {varmap: {}}
 print "---"
 print GLOBAL.varmap
 print "---"

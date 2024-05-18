@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.statements.*;
-import ru.maratislamov.script.statements.loops.MoveIteratorStatement;
 import ru.maratislamov.script.values.MethodCallValue;
 import ru.maratislamov.script.values.StringFrameValue;
 
@@ -19,8 +18,8 @@ public class ParserVarTest {
     @Test
     public void test0() {
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x = 1".getBytes(StandardCharsets.UTF_8)));
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         assert statements.get(0) instanceof AssignStatement;
         Assertions.assertEquals("x", ((AssignStatement) statements.get(0)).getVarExpression().getName());
@@ -44,8 +43,8 @@ public class ParserVarTest {
         Assertions.assertEquals(TokenType.DOT, tokens.get(i++).type);
         Assertions.assertEquals(TokenType.DIGITS, tokens.get(i++).type);
 
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         assert statements.get(0) instanceof AssignStatement;
         assert ((AssignStatement) statements.get(0)).getValue() instanceof VariableExpression;
@@ -63,8 +62,8 @@ public class ParserVarTest {
     public void test2() {
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream("x.1[2].3 = y.1".getBytes(StandardCharsets.UTF_8)));
 
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         assert statements.get(0) instanceof AssignStatement;
         assert ((AssignStatement) statements.get(0)).getValue() instanceof VariableExpression;
@@ -93,8 +92,8 @@ public class ParserVarTest {
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
 
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         final MethodCallValue methodCallValue = (MethodCallValue) statements.get(0);
         Assertions.assertEquals("print", methodCallValue.getName());
@@ -111,8 +110,8 @@ public class ParserVarTest {
 
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         assert statements.size() == 3;
         Assertions.assertTrue(statements.get(0) instanceof AssignStatement);
@@ -136,8 +135,8 @@ public class ParserVarTest {
 
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         assert statements.size() == 1;
         Assertions.assertTrue(statements.get(0) instanceof AssignStatement);
@@ -156,8 +155,8 @@ public class ParserVarTest {
         String code = "create_message(\"\")";
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         assert statements.size() == 1;
         Assertions.assertTrue(statements.get(0) instanceof MethodCallValue);
@@ -174,8 +173,8 @@ public class ParserVarTest {
         String code = "i = 1\ncreate_message(\"\")\ni=2";
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         assert statements.size() == 3;
         Assertions.assertTrue(statements.get(0) instanceof AssignStatement);
@@ -201,8 +200,8 @@ public class ParserVarTest {
                 "            if gap <= 0 then goto end_if_1";
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
-        Parser parser = new Parser(new ScriptEngine(), tokens);
-        final List<Statement> statements = parser.parseCommands(new HashMap<>());
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(new HashMap<>());
 
         assert statements.size() == 3;
 
@@ -221,9 +220,9 @@ public class ParserVarTest {
                 "print\"fin\"";
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
         final HashMap<String, Integer> labels = new HashMap<>();
-        final List<Statement> statements = parser.parseCommands(labels);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(labels);
 
         assert statements.size() == 7;
         assert labels.size() == 2;
@@ -249,9 +248,9 @@ public class ParserVarTest {
                 "print\"fin\"";
 
         List<Token> tokens = Tokenizer.tokenize(new ByteArrayInputStream(code.getBytes(StandardCharsets.UTF_8)));
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
         final HashMap<String, Integer> labels = new HashMap<>();
-        final List<Statement> statements = parser.parseCommands(labels);
+        final List<Statement> statements = parserSession.parseCommandsUntilEndBlock(labels);
 
         assert statements.size() == 8;
         assert labels.size() == 2;

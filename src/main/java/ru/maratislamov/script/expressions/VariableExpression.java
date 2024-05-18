@@ -93,7 +93,13 @@ public class VariableExpression implements Expression {
             return value == null ? Value.NULL : value;
         }
 
-        return Value.NULL;
+        if (variables == session.getSessionScope()) {
+            // если обращение к неиницаилизированной переменной
+            throw new RuntimeException("Var '" + nameSearch + "' is not defined");
+        } else {
+            // если обращение к несуществующему полю инициализированной переменной
+            return Value.NULL;
+        }
     }
 
     public Expression getNameExpression() {

@@ -1,6 +1,5 @@
 package ru.maratislamov.script.values;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
 
 // обертка для хранения и обновления ссылок на значения при работе с полем переменных

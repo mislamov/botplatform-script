@@ -2,6 +2,7 @@ package ru.maratislamov.script.values;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.statements.AssignStatement;
@@ -31,12 +32,22 @@ public class MapValueTest {
         }, "нельзя обращаться к термальной переменной как к мапе");
 
 
-        Assertions.assertEquals(Value.NULL, new VariableExpression("nonextst").evaluate(session), "несуществующая переменная == NULL");
-        Assertions.assertEquals(Value.NULL, new VariableExpression("nonextst").evaluate(session), "обращение к несуществующей переменной не создаёт её");
-        Assertions.assertEquals(Value.NULL, new VariableExpression("nonextst.subvar").evaluate(session), "параметры у несуществующей переменной == NULL");
-        Assertions.assertEquals(Value.NULL, new VariableExpression("nonextst").evaluate(session), "обращение к параметру несуществующей переменной не создаёт её");
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            new VariableExpression("nonextst").evaluate(session);
+        }, "вычисление несуществующей переменной выдает исключение");
 
-        setVarToScope("var", new MapValue(), session);  // теперь эта переменная - пустая мапа
+//        Assertions.assertEquals(Value.NULL, new VariableExpression("nonextst").evaluate(session), "несуществующая переменная == NULL");
+//        Assertions.assertEquals(Value.NULL, new VariableExpression("nonextst").evaluate(session), "обращение к несуществующей переменной не создаёт её");
+//        Assertions.assertEquals(Value.NULL, new VariableExpression("nonextst.subvar").evaluate(session), "параметры у несуществующей переменной == NULL");
+//        Assertions.assertEquals(Value.NULL, new VariableExpression("nonextst").evaluate(session), "обращение к параметру несуществующей переменной не создаёт её");
+
+        MapValue mapValue = new MapValue();
+        setVarToScope("var", mapValue, session);  // теперь эта переменная - пустая мапа
+
+        Assertions.assertEquals(Value.NULL, new VariableExpression("var.subvar").evaluate(session), "несуществующий параметр у переменной == NULL");
+        Assertions.assertTrue(((MapValue) (new VariableExpression("var").evaluate(session))).isEmpty(), "обращение к несуществующему параметру переменной не создаёт её");
+
+
         String sub_var_text_value = "sub var text value";
 
         // инициализируем вложенное значение

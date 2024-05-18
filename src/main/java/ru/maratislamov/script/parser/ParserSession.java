@@ -14,34 +14,32 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * This defines the Jasic parser. The parser takes in a sequence of tokens
- * and generates an abstract syntax tree. This is the nested data structure
- * that represents the series of statements, and the expressions (which can
- * nest arbitrarily deeply) that they evaluate. In technical terms, what we
- * have is a recursive descent parser, the simplest kind to hand-write.
- * <p>
- * As a side-effect, this phase also stores off the line numbers for each
- * label in the program. It's a bit gross, but it works.
+ * This defines the Jasic parser session. The parser takes in a sequence of tokens
+ * and generates an abstract syntax tree.
  */
-public class Parser {
-    public static final String BLOCK_BEGIN_LABEL_PREFIX = "____block_begin_";
-    public static final String BLOCK_END_LABEL_PREFIX = "____block_end_";
+public class ParserSession {
     public static final String ELSE_LABEL_PREFIX = "____else";
-    Logger logger = LoggerFactory.getLogger(Parser.class);
+    Logger logger = LoggerFactory.getLogger(ParserSession.class);
 
     private final ScriptEngine botScript;
 
     private Stack<String[]> blocksAndLoopsLabels = new Stack<>(); // пары меток: начала итераций и точки выхода из циклов
 
+    private List<Statement> statements = new ArrayList<>(); // дерево программы
+
     private final List<Token> tokens;
     private int position;
     private int positionLine;
 
-    public Parser(ScriptEngine botScript, List<Token> tokens) {
+    public ParserSession(ScriptEngine botScript, List<Token> tokens) {
         this.botScript = botScript;
         this.tokens = tokens;
         position = 0;
         positionLine = 0;
+    }
+
+    public List<Statement> getStatements() {
+        return statements;
     }
 
     public String debugCurrentPosition() {
@@ -69,16 +67,14 @@ public class Parser {
 
 
     /**
-     * The top-level function to start parsing. This will keep consuming
-     * tokens and routing to the other parse functions for the different
-     * grammar syntax until we run out of code to parse.
-     *
-     * @param labels A map of label names to statement indexes. The
-     *               parser will fill this in as it scans the code.
-     * @return The list of parsed statements.
+     * @param labels
+     * @return
+     * @deprecated for unit tests only
      */
-    public List<Statement> parseCommands(Map<String, Integer> labels) {
-        return parseCommands(labels, false);
+    @Deprecated
+    public List<Statement> parseCommandsUntilEndBlock(Map<String, Integer> labels) {
+        parseCommandsUntilEndBlock(labels, false);
+        return getStatements();
     }
 
     /**
@@ -86,15 +82,14 @@ public class Parser {
      * @param parseHolder - если true - принудительно парсим переменную или холдер: ${ _from_here_ }
      * @return
      */
-    public List<Statement> parseCommands(Map<String, Integer> labels, boolean parseHolder) {
-        List<Statement> statements = new ArrayList<>();
+    public void parseCommandsUntilEndBlock(Map<String, Integer> labels, boolean parseHolder) {
 
         while (true) {
 
             skipSpacesAndSeps();
 
-             if (match(TokenType.EOF)) {
-                break;
+            if (match(TokenType.EOF)) {
+                return;
 
             } else if (match(TokenType.LABEL)) {
                 // label:
@@ -103,17 +98,28 @@ public class Parser {
 
                 // fn ...
             } else if (peek(TokenType.WORD)) {
-                 parseInstructionCommand(labels, parseHolder, statements);
+                boolean isEndBlock = parseInstructionCommand(labels, parseHolder);
+                if (isEndBlock) {
+                    return;
+                }
 
-             } else {
+            } else {
                 throw new RuntimeException("ERROR [line " + (positionLine + 1) + "]: near '" + debugCurrentPosition() + "'");
             }
         }
-
-        return statements;
     }
 
-    private void parseInstructionCommand(Map<String, Integer> labels, boolean parseHolder, List<Statement> statements) {
+
+    Statement lastStat() {
+        return statements.isEmpty() ? null : statements.get(statements.size() - 1);
+    }
+
+    /**
+     * @param labels
+     * @param parseHolder
+     * @return признак окончания чтения текущего блока
+     */
+    private boolean parseInstructionCommand(Map<String, Integer> labels, boolean parseHolder) {
         Expression atomStartsByWord = atomic();
 
         // FN()
@@ -165,21 +171,21 @@ public class Parser {
 
                         // for var in list  ....... end
                     } else if (atomWord.equals("for")) {
-                        String forBeginLabel = "____for_in_begin_" + statements.size();
-                        String forEndLabel = "____for_in_end_" + statements.size();
-                        String forCollectionVarName = "____for_collection_" + statements.size();
 
-                        blocksAndLoopsLabels.add(new String[]{forBeginLabel, forEndLabel});
-
-                        consume(TokenType.WORD);
+                        consume(TokenType.WORD); // var
                         assert get(-1).type == TokenType.WORD;
                         String varIteratorUserName = get(-1).text;
 
                         consume("in");
-                        Expression collection = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP, TokenType.EOF);
+                        Expression collection = mathExpression(TokenType.LINE, TokenType.COMMAND_SEP, TokenType.EOF); // list
 
+                        int idx = statements.size();
+                        String forBeginLabel = "____for_in_begin_" + idx;
+                        String forEndLabel = "____for_in_end_" + idx;
+                        String forCollectionVarName = "____for_collection_" + idx;
+                        blocksAndLoopsLabels.add(new String[]{forBeginLabel, forEndLabel});
 
-                        String varIteratorInternal = "____iterator_impl_" + statements.size();
+                        String varIteratorInternal = "____iterator_impl_" + idx;
                         statements.add(new AssignStatement(new VariableExpression(forCollectionVarName), collection)); // for_collection = []
                         statements.add(new CreateIteratorStatement(varIteratorInternal, new VariableExpression(forCollectionVarName)));  // инициализируем итератор
 
@@ -190,17 +196,36 @@ public class Parser {
                                 new VariableExpression(varIteratorUserName), null, forEndLabel
                         ));
 
+                        parseCommandsUntilEndBlock(labels, parseHolder);
+                        assert get(-1).type == TokenType.WORD;
+                        if (!Objects.equals(get(-1).text, "end")) throw new RuntimeException("end[for] expected");
+
+                        statements.add(new GotoStatement(botScript, new StringValue(forBeginLabel)));
+                        // end label
+                        labels.put(forEndLabel, statements.size()); // метка выхода из цикла
+                        blocksAndLoopsLabels.pop(); // assert
+
 
                         // while (cond)  ....... end
                     } else if (atomWord.equals("while")) {
-                        String whileBeginLabel = "____while_begin_" + statements.size();
-                        String whileEndLabel = "____while_end_" + statements.size();
+                        String whileBeginLabel = "____while_begin_" + (statements.size());
+                        String whileEndLabel = "____while_end_" + (statements.size());
                         blocksAndLoopsLabels.add(new String[]{whileBeginLabel, whileEndLabel});
 
                         Expression condition = expression();
 
                         labels.put(whileBeginLabel, statements.size()); // метка следующей итерации
                         statements.add(new IfThenStatement(botScript, condition, null, whileEndLabel)); // условие итерации
+
+                        parseCommandsUntilEndBlock(labels, parseHolder);
+                        assert get(-1).type == TokenType.WORD;
+                        if (!Objects.equals(get(-1).text, "end")) throw new RuntimeException("end[while] expected");
+
+                        statements.add(new GotoStatement(botScript, new StringValue(whileBeginLabel)));
+
+                        // end label
+                        labels.put(whileEndLabel, statements.size()); // метка выхода из цикла
+                        blocksAndLoopsLabels.pop(); // assert
 
                     } else if (atomWord.equals("break")) {
                         statements.add(new GotoStatement(botScript, new StringValue(blocksAndLoopsLabels.peek()[1])));
@@ -210,39 +235,43 @@ public class Parser {
 
                     } else if (atomWord.equals("begin")) {
                         // begin ...
-                        String blockBeginLabel = BLOCK_BEGIN_LABEL_PREFIX + statements.size();
+                        /*String blockBeginLabel = BLOCK_BEGIN_LABEL_PREFIX + statements.size();
                         String blockEndLabel = BLOCK_END_LABEL_PREFIX + statements.size();
                         blocksAndLoopsLabels.add(new String[]{blockBeginLabel, blockEndLabel});
-                        labels.put(blockBeginLabel, statements.size()); // метка следующей итерации
+                        labels.put(blockBeginLabel, statements.size()); */
+
+                        // к смещению начала данного блока добавляем смещение к текущей позиции в блоке = смещение нового блока
+                        parseCommandsUntilEndBlock(labels, parseHolder);
+                        assert get(-1).type == TokenType.WORD;
+                        if (!Objects.equals(get(-1).text, "end")) throw new RuntimeException("end expected");
+
 
                     } else if (atomWord.equals("end")) {
                         // ..... end
 
-                        String[] currentBlockLabels = blocksAndLoopsLabels.pop();
+                        /*String[] currentBlockLabels = blocksAndLoopsLabels.pop();
 
                         if (!currentBlockLabels[0].startsWith(BLOCK_BEGIN_LABEL_PREFIX)) {
                             // если не блок (значит цикл) - возвращаем управление в начало итерации к условию цикла
                             statements.add(new GotoStatement(botScript, new StringValue(currentBlockLabels[0]))); // отсылка н итерацию
                             labels.put(currentBlockLabels[1], statements.size()); // метка выхода из цикла
-                        }
+                        }*/
+                        return true;
 
                         // if
                     } else if (atomWord.equals("if")) {
                         Expression condition = expression();
                         consume("then");
 
-                        // ищем индекс токена, после которого вставим метку для выполнения else-условия
-                        int gotoIndex = findIndexOfNext(TokenType.LINE, TokenType.EOF); // todo: искать полноценный блок
-                        if (gotoIndex < 0) {
-                            gotoIndex = tokens.size(); // end of script
-                        } else {
-                            ++gotoIndex; // выполняем один токен для then, далее вставим else-label
-                        }
-                        String labelForElse = ELSE_LABEL_PREFIX + gotoIndex;
-                        tokens.add(gotoIndex, new Token(labelForElse, TokenType.LABEL));
-
+                        String labelForElse = ELSE_LABEL_PREFIX + statements.size();
                         // если condition=true тогда продолжаем (null) иначе прыгаем на labelForElse
                         statements.add(new IfThenStatement(botScript, condition, null, labelForElse));
+
+                        parseInstructionCommand(labels, parseHolder);
+
+                        // todo: проверить тут на else
+
+                        labels.put(labelForElse, statements.size());
 
 
                         // input
@@ -283,6 +312,7 @@ public class Parser {
                 }
             }
         }
+        return false; // простая команда - не окончание блока
     }
 
     private ScriptEngine engine4frame = new ScriptEngine();
@@ -372,17 +402,18 @@ public class Parser {
      * @return The parsed expression.
      */
     private Expression expression(TokenType... stoppers) {
+        boolean skip = (stoppers == null || stoppers.length == 0); // for: cmd arg arg arg \n
 
         // список
         if (match(TokenType.BEGIN_LIST)) {
             List<Expression> expressionList = new ArrayList<>();
 
             while (!match(TokenType.END_LIST)) {
-                skipSpaces(); // [\n  ,\n
+                if (skip) skipSpaces(); // [\n  ,\n
 
                 expressionList.add(expression());
 
-                skipSpaces(); // xxx\n]
+                if (skip) skipSpaces(); // xxx\n]
 
                 if (!match(TokenType.COMMA) && !peek(TokenType.END_LIST)) {
                     throw new Error("List parse error here: " + debugCurrentPosition());
@@ -396,7 +427,7 @@ public class Parser {
             Map<String, Expression> map = new LinkedHashMap<>();
 
             while (!match(TokenType.END_MAP)) {
-                skipSpaces(); // {\n  ,\n
+                if (skip) skipSpaces(); // {\n  ,\n
 
                 consume(TokenType.STRING, TokenType.LABEL);
                 String key = get(-1).text;
@@ -407,7 +438,7 @@ public class Parser {
                 Expression val = expression();
 
                 map.put(key, val);
-                skipSpaces(); // xxx\n}
+                if (skip) skipSpaces(); // xxx\n}
 
                 if (!match(TokenType.COMMA) && !peek(TokenType.END_MAP)) {
                     throw new Error("List parse error here: " + debugCurrentPosition());
@@ -465,7 +496,7 @@ public class Parser {
                     stack.push(new BinaryOperatorExpression(stack.isEmpty() ? new NumberValue(0) : stack.pop(), operator, right));
                 }
 
-                case "===", "==", "!=", "=", "/", "*", ">", "<", ">=", "<=", "&&", "||" -> {
+                case "===", "==", "!=", "=", "/", "%", "*", ">", "<", ">=", "<=", "&&", "||" -> {
                     final Expression right = stack.pop();
                     stack.push(new BinaryOperatorExpression(stack.pop(), operator, right));
                 }
@@ -487,6 +518,8 @@ public class Parser {
      * @return The parsed expression.
      */
     private Expression mathExpression(TokenType... stoppers) {
+        boolean skip = (stoppers == null || stoppers.length == 0); // for: cmd arg arg arg \n
+
         Stack<Expression> stack = new Stack<>();
         Stack<String> operators = new Stack<>();
 
@@ -495,7 +528,7 @@ public class Parser {
 
             if (stoppers != null && Arrays.asList(stoppers).contains(get(0).type)) break;
 
-            skipSpaces();
+            if (skip) skipSpaces();
 
             Token token = get(0);
 
@@ -514,7 +547,7 @@ public class Parser {
                             operators.push(currentOperatorCode);
                         }
 
-                        case "*", "/" -> {
+                        case "*", "/", "%" -> {
                             while (!operators.isEmpty() && (operators.peek().equals("*") || operators.peek().equals("/"))) {
                                 Expression right = stack.pop();
                                 stack.push(new BinaryOperatorExpression(stack.pop(), operators.pop(), right));
@@ -523,6 +556,8 @@ public class Parser {
                         }
 
                         case "===", "==", "=", "<", ">", "<=", ">=", "!=", "&&", "||" -> {
+                            // todo: после || и && и некоторых других - сразу вычислять мат.выражение справа, иначе будет взят только токен
+                            // и произойдет ошибочное чтение для   if  {a==1 || b}==2 then
                             String bracket = stackEvaluteCurrentBracketLevel(stack, operators);
                             if (bracket != null) { // EOF
                                 operators.push(bracket); // возвращаем скобку обратно
@@ -530,7 +565,8 @@ public class Parser {
                             operators.push(currentOperatorCode);
                         }
 
-                        default -> throw new RuntimeException("NYR operator: " + currentOperatorCode + "  here: " + debugCurrentPosition());
+                        default ->
+                                throw new RuntimeException("NYR operator: " + currentOperatorCode + "  here: " + debugCurrentPosition());
                     }
                     continue;
                 }
@@ -547,7 +583,7 @@ public class Parser {
                     }
 
                     ++position;
-                    skipSpaces();
+                    if (skip) skipSpaces();
 
                     // если дальше после АТОМА арифметическое выражение продолжается
                     if (!peek_one_of(0, TokenType.OPERATOR, TokenType.RIGHT_PAREN)) {
@@ -566,7 +602,7 @@ public class Parser {
                     stack.push(atomic);
 
                     if (stoppers != null && Arrays.asList(stoppers).contains(get(0).type)) break parsingMath;
-                    skipSpaces();
+                    if (skip) skipSpaces();
 
                     if (!peek_one_of(0, TokenType.OPERATOR, TokenType.RIGHT_PAREN)) {
                         // арифм выражение завершено
@@ -633,6 +669,12 @@ public class Parser {
 
             if ("NULL".equals(prevUpper)) {
                 return Value.NULL;
+            }
+            if ("TRUE".equals(prevUpper)) {
+                return Value.from(true);
+            }
+            if ("FALSE".equals(prevUpper)) {
+                return Value.from(false);
             }
 
             if (word.isSeparatedWord()) {
@@ -801,6 +843,11 @@ public class Parser {
 
     private boolean peek(TokenType type) {
         if (get(0).type != type) return false;
+        return true;
+    }
+
+    private boolean peekPerv(TokenType type) {
+        if (get(-1).type != type) return false;
         return true;
     }
 

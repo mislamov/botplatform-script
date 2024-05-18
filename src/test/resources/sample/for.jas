@@ -1,9 +1,12 @@
 list = [5, 4, 3, 2, 1]
-if list then begin
+
 for item in list
+    s = ""
     for i in list
-        print(item + " * " + i + " = " + (item * i))
+        if i % 2 == 0 then begin
+            s += (item + " * " + i + " = " + (item * i)) + ", "
+        end
     end
-    print(item)
+    print s
 end
-end
+    print "---"

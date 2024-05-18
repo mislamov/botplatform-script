@@ -108,8 +108,8 @@ public class BinaryOperatorExpression implements Expression {
         }
 
 
-        final Double leftNumber = leftVal.toNumber();
-        final Double rightNumber = rightVal.toNumber();
+        Double leftNumber = leftVal.toNumber();
+        Double rightNumber = rightVal.toNumber();
 
         switch (operator) {
             case "=":
@@ -141,14 +141,22 @@ public class BinaryOperatorExpression implements Expression {
                     } else {
                         lv.push(rightVal);
                     }
+                    /*return lv;
+                } else if (rightVal instanceof ListValue rv) {
+                    ListValue lv = leftVal == Value.NULL ? new ListValue() : ListValue.of(leftVal);
+                    lv.addAll(rv);*/
                     return lv;
                 } else {
+                    if (leftNumber == null) leftNumber = 0.0;
                     return new StringValue(leftVal.toString() + rightVal);
                 }
             case "-":
+                if (leftNumber == null) leftNumber = 0.0;
                 return new NumberValue(leftNumber - rightNumber);
             case "*":
                 return new NumberValue(leftNumber * rightNumber);
+            case "%":
+                return new NumberValue(leftNumber % rightNumber);
             case "/":
                 return new NumberValue(leftNumber / rightNumber);
             case "<":
@@ -192,8 +200,10 @@ public class BinaryOperatorExpression implements Expression {
                 if (leftNumber == null || rightNumber == null) return Value.from(false);
                 return new NumberValue(rightNumber != 0 && leftNumber != 0 ? 1 : 0);
             case "||":
-                if (leftNumber == null && rightNumber == null) return Value.from(false);
-                return new NumberValue(rightNumber != 0 || leftNumber != 0 ? 1 : 0);
+                if (leftNumber == null) {
+                    return rightNumber == null ? Value.from(false) : new NumberValue(rightNumber != 0 ? 1 : 0);
+                }
+                return rightNumber == null ? new NumberValue(leftNumber != 0 ? 1 : 0) : new NumberValue(rightNumber != 0 || leftNumber != 0 ? 1 : 0);
 
         }
         throw new Error("Unknown operator: " + operator);

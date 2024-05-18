@@ -17,9 +17,13 @@ public class Tokenizer {
     // Tokenizing (lexing) -----------------------------------------------------
 
     // Many tokens are a single character, like operators and ().
-    private static final String charTokens = "\n=!+-*/<>()[],.;{}:&|";
+    private static final String charTokens = "\n=!" +
+            "+-*/" +
+            "%<>" +
+            "()[],.;{}:&|";
+
     private static final TokenType[] tokenTypes = {TokenType.LINE, TokenType.OPERATOR, TokenType.OPERATOR,
-            TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
+            TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
             TokenType.OPERATOR, TokenType.OPERATOR, TokenType.OPERATOR,
             TokenType.LEFT_PAREN, TokenType.RIGHT_PAREN, TokenType.BEGIN_LIST, TokenType.END_LIST,
             TokenType.COMMA, TokenType.DOT, TokenType.COMMAND_SEP, TokenType.BEGIN_MAP, TokenType.END_MAP, TokenType.MAP_SEP,
@@ -55,38 +59,28 @@ public class Tokenizer {
                         if (iC == -1)
                             return tokens;
 
-  /*                      if (c == '=') {
-                            tokens.add(new Token("=", TokenType.OPERATOR));
-                            token = "";
-
-                            iC = source.read();
-                            c = (char) iC;
-                            *//*if (c == '=') {
-                                break;
-                            }*//*
-                            continue;
-  */
-/*                        } else if ((c == '+' || c == '-' || c == '*' || c == '\\')) {
-                            token += c;
-                            iC = source.read();
-                            token = "";
-
-                            if (iC == '=') {
-                                tokens.add(new Token(c + "=", TokenType.OPERATOR));
-                                break;
-                            } else {
-                                tokens.add(new Token("" + c, TokenType.OPERATOR));
-                                c = (char) iC;
-                                continue;
-                            }
-
-                        } else*/
-
                         if (c == '\n') {
                             tokens.add(new Token("\n", TokenType.LINE));
                             // схлопываем все смежные отступы и переносы в этот один токен
                             while (Character.isWhitespace(iC = source.read())) ;
                             continue;
+
+                            // basic - комментарий
+                        } else if (c == '\'') {
+                            state = TokenizeState.COMMENT;
+                            break;
+
+                            // деление или комментарий
+                        } else if (c == '/') {
+                            iC = source.read();
+                            c = (char) iC;
+                            if (c == '/') {  // комментарий
+                                state = TokenizeState.COMMENT;
+                            } else {
+                                tokens.add(new Token("/", TokenType.OPERATOR));
+                                continue;
+                            }
+                            break;
 
                         } else if (charTokens.indexOf(c) != -1) {
                             tokens.add(new Token(Character.toString(c), tokenTypes[charTokens.indexOf(c)]));
@@ -125,8 +119,6 @@ public class Tokenizer {
                             break;
 
 
-                        } else if (c == '\'') {
-                            state = TokenizeState.COMMENT;
                         }
                         break;
 

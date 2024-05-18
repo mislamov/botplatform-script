@@ -11,7 +11,6 @@ import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 public class TextFrameTest {
@@ -20,9 +19,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame1(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("hello, $user.name, bye");
+        final List<Expression> expressions = parserSession.frameTextToArgList("hello, $user.name, bye");
         assert expressions.get(0).toString().equals("hello, ");
         assert expressions.get(1) instanceof VariableExpression;
         assert ((VariableExpression) expressions.get(1)).getName().equals("user");
@@ -40,9 +39,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame2(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("hello, $user.name");
+        final List<Expression> expressions = parserSession.frameTextToArgList("hello, $user.name");
         assert expressions.get(0).toString().equals("hello, ");
         assert expressions.get(1) instanceof VariableExpression;
         assert ((VariableExpression) expressions.get(1)).getName().equals("user");
@@ -58,9 +57,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame2_1(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("$user.name, hello");
+        final List<Expression> expressions = parserSession.frameTextToArgList("$user.name, hello");
         assert expressions.get(0).toString().equals("${user.name}");
         assert expressions.get(1).toString().equals(", hello");
 
@@ -74,9 +73,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame2_2(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("mmm $user.name, hello");
+        final List<Expression> expressions = parserSession.frameTextToArgList("mmm $user.name, hello");
         assert expressions.get(0).toString().equals("mmm ");
         assert expressions.get(1).toString().equals("${user.name}");
         assert expressions.get(2).toString().equals(", hello");
@@ -91,9 +90,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame3(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("hello, $$user.name");
+        final List<Expression> expressions = parserSession.frameTextToArgList("hello, $$user.name");
         assert expressions.get(0).toString().equals("hello, ");
         assert expressions.get(1).toString().equals("$");
         assert expressions.get(2).toString().equals("user.name");
@@ -109,9 +108,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame3_1(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("$$hello, user.name");
+        final List<Expression> expressions = parserSession.frameTextToArgList("$$hello, user.name");
 
         assert expressions.get(0).toString().equals("$");
         assert expressions.get(1).toString().equals("hello, user.name");
@@ -127,9 +126,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame3_2(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("hello, user.name$$");
+        final List<Expression> expressions = parserSession.frameTextToArgList("hello, user.name$$");
 
         assert expressions.get(0).toString().equals("hello, user.name");
         assert expressions.get(1).toString().equals("$");
@@ -145,9 +144,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame4(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("hello, $ user.name");
+        final List<Expression> expressions = parserSession.frameTextToArgList("hello, $ user.name");
         assert expressions.get(0).toString().equals("hello, ");
         assert expressions.get(1).toString().equals("$ user.name");
 
@@ -160,9 +159,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame4_1(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("$ hello, user.name");
+        final List<Expression> expressions = parserSession.frameTextToArgList("$ hello, user.name");
 
         assert expressions.size() == 1;
 
@@ -174,9 +173,9 @@ public class TextFrameTest {
     @Test
     public void testVarNameInFrame4_2(){
         ArrayList<Token> tokens = new ArrayList<>();
-        Parser parser = new Parser(new ScriptEngine(), tokens);
+        ParserSession parserSession = new ParserSession(new ScriptEngine(), tokens);
 
-        final List<Expression> expressions = parser.frameTextToArgList("hello, user.name$");
+        final List<Expression> expressions = parserSession.frameTextToArgList("hello, user.name$");
         assert expressions.get(0).toString().equals("hello, user.name");
         assert expressions.get(1).toString().equals("$");
 
@@ -188,7 +187,7 @@ public class TextFrameTest {
     public void testVarNameInFrame4_3(){
         ArrayList<Token> tokens = new ArrayList<>();
         final ScriptEngine scriptEngine = new ScriptEngine();
-        Parser parser = new Parser(scriptEngine, tokens);
+        ParserSession parserSession = new ParserSession(scriptEngine, tokens);
 
         final List<Statement> statements = scriptEngine.scriptToStatements("name.subname[2]");
         assert statements.size() == 1;
@@ -199,7 +198,7 @@ public class TextFrameTest {
         assert var.getNextInPath().getNextInPath().getName().equals("2");
 
 
-        List<Expression> expressions = parser.frameTextToArgList("hello, $name.subname[2]!");
+        List<Expression> expressions = parserSession.frameTextToArgList("hello, $name.subname[2]!");
         assert expressions.get(0).toString().equals("hello, ");
         assert expressions.get(1) instanceof VariableExpression;
         assert expressions.get(1).getName().equals("name");
@@ -208,7 +207,7 @@ public class TextFrameTest {
         assert expressions.get(2).toString().equals("!");
 
 
-        expressions = parser.frameTextToArgList("hello, $name.subname[1]+$name.subname[2]!");
+        expressions = parserSession.frameTextToArgList("hello, $name.subname[1]+$name.subname[2]!");
         assert expressions.get(0).toString().equals("hello, ");
         assert expressions.get(1) instanceof VariableExpression;
         assert expressions.get(1).getName().equals("name");

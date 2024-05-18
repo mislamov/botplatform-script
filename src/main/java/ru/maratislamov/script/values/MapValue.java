@@ -20,9 +20,10 @@ public class MapValue implements Value, MapOrListValueInterface {
 
     public static final int MAP_EQUAL_CALC_DEEP = 10; // максимальная глубина сравнения двух ValueMap
 
-    private Map<String, Value> body = new LinkedHashMap<>();  //new TreeMap<>(/*String.CASE_INSENSITIVE_ORDER*/);
+    private Map<String, Value> body = Collections.synchronizedMap(new LinkedHashMap<>());  //new TreeMap<>(/*String.CASE_INSENSITIVE_ORDER*/);
 
     public static Map<String, Function<MapValue, Value>> methods = Map.of(
+            "keys", v -> new ListValue(v.getBody().keySet().stream().map(Value::from).collect(Collectors.toList())),
             "size", v -> Value.from(v.getBody().size()),
             "length", v -> Value.from(v.getBody().size())
     );
