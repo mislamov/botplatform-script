@@ -9,6 +9,7 @@ import ru.maratislamov.script.utils.VarLocalMemoryManager;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -22,11 +23,15 @@ public class MapValue implements Value, MapOrListValueInterface {
 
     private Map<String, Value> body = Collections.synchronizedMap(new LinkedHashMap<>());  //new TreeMap<>(/*String.CASE_INSENSITIVE_ORDER*/);
 
-    public static Map<String, Function<MapValue, Value>> methods = Map.of(
-            "keys", v -> new ListValue(v.getBody().keySet().stream().map(Value::from).collect(Collectors.toList())),
-            "size", v -> Value.from(v.getBody().size()),
-            "length", v -> Value.from(v.getBody().size())
-    );
+    public static Map<String, Function<MapValue, Value>> methods;
+
+    static {
+        methods = new HashMap<>();
+        methods.put("keys", v -> new ListValue(v.getBody().keySet().stream().map(Value::from).collect(Collectors.toList())));
+        methods.put("size", v -> Value.from(v.getBody().size()));
+        methods.put("length", v -> Value.from(v.getBody().size()));
+        methods.put("regexp", null);
+    }
 
     public Map<String, Value> getBody() {
         return body;
@@ -39,17 +44,7 @@ public class MapValue implements Value, MapOrListValueInterface {
     @Override
     public Object nativeObject() {
         return body.entrySet().stream()
-                .collect(
-                        /*Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().nativeObject())*/
-                        Collectors.toMap(
-                                Map.Entry::getKey,
-                                entry -> entry.getValue().nativeObject(),
-                                (oldValue, newValue) -> newValue,
-                                LinkedHashMap::new
-                        )
-                );
+                .collect(LinkedHashMap::new, (m, v) -> m.put(v.getKey(), v.getValue().nativeObject()), LinkedHashMap::putAll);
     }
 
     public MapValue() {
@@ -62,7 +57,7 @@ public class MapValue implements Value, MapOrListValueInterface {
     }
 
     public MapValue(MapValue mv) {
-        mv.body.forEach(body::put);
+        //mv.body.forEach(body::put);
         body.putAll(mv.body);
     }
 
@@ -87,7 +82,7 @@ public class MapValue implements Value, MapOrListValueInterface {
     @JsonIgnore
     @Override
     public Double toNumber() {
-        return null;
+        return (double) body.size();
     }
 
     @JsonIgnore
@@ -131,7 +126,8 @@ public class MapValue implements Value, MapOrListValueInterface {
             throw new RuntimeException("Don't use DOTs in keys for MapValues. Use VarMapUtils.getValueSetterByPath for deep. Found: " + name);
         }*/
 
-        if (methods.containsKey(name)) return methods.get(name).apply(this);
+        if (methods.containsKey(name))
+            return methods.get(name).apply(this);
 
         return body.get(name);
     }
@@ -182,6 +178,16 @@ public class MapValue implements Value, MapOrListValueInterface {
     @JsonIgnore
     public boolean containsKey(String name) {
         return methods.containsKey(name) || body.containsKey(name);
+    }
+
+    @Override
+    public boolean containsMethod(String name) {
+        return methods.containsKey(name);
+    }
+
+    @Override
+    public Function<MapValue, Value> getMethod(String name) {
+        return methods.getOrDefault(name, null);
     }
 
     @JsonIgnore

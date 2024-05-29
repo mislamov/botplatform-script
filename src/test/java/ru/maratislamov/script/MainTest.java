@@ -47,6 +47,11 @@ public class MainTest {
         runScript("sample\\submaps.jas", null);
     }
 
+    @Test
+    public void ifthenbeginendJas() throws IOException {
+        runScript("sample\\ifthenbeginend.jas", null);
+    }
+
 
     @Test
     public void runPlusEq() throws IOException {
@@ -58,7 +63,7 @@ public class MainTest {
         runScript("print 4>=4".getBytes(StandardCharsets.UTF_8), null);
     }
 
-    //@Test
+    @Test
     public void runDemo() throws IOException {
         runScript("demo.bas", null);
     }

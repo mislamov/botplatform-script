@@ -2,9 +2,11 @@ package ru.maratislamov.script.expressions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ru.maratislamov.script.ScriptSession;
-import ru.maratislamov.script.values.MapOrListValueInterface;
-import ru.maratislamov.script.values.StringValue;
-import ru.maratislamov.script.values.Value;
+import ru.maratislamov.script.VarNotFoundException;
+import ru.maratislamov.script.values.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A variable expression evaluates to the current value stored in that
@@ -48,6 +50,9 @@ public class VariableExpression implements Expression {
 
         final Value value = findByPathName(scope, evaluatedName, session);
 
+        if (nextInPath!=null && nextInPath instanceof MethodCallValue)
+            throw new RuntimeException("do not use () for functions in var-path!: " + nextInPath);
+
         // ныряем в переменную
         if (nextInPath != null) {
 
@@ -56,7 +61,25 @@ public class VariableExpression implements Expression {
                 return Value.NULL;
             }
 
-            if (!(value instanceof MapOrListValueInterface)) {
+            // вызов метода
+            if (value instanceof MethodCallValue mcv) {
+                assert mcv.getArgs().get(0) == NULLValue.NULL;
+                Value arg;
+                //try {
+                //arg = nextInPath.evaluate(session); - не работает когда в аргументе точка
+                //} catch (VarNotFoundException ex) {
+                arg = Expression.evaluate(nextInPath.nameExpression, session);
+                //}
+
+                mcv.getArgs().set(0, arg);
+                Value evaluated = mcv.evaluate(session);
+                if (nextInPath.nextInPath != null) {
+                    assert evaluated instanceof ListValue lv;
+                    return nextInPath.nextInPath.evaluate(session, (ListValue) evaluated);
+                }
+                return evaluated;
+
+            } else if (!(value instanceof MapOrListValueInterface)) {
                 throw new RuntimeException(String.format("can't take path from ATOMIC value: %s[%s]", value, nextInPath));
             }
             return nextInPath.evaluate(session, (MapOrListValueInterface) value);
@@ -66,6 +89,14 @@ public class VariableExpression implements Expression {
     }
 
     private Value findByPathName(MapOrListValueInterface variables, String nameSearch, ScriptSession session) {
+
+        if (variables.containsMethod(nameSearch) && variables.getMethod(nameSearch) == null) {
+            ArrayList<Expression> args = new ArrayList<>();
+            args.add(NULLValue.NULL);
+            args.add(variables instanceof MapValue mv ? new MapValue(mv) : new ListValue((ListValue) variables));
+            return new MethodCallValue(nameSearch, args);
+        }
+
         // переменная присутствует точь-в-точь по имени
         if (variables.containsKey(nameSearch)) {
             return variables.get(nameSearch)/*.evaluate(session)*/;
@@ -95,7 +126,7 @@ public class VariableExpression implements Expression {
 
         if (variables == session.getSessionScope()) {
             // если обращение к неиницаилизированной переменной
-            throw new RuntimeException("Var '" + nameSearch + "' is not defined");
+            throw new VarNotFoundException("Var '" + nameSearch + "' is not defined");
         } else {
             // если обращение к несуществующему полю инициализированной переменной
             return Value.NULL;

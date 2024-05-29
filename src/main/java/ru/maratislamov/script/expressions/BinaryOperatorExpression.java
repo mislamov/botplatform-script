@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptSession;
+import ru.maratislamov.script.statements.IfThenStatement;
 import ru.maratislamov.script.values.ListValue;
 import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.StringValue;
@@ -94,6 +95,10 @@ public class BinaryOperatorExpression implements Expression {
                 return new NumberValue(leftVal.equals(rightVal) ? 1 : 0);
 
             if (Objects.equals(operator, "!=")) return new NumberValue(leftVal.equals(rightVal) ? 0 : 1);
+
+            if (Objects.equals(operator, "&&")) return new NumberValue(0);
+            if (Objects.equals(operator, "||"))
+                return new NumberValue(IfThenStatement.toBoolean(leftVal) || IfThenStatement.toBoolean(rightVal) ? 1 : 0);
 
             Value secondValue = leftVal.equals(Value.NULL) ? rightVal : leftVal;
             if (secondValue instanceof NumberValue)

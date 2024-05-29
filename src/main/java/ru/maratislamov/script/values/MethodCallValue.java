@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import ru.maratislamov.script.ScriptFunctionsService;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.expressions.VariableExpression;
 import ru.maratislamov.script.statements.Statement;
 
 
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 /**
  * A string value.
  */
-public class MethodCallValue implements Statement, Value {
+public class MethodCallValue extends VariableExpression implements Statement, Value {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodCallValue.class);
 
@@ -54,7 +55,7 @@ public class MethodCallValue implements Statement, Value {
 
 
     public Double toNumber() {
-        throw new ClassCastException("MethodCallValue can't be cast to Number");
+        throw new ClassCastException("MethodCallValue can't be cast to Number: " + this);
     }
 
     @Override
@@ -64,6 +65,23 @@ public class MethodCallValue implements Statement, Value {
 
     public Value evaluate(ScriptSession session) {
         try {
+            List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> Expression.evaluate(e, session)).collect(Collectors.toList());
+            return ScriptFunctionsService.execFunction(name, args, session);
+
+        } catch (Exception | Error e) {
+            logger.error("CallMethodError[" + name + "]");
+            throw new Error("ERROR when call function '" + name + "': " + e.getMessage(), e);
+        }
+    }
+
+    public Value evaluate(ScriptSession session, MapOrListValueInterface scope) {
+        Value arg0 = null;
+        try {
+            if (getNextInPath() != null) {
+                getArgs().add(0, getLastInPath());
+            }
+            getArgs().add(0, scope instanceof MapValue mv ? mv : (ListValue) scope);
+
             List<Value> args = (this.args == null) ? null : this.args.stream().map(e -> Expression.evaluate(e, session)).collect(Collectors.toList());
             return ScriptFunctionsService.execFunction(name, args, session);
 

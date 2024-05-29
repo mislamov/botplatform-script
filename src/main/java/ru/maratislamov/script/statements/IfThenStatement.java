@@ -3,6 +3,7 @@ package ru.maratislamov.script.statements;
 import ru.maratislamov.script.ScriptEngine;
 import ru.maratislamov.script.ScriptSession;
 import ru.maratislamov.script.expressions.Expression;
+import ru.maratislamov.script.values.MapOrListValueInterface;
 import ru.maratislamov.script.values.NULLValue;
 import ru.maratislamov.script.values.NumberValue;
 import ru.maratislamov.script.values.Value;
@@ -36,6 +37,13 @@ public class IfThenStatement implements Statement {
         this.labelIfNot = labelIfNot;
     }
 
+    public static boolean toBoolean(Value conditionValue) {
+        return conditionValue != null
+                && !NULL.equals(conditionValue)
+                && !(ZERO_VALUE.equals(conditionValue))
+                && (!(conditionValue instanceof MapOrListValueInterface ml) || !ml.isEmpty());
+    }
+
     public Value execute(ScriptSession session) {
 
         if (label != null && !botScript.labels.containsKey(label)) {
@@ -47,10 +55,8 @@ public class IfThenStatement implements Statement {
 
         final Value conditionValue = Expression.evaluate(condition, session);
 
-        boolean success = !NULL.equals(conditionValue) && !(ZERO_VALUE.equals(conditionValue));
-
         // true
-        if (success) {
+        if (toBoolean(conditionValue)) {
             if (label != null) {
                 session.setCurrentStatement(botScript.labels.get(label));
             }

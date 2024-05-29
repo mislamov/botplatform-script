@@ -6,16 +6,21 @@ import ru.maratislamov.script.values.google.SparseArray;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ListValue extends AbstractList<Value> implements Value, MapOrListValueInterface {
 
     SparseArray<Value> data;
 
-    public static Map<String, Function<ListValue, Value>> methods = Map.of(
-            "size", v -> Value.from(v.size()),
-            "length", v -> Value.from(v.size())
-            );
+    public static Map<String, Function<ListValue, Value>> methods;
+
+    static {
+        methods = new HashMap<>();
+        methods.put("size", v -> Value.from(v.size()));
+        methods.put("length", v -> Value.from(v.size()));
+        methods.put("regexp", null);
+    }
 
     public static ListValue of(Value... vals) {
         if (vals.length == 1 && vals[0] instanceof ListValue) return (ListValue) vals[0];
@@ -52,14 +57,28 @@ public class ListValue extends AbstractList<Value> implements Value, MapOrListVa
         if (methods.containsKey(name)) return true;
 
         int idx = Integer.parseInt(name);
+        if (idx < 0) return -idx <= data.maxIndex();
         return idx <= data.maxIndex();
+    }
+
+    @Override
+    public boolean containsMethod(String name) {
+        return methods.containsKey(name);
+    }
+
+    @Override
+    public Function<ListValue, Value> getMethod(String name) {
+        return methods.getOrDefault(name, null);
     }
 
     @Override
     public Value get(String name) {
         if (methods.containsKey(name)) return methods.get(name).apply(this);
 
-        Integer idx = Integer.parseInt(name);
+        int idx = Integer.parseInt(name);
+        if (idx < 0) {
+            return ObjectUtils.firstNonNull(data.get(data.size() + idx), NULL);
+        }
         return ObjectUtils.firstNonNull(data.get(idx), NULL);
     }
 
@@ -72,7 +91,7 @@ public class ListValue extends AbstractList<Value> implements Value, MapOrListVa
 
     @Override
     public Double toNumber() {
-        return null;
+        return (double) size();
     }
 
     @Override
@@ -137,7 +156,7 @@ public class ListValue extends AbstractList<Value> implements Value, MapOrListVa
 
     @Override
     public int compareTo(Object o) {
-        if (o instanceof ListValue){
+        if (o instanceof ListValue) {
             return Integer.compare(size(), ((ListValue) o).size());
         }
         throw new RuntimeException("Unexpected comparation ListValue with " + o.getClass().getSimpleName());

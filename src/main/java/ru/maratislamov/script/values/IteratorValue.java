@@ -85,6 +85,9 @@ public class IteratorValue implements Value {
 
     private ListValue getListValue(ScriptSession session) {
         final Value evaluatedCollection = collectionVar.evaluate(session);
+
+        if (evaluatedCollection == null || evaluatedCollection == NULL) return new ListValue();
+
         if (!(evaluatedCollection instanceof ListValue listValue))
             throw new RuntimeException("ListValue expected for loop, but: " + evaluatedCollection);
         return listValue;

@@ -6,3 +6,16 @@ end
 if x == 2 then begin
     print "два"
 end
+
+if {} then throw("{} is true")
+if [] then throw("[] is true")
+if NULL then throw("NULL is true")
+if 0 then throw("0 is true")
+
+fb = {}
+kb = []
+if (fb||[]) then throw("{} || [] is true")
+if kb||0 then throw("[] || 0 is true")
+if 1 && NULL then throw("1 && NULL is true")
+if 0 && 2 then throw("0 && 2 is true")
+

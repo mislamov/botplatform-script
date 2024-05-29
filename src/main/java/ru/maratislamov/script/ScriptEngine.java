@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.RecursiveTask;
@@ -141,12 +142,12 @@ public class ScriptEngine {
      * current statement.
      */
     public ScriptEngine() {
-        this.labels = new HashMap<>();
+        this.labels = new LinkedHashMap<>();
         constants = new MapValue();
     }
 
     public ScriptEngine(MapValue constants) {
-        this.labels = new HashMap<>();
+        this.labels = new LinkedHashMap<>();
         this.constants = constants;
     }
 
@@ -231,7 +232,6 @@ public class ScriptEngine {
     }
 
     public <TSession extends ScriptSession> TSession doFinish(TSession session) {
-        logger.info("THE END");
         session.close();
         return session;
     }

@@ -37,8 +37,8 @@ start:
     print "var: {" + var + "}"
 
     keyboard ["первый::onselect{selected=""a""}", "второй:onselect{selected=""b""}", "третий:onselect{selected=""c""}"]
-    'input any
-    print "any: " + any
+    //input any
+    //print "any: " + any
     goto finish
 
 onselect:

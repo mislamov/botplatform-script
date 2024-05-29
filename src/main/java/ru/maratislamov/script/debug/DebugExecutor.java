@@ -9,6 +9,8 @@ import ru.maratislamov.script.values.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +44,9 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
             case "getcontact":
                 System.out.println(args.stream().map(Value::toString).collect(Collectors.joining(" ")));
                 return args.isEmpty() ? Value.NULL : args.get(0);
+
+            case "throw":
+                throw new RuntimeException("throw called: " + args.stream().map(Value::toString).collect(Collectors.joining(" ")));
 
             case "debug":
                 System.out.println("$" + args.stream().map(Value::getClass).map(Class::getSimpleName).collect(Collectors.joining(" $")));
@@ -85,6 +90,20 @@ public class DebugExecutor extends ScriptFunctionsExecutor {
                 });
 
                 return maps;
+
+            case "regexp": {
+                assert args.size() == 2;
+
+                Pattern pattern = Pattern.compile(args.get(0).toString());
+                Value arg1 = args.get(1);
+                if (arg1 instanceof MapValue mv) {
+                    return new ListValue(mv.getBody().entrySet().stream().filter(v -> pattern.matcher(v.getKey()).find()).map(Map.Entry::getValue).collect(Collectors.toList()));
+                } else if (arg1 instanceof ListValue lv) {
+                    return new ListValue(lv.stream().filter(v -> pattern.matcher(v.toString()).find()).collect(Collectors.toList()));
+                } else {
+                    throw new RuntimeException("NYR");
+                }
+            }
 
             default:
                 //throw new Error("Unknown function: " + fname);
